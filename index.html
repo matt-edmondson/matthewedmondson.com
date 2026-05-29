@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matt Edmondson — Producer, Game &amp; Software Developer</title>
+  <meta name="description" content="Matt Edmondson — Producer, Game Developer, and Software Engineer based in Melbourne, Australia. Studio Production Lead at The Three Thousands and maintainer of ktsu.dev." />
+  <link rel="canonical" href="https://matthewedmondson.com/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Matt Edmondson" />
+  <meta property="og:description" content="Producer, Game Developer, and Software Engineer. Melbourne, Australia." />
+  <meta property="og:url" content="https://matthewedmondson.com/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">matthewedmondson.com</p>
+    <h1>Matt Edmondson</h1>
+    <p class="tagline">
+      Producer <span class="dot">·</span> Game Developer <span class="dot">·</span>
+      Software Engineer <span class="dot">·</span> Melbourne, Australia
+    </p>
+
+    <section class="intro">
+      <p>
+        I've been building games and software for about 30 years — from Amiga BASIC, to custom
+        engines in C++ and OpenGL, to co-founding an indie studio and shipping on Steam. I spent
+        a decade at EA on the <em>Real Racing</em> series, and I'm now Studio Production Lead at
+        <strong>The Three Thousands</strong>, where we're making a racing game in Unreal Engine.
+      </p>
+      <p>
+        The arc has been a gradual shift from writing code all day to leading the teams that do.
+        I still review PRs, maintain build infrastructure, and catch math errors in the vehicle
+        model — but the job is production now: coaching people, running sprints, making scope
+        calls, keeping the machine moving.
+      </p>
+    </section>
+
+    <section>
+      <h2>ktsu.dev</h2>
+      <p>
+        Outside studio work, most of my energy goes into
+        <a href="https://ktsu.dev">ktsu.dev</a> — a collection of open-source .NET libraries and
+        tools built around making invalid states unrepresentable: strongly-typed file paths,
+        type-safe physical quantities with dimensional analysis, and a pile of utilities that
+        eliminate the bugs that waste everyone's time. 60+ packages on NuGet and counting.
+      </p>
+    </section>
+
+    <section>
+      <h2>Other things I make</h2>
+      <p>
+        Analog synth modules, guitar pedals, CNC machines. Amateur race-car mechanic, CAD
+        designer, 3D-print enthusiast, miniature painter, music producer, and photographer.
+        The medium changes; the satisfaction of making things doesn't.
+      </p>
+    </section>
+
+    <div class="links">
+      <a class="primary" href="https://ktsu.dev">ktsu.dev</a>
+      <a href="https://github.com/ktsu-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/medmondson-aus">LinkedIn</a>
+      <a href="https://www.nuget.org/profiles/ktsu.dev">NuGet</a>
+    </div>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">●</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

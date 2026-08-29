@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debugging the Mysterious 'Unable to find a project to restore' Error in .NET | Matt Edmondson</title>
+  <meta name="description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Debugging the Mysterious 'Unable to find a project to restore' Error in .NET | Matt Edmondson" />
+  <meta property="og:description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-06-14">June 14, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">Debugging</span>
+        <span class="category-tag">Architecture</span>
+      </div>
+<h1>Debugging the Mysterious &quot;Unable to find a project to restore&quot; Error in .NET</h1>
+<p>Not long ago, I ran into one of those .NET errors that appears simple on the surface but conceals a surprisingly deep web of potential causes. The error message itself was disarmingly brief:</p>
+<pre><code>Unable to find a project to restore!
+</code></pre>
+<p>What made the situation genuinely puzzling was that everything appeared to be correctly configured. My solution file was valid, my project files existed at their expected paths, and the directory structure was sound. Yet <code>dotnet restore</code> kept failing with this cryptic message.</p>
+<p>What followed was an extended debugging session that led me from routine troubleshooting into a fundamental architectural issue in how MSBuild identifies projects, one that affects any developer who uses Git worktrees, repository forks, or templates.</p>
+<h2>Part 1: The Investigation</h2>
+<h3>Initial Symptoms</h3>
+<p>My project setup was straightforward:</p>
+<ul>
+<li>A solution containing two projects: <code>UndoRedo.Core</code> and <code>UndoRedo.Test</code></li>
+<li>Custom MSBuild SDKs for centralized configuration</li>
+<li>Centralized package management via <code>Directory.Packages.props</code></li>
+<li>An identical configuration working flawlessly across dozens of other solutions</li>
+</ul>
+<p>The error surfaced specifically during <code>dotnet restore</code> at the solution level. Restoring individual projects worked without issue.</p>
+<h3>Ruling Out the Obvious</h3>
+<p>My first instinct was to verify the fundamentals:</p>
+<ol>
+<li><strong>Directory structure</strong>: was I running the command from the correct location?</li>
+<li><strong>Project file existence</strong>: were the <code>.csproj</code> files actually present on disk?</li>
+<li><strong>Solution file integrity</strong>: was the <code>.sln</code> file well-formed?</li>
+</ol>
+<p>A quick PowerShell check confirmed everything was in order:</p>
+<pre><code class="language-powershell">Get-ChildItem -Path . -Recurse -Include *.csproj, *.sln | Select-Object FullName
+</code></pre>
+<p>All files were present and accounted for:</p>
+<ul>
+<li><code>UndoRedo.Core\UndoRedo.Core.csproj</code></li>
+<li><code>UndoRedo.Test\UndoRedo.Test.csproj</code></li>
+<li><code>UndoRedo.sln</code></li>
+</ul>
+<p>Running <code>dotnet sln list</code> further confirmed that both projects were properly referenced in the solution.</p>
+<h3>Investigating Non-Standard Configuration</h3>
+<p>With the basics eliminated, I turned my attention to the non-standard parts of my setup. I use custom MSBuild SDKs and centralized package management across all my projects, and while both are well-supported features, investigating anything non-standard is sound debugging practice.</p>
+<p>My <code>global.json</code> defined custom SDK versions:</p>
+<pre><code class="language-json">{
+  &quot;sdk&quot;: {
+    &quot;version&quot;: &quot;9.0.300&quot;,
+    &quot;rollForward&quot;: &quot;latestFeature&quot;
+  },
+  &quot;msbuild-sdks&quot;: {
+    &quot;ktsu.Sdk&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.Lib&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.ConsoleApp&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.Test&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.ImGuiApp&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.WinApp&quot;: &quot;1.38.0&quot;,
+    &quot;ktsu.Sdk.WinTest&quot;: &quot;1.38.0&quot;,
+    &quot;MSTest.Sdk&quot;: &quot;3.9.1&quot;
+  }
+}
+</code></pre>
+<p>My project files relied on centralized SDK versioning and centralized package management:</p>
+<pre><code class="language-xml">&lt;Project Sdk=&quot;ktsu.Sdk.Lib&quot;&gt;
+    &lt;ItemGroup&gt;
+        &lt;PackageReference Include=&quot;Microsoft.Extensions.DependencyInjection&quot; /&gt;
+        &lt;PackageReference Include=&quot;Microsoft.Extensions.DependencyInjection.Abstractions&quot; /&gt;
+    &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>The <code>PackageReference</code> elements intentionally omit version numbers because those are managed centrally in <code>Directory.Packages.props</code>. This is the officially recommended approach for both centralized SDK versioning and centralized package management.</p>
+<h3>The Red Herring Problem</h3>
+<p>When I searched online for solutions, the available advice consistently pointed to my non-standard configuration as the likely culprit. Common suggestions included:</p>
+<ul>
+<li>&quot;Specify SDK versions directly in the project file&quot;</li>
+<li>&quot;Custom SDKs in <code>global.json</code> are unreliable&quot;</li>
+<li>&quot;Use standard Microsoft SDKs instead&quot;</li>
+<li>&quot;Centralized package management causes restore issues&quot;</li>
+<li>&quot;Package references without explicit versions are problematic&quot;</li>
+</ul>
+<p>The combination of my non-standard setup and this chorus of advice sent me down a prolonged investigation of both custom SDK resolution and centralized package management. I spent considerable time exploring these directions.</p>
+<p>However, I had one critical piece of conflicting evidence: <strong>the identical configuration was working perfectly across dozens of my other projects.</strong> The same <code>global.json</code>, the same custom SDK versions, the same centralized versioning approach, all functioning flawlessly elsewhere.</p>
+<p>This was the most important insight of the entire investigation. When debugging, trust the known-good configurations. Don&#39;t second-guess working patterns because they&#39;re non-standard.</p>
+<h3>MSBuild Preprocessing as a Check</h3>
+<p>To verify what MSBuild was actually seeing, I used its preprocessing feature:</p>
+<pre><code class="language-powershell">dotnet msbuild -preprocess UndoRedo.Core\UndoRedo.Core.csproj &gt; preprocess.xml
+</code></pre>
+<p>MSBuild was successfully resolving my custom SDK:</p>
+<pre><code>C:\Users\MatthewEdmondson\.nuget\packages\ktsu.sdk.lib\1.38.0\Sdk\Sdk.props
+</code></pre>
+<p>This definitively ruled out SDK resolution as the problem, which left one remaining possibility.</p>
+<h2>Part 2: The Root Cause</h2>
+<h3>The GUID Duplication Hypothesis</h3>
+<p>The last candidate on my list was duplicate project GUIDs. My initial theory was that MSBuild or NuGet maintained some kind of machine-wide cache keyed on project GUIDs. It seemed like the only mechanism through which GUID duplication could cause cross-solution interference.</p>
+<p>When I searched the official documentation for evidence of this theory, I found the opposite. NuGet restore caching is based on package content hashes and project asset files. MSBuild&#39;s caching is generally project-scoped or solution-scoped. There&#39;s no mention of GUID-based machine-wide caching in any official documentation.</p>
+<p>This forced me to dig deeper.</p>
+<h3>The Real Culprit: Build Server State</h3>
+<p>The breakthrough came when I realized the issue wasn&#39;t about persistent disk-based caching, but about <strong>in-memory state held by long-lived build server processes</strong>.</p>
+<p>MSBuild and Visual Studio use project GUIDs to track project identities within a solution&#39;s internal build graph. The NuGet restore cache itself keys off project file paths and inputs, not GUIDs. However, the <code>dotnet build-server</code> and Visual Studio&#39;s MSBuild host processes keep long-lived processes running in memory to improve build performance. When two solutions contain projects with duplicate GUIDs and are built within the same server session, MSBuild&#39;s internal dependency graph can confuse their identities.</p>
+<p>The critical problem is that <strong>developers don&#39;t opt into this behavior.</strong> Build server processes operate invisibly in the background. There&#39;s no indication that state is being shared across solutions, no warning when GUID duplication creates identity conflicts, and no straightforward way to observe what&#39;s happening.</p>
+<blockquote>
+<p><strong>Invisible Build Server Risk</strong></p>
+<p>The dotnet build server and Visual Studio&#39;s build hosts share in-memory project system state to improve performance. When multiple solutions contain projects with the same GUID, these servers can confuse project identities, producing errors like &quot;Unable to find a project to restore.&quot; This happens silently, without opt-in, and without any diagnostic output. This lack of visibility and control creates real risk in standard development workflows.</p>
+<p>This isn&#39;t an experimental feature. The build server processes are standard components that have been part of the .NET ecosystem for years.</p>
+</blockquote>
+<p>Project GUIDs serve several functions in MSBuild&#39;s internal operations:</p>
+<ol>
+<li><strong>Project identity tracking</strong> within solution-level dependency graphs and build orchestration.</li>
+<li><strong>Build server state management</strong>, where long-lived processes maintain project system state in memory.</li>
+<li><strong>Dependency graph resolution</strong>, where MSBuild constructs graphs with GUID-identified nodes for project-to-project references.</li>
+<li><strong>Solution-level build coordination</strong>, where GUIDs help MSBuild coordinate builds across multiple projects.</li>
+</ol>
+<h3>How Duplicate GUIDs Manifest as Failures</h3>
+<p>When two projects share the same GUID, several failure modes emerge in build server contexts:</p>
+<ul>
+<li><strong>Identity confusion</strong>: The build server can&#39;t distinguish between two projects that share a GUID, causing it to associate the wrong metadata or state with a project.</li>
+<li><strong>Dependency graph corruption</strong>: The internal dependency graph becomes invalid when MSBuild encounters what it believes are duplicate entries for the same project.</li>
+<li><strong>Restore target skipping</strong>: The restore process may skip a project entirely because the build server believes it has already been processed, producing the cryptic &quot;Unable to find a project to restore&quot; error.</li>
+</ul>
+<h2>Part 3: Why This Matters Beyond My Bug</h2>
+<h3>Common Sources of Duplicate GUIDs</h3>
+<p>Understanding how duplicate GUIDs arise reveals why this problem is far more common than it might seem:</p>
+<p><strong>Development workflow scenarios:</strong></p>
+<ul>
+<li><strong>Git worktrees</strong>: working on different branches simultaneously creates multiple directory trees with identical GUIDs</li>
+<li><strong>Repository forks</strong>: having both a fork and the upstream repository cloned on the same machine</li>
+<li><strong>Multiple clones</strong>: maintaining separate clones for development, testing, or review</li>
+<li><strong>Copy-paste project creation</strong>: using existing solutions as templates without regenerating GUIDs</li>
+</ul>
+<p><strong>Environment and tooling scenarios:</strong></p>
+<ul>
+<li><strong>Template-based generation</strong>: some tools produce projects with predictable or identical GUIDs</li>
+<li><strong>Shared build agents</strong>: CI/CD agents that build multiple solutions containing the same forked repositories</li>
+<li><strong>Backup and restore</strong>: archived projects coexisting alongside active development copies</li>
+</ul>
+<h3>A Fundamental Design Problem</h3>
+<p>This GUID-based project identification system represents a significant design flaw in MSBuild&#39;s architecture. The issue isn&#39;t merely technical. It&#39;s that the system is incompatible with standard, widely-recommended development practices.</p>
+<p><strong>Git worktrees are standard practice.</strong> Using worktrees to work on multiple branches simultaneously is a documented, recommended Git workflow. Yet this essential feature is fundamentally incompatible with MSBuild&#39;s assumption that GUIDs are globally unique on a machine.</p>
+<p><strong>Repository forking is essential for open source.</strong> The entire open source ecosystem depends on developers forking repositories. A contributor who has both their fork and the upstream repository on the same machine, an entirely routine situation, risks GUID conflicts.</p>
+<p><strong>The uniqueness assumption is structurally broken.</strong> GUIDs were designed as globally unique identifiers, but MSBuild uses them in a context where global uniqueness is impossible to maintain. The moment a repository is cloned, the uniqueness assumption is already broken. The moment a worktree is created, it breaks again.</p>
+<p>The core issue is that MSBuild treats project identity as though projects exist in isolation. In practice, modern development is built on workflows that inherently duplicate project files: branching, forking, templating, and multi-repository setups. By relying on GUID-based identity in long-lived build server memory, without safeguards or diagnostic support, the system creates friction for developers who follow these standard practices.</p>
+<h3>The Diagnostic Difficulty</h3>
+<p>What makes this issue particularly costly is how difficult it is to diagnose:</p>
+<p><strong>Misleading error messages.</strong> &quot;Unable to find a project to restore&quot; strongly suggests missing files when the actual problem is internal state confusion within the build server. Nothing in the error points toward GUID conflicts.</p>
+<p><strong>No warnings or diagnostics.</strong> MSBuild provides no indication when it encounters duplicate GUIDs across solutions. There are no log entries, no warnings, and no diagnostic flags that surface the conflict.</p>
+<p><strong>Inconsistent reproduction.</strong> Because the issue depends on build server state, timing, and the order in which solutions are built, it can appear and disappear unpredictably, making it even harder to isolate.</p>
+<p><strong>Documentation gaps.</strong> There&#39;s no official documentation warning developers that project GUID duplication can cause cross-solution build server confusion. Online searches return advice about SDK paths, NuGet configuration, and project file formatting, none of which address the actual problem.</p>
+<p>I spent significant time investigating SDK resolution, NuGet configuration, and project file integrity before arriving at the root cause. Every one of those avenues was a dead end, because the error message gave no indication that the real issue was project identity conflicts in build server memory.</p>
+<h2>Part 4: The Solution</h2>
+<h3>Detecting GUID Conflicts</h3>
+<p>The following PowerShell script scans all solution files under a directory tree and reports any duplicate project GUIDs:</p>
+<pre><code class="language-powershell"># Find all solution files with better performance and error handling
+Write-Host &quot;Searching for solution files...&quot; -ForegroundColor Yellow
+
+# Exclude common problematic directories and limit depth
+$excludeDirs = @(&#39;node_modules&#39;, &#39;.git&#39;, &#39;bin&#39;, &#39;obj&#39;, &#39;.vs&#39;, &#39;.vscode&#39;, &#39;packages&#39;)
+$solutions = @()
+
+try {
+    $solutions = Get-ChildItem -Path . -Filter &quot;*.sln&quot; -Recurse -Depth 10 -ErrorAction SilentlyContinue |
+        Where-Object {
+            $exclude = $false
+            foreach ($dir in $excludeDirs) {
+                if ($_.FullName -like &quot;*\$dir\*&quot;) {
+                    $exclude = $true
+                    break
+                }
+            }
+            -not $exclude
+        }
+
+    Write-Host &quot;Found $($solutions.Count) solution files&quot; -ForegroundColor Green
+} catch {
+    Write-Host &quot;Error searching for solution files: $($_.Exception.Message)&quot; -ForegroundColor Red
+    return
+}
+
+$projectGuids = @{}
+
+foreach ($sln in $solutions) {
+    Write-Host &quot;Processing: $($sln.Name)&quot; -ForegroundColor Cyan
+    try {
+        $content = Get-Content $sln.FullName -ErrorAction Stop
+        foreach ($line in $content) {
+            if ($line -match &#39;Project\(&quot;.*&quot;\)\s*=\s*&quot;.*&quot;,\s*&quot;.*&quot;,\s*&quot;([^&quot;]+)&quot;&#39;) {
+                $guid = $matches[1]
+                if (-not $projectGuids.ContainsKey($guid)) {
+                    $projectGuids[$guid] = @()
+                }
+                $projectGuids[$guid] += $sln.FullName
+            }
+        }
+    } catch {
+        Write-Host &quot;  Warning: Could not read $($sln.FullName)&quot; -ForegroundColor Yellow
+    }
+}
+
+# Find and report duplicates
+$duplicates = $projectGuids.GetEnumerator() | Where-Object { $_.Value.Count -gt 1 }
+if ($duplicates) {
+    Write-Host &quot;`nFound duplicate project GUIDs:&quot; -ForegroundColor Red
+    foreach ($duplicate in $duplicates) {
+        Write-Host &quot;GUID: $($duplicate.Key)&quot; -ForegroundColor Yellow
+        Write-Host &quot;Found in solutions:&quot; -ForegroundColor White
+        foreach ($solution in $duplicate.Value) {
+            Write-Host &quot;  - $solution&quot; -ForegroundColor Cyan
+        }
+        Write-Host &quot;&quot;
+    }
+} else {
+    Write-Host &quot;`nNo duplicate project GUIDs found.&quot; -ForegroundColor Green
+}
+</code></pre>
+<h3>Resolving Conflicts</h3>
+<p>When the script identifies duplicates, the fix is to generate a new GUID:</p>
+<pre><code class="language-powershell">[guid]::NewGuid().ToString().ToUpper()
+</code></pre>
+<p>Then replace the duplicate GUID in one of the affected solution files, and in the corresponding project file if it contains the GUID as well.</p>
+<h3>Why This Works</h3>
+<p>Assigning a unique GUID forces MSBuild and its build server processes to recognize the project as a distinct entity. This eliminates the ambiguity in the internal dependency graph and resets the project&#39;s identity in the server&#39;s in-memory state.</p>
+<p>This explanation accounts for all the observed symptoms:</p>
+<ul>
+<li>The solution file appeared structurally correct (it was)</li>
+<li>Individual project restores succeeded (no GUID conflict at the project level)</li>
+<li>SDK resolution worked properly (confirmed via preprocessing)</li>
+<li>Solution-level restore failed with a vague error (the build server conflated two projects)</li>
+</ul>
+<h2>Part 5: Lessons and Recommendations</h2>
+<h3>Key Takeaways</h3>
+<ol>
+<li><p><strong>Trust known-good configurations.</strong> When a setup works across dozens of projects and fails in one, the problem is almost certainly specific to that instance rather than a fundamental flaw in the shared approach.</p>
+</li>
+<li><p><strong>MSBuild preprocessing is a useful diagnostic tool.</strong> Running <code>dotnet msbuild -preprocess</code> quickly confirms whether SDK resolution is working, which eliminates an entire category of potential causes.</p>
+</li>
+<li><p><strong>Test at multiple scopes.</strong> Comparing <code>dotnet restore</code> on individual <code>.csproj</code> files versus the entire <code>.sln</code> helps narrow down where the failure actually occurs.</p>
+</li>
+<li><p><strong>Build server state is a hidden variable.</strong> Understanding how <code>dotnet build-server</code> and Visual Studio&#39;s design-time builds maintain state is essential context for debugging restore and build failures.</p>
+</li>
+<li><p><strong>GUID conflicts are real and under-documented.</strong> Project GUID duplication causes genuine build system failures, particularly in the context of long-lived build server processes.</p>
+</li>
+</ol>
+<h3>Debugging Checklist</h3>
+<p>When encountering &quot;Unable to find a project to restore&quot;:</p>
+<ol>
+<li>Verify basic file structure and project locations</li>
+<li>Check <code>global.json</code> SDK configurations</li>
+<li>Validate custom SDK availability via NuGet sources</li>
+<li>Use MSBuild preprocessing to confirm SDK resolution</li>
+<li>Test individual project restore versus solution restore</li>
+<li>Check for duplicate project GUIDs across all solution files</li>
+<li>Shut down build servers with <code>dotnet build-server shutdown</code></li>
+<li>Clear all caches and intermediate files</li>
+<li>Consider recreating the solution file from scratch</li>
+</ol>
+<h3>What Should Change</h3>
+<p>This debugging experience exposed something more significant than a single configuration problem. MSBuild&#39;s GUID-based project identity system silently introduces risk into standard development practices. Developers who use Git worktrees, forks, templates, or multi-repository setups (all common and legitimate workflows) can encounter mysterious build failures caused by invisible coupling through build server memory.</p>
+<p>The current situation places the burden entirely on individual developers to manually detect GUID conflicts using custom scripts, regenerate GUIDs when conflicts occur, understand MSBuild internals to diagnose cryptic errors, and in some cases avoid legitimate development practices to prevent issues from arising.</p>
+<p>Several targeted improvements could address this:</p>
+<ol>
+<li><strong>Replace GUID-based project identity</strong> with path-based or content-based identification for build server state.</li>
+<li><strong>Improve error messages</strong> to indicate GUID conflicts instead of suggesting missing projects.</li>
+<li><strong>Add warnings</strong> when duplicate GUIDs are detected across solutions.</li>
+<li><strong>Document this limitation</strong> and provide guidance for common scenarios like worktrees and forks.</li>
+<li><strong>Consider alternative approaches</strong> to project identity that accommodate modern Git workflows.</li>
+</ol>
+<p>Anyone who has hit this should consider reporting it. The more visibility this problem receives, the more likely it is to be prioritized for a proper fix. This isn&#39;t about demanding perfection from Microsoft&#39;s tooling. It&#39;s about highlighting a specific architectural decision that conflicts with how developers actually work, and that could be resolved with focused effort.</p>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

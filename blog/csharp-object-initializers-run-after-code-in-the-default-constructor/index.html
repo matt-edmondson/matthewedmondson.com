@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C# Object Initializers Run After Code in the Default Constructor | Matt Edmondson</title>
+  <meta name="description" content="How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="C# Object Initializers Run After Code in the Default Constructor | Matt Edmondson" />
+  <meta property="og:description" content="How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-07-18">July 18, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+      </div>
+<h1>C# Object Initializers Run After Code in the Default Constructor</h1>
+<p>Object initializers are one of those C# features that look entirely intuitive on the surface. Declare a new object, set some properties in curly braces, and move on. But beneath that clean syntax lies a specific execution order that, if misunderstood, can produce subtle and frustrating bugs. The rule is simple: the default constructor runs to completion before any property assignments from the object initializer take effect.</p>
+<p>I&#39;ve seen this catch experienced developers off guard more than once. This post covers exactly what that means, why it matters, and how to design a type so the initialization order works for it rather than against it.</p>
+<h2>The Execution Order</h2>
+<p>When an object is instantiated with an object initializer, C# follows a strict two-phase sequence:</p>
+<ol>
+<li>The default (or specified) constructor executes in full</li>
+<li>The properties listed in the object initializer are assigned, one by one, in the order they appear</li>
+</ol>
+<p>There&#39;s no interleaving. The constructor has no awareness that an object initializer will follow, and the object initializer has no ability to influence what happens inside the constructor.</p>
+<h2>What the Ordering Affects</h2>
+<p>Consider a class that logs its own state during construction:</p>
+<pre><code class="language-csharp">public class Person
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+
+    public Person()
+    {
+        Console.WriteLine(&quot;Constructor running...&quot;);
+        Console.WriteLine($&quot;Name: {Name}, Age: {Age}&quot;);
+    }
+}
+
+// Usage
+var person = new Person
+{
+    Name = &quot;John&quot;,
+    Age = 30
+};
+</code></pre>
+<p>The output is:</p>
+<pre><code>Constructor running...
+Name: null, Age: 0
+</code></pre>
+<p>Even though <code>Name</code> and <code>Age</code> are assigned at the call site, the constructor sees only the default values: <code>null</code> for the string and <code>0</code> for the integer. The property assignments haven&#39;t happened yet. If the constructor contained validation logic, branching decisions, or event subscriptions that depended on those property values, it would operate on incomplete data.</p>
+<h2>Collection Initializers</h2>
+<p>Collection initializers follow the same two-phase pattern. The collection&#39;s constructor runs first, and then the compiler generates a series of <code>Add</code> calls:</p>
+<pre><code class="language-csharp">var list = new List&lt;int&gt; { 1, 2, 3 };
+</code></pre>
+<p>This is semantically equivalent to:</p>
+<pre><code class="language-csharp">var list = new List&lt;int&gt;();
+list.Add(1);
+list.Add(2);
+list.Add(3);
+</code></pre>
+<p>This distinction becomes important when working with custom collections. If the <code>Add</code> method performs validation, triggers side effects, or involves synchronization (as in a concurrent collection), those operations execute after construction, not during it. Designing the <code>Add</code> method with that ordering in mind prevents a class of initialization bugs.</p>
+<h2>Common Pitfalls</h2>
+<p>This execution order creates several recurring traps:</p>
+<ol>
+<li><p><strong>Constructor-time validation</strong>: A constructor that validates property values will always see default values when paired with an object initializer. The validation runs before the caller has had any opportunity to set the properties.</p>
+</li>
+<li><p><strong>Dependent properties</strong>: Computed or derived properties that depend on other properties being populated will produce incorrect results if evaluated in the constructor.</p>
+</li>
+<li><p><strong>Event wiring</strong>: If the constructor subscribes to events or registers callbacks that reference property values, those handlers will capture the default values rather than the values the caller intended.</p>
+</li>
+</ol>
+<h2>Safer Patterns</h2>
+<p>Each of the following patterns avoids the two-phase initialization problem by ensuring that all required data is available at construction time.</p>
+<h3>1. Immutable Objects with Parameterized Constructors</h3>
+<p>The most straightforward approach is to require all necessary values as constructor parameters:</p>
+<pre><code class="language-csharp">public class Person
+{
+    public string Name { get; }
+    public int Age { get; }
+
+    public Person(string name, int age)
+    {
+        Name = name;
+        Age = age;
+    }
+}
+
+// Usage
+var person = new Person(&quot;John&quot;, 30);
+</code></pre>
+<p>This guarantees three things: every property is set before any constructor logic that depends on it, properties can&#39;t be mutated after creation, and the object is never in a partially initialized state.</p>
+<h3>2. Record Types (C# 9+)</h3>
+<p>Record types express the same intent with far less ceremony:</p>
+<pre><code class="language-csharp">public record Person(string Name, int Age);
+
+// Usage
+var person = new Person(&quot;John&quot;, 30);
+
+// Records support deconstruction
+var (name, age) = person;
+</code></pre>
+<p>Records provide immutable properties, value-based equality, built-in deconstruction, and a concise positional syntax. For data-carrying types where identity is defined by the values rather than by reference, records are the idiomatic choice in modern C#.</p>
+<h3>3. Factory Methods with Private Constructors</h3>
+<p>When construction involves validation, transformation, or conditional logic that shouldn&#39;t be the caller&#39;s concern, a factory method paired with a private constructor provides a clean separation:</p>
+<pre><code class="language-csharp">public class Person
+{
+    public string Name { get; }
+    public int Age { get; }
+
+    private Person(string name, int age)
+    {
+        Name = name;
+        Age = age;
+    }
+
+    public static Person Create(string name, int age)
+    {
+        return new Person(name, age);
+    }
+}
+
+// Usage
+var person = Person.Create(&quot;John&quot;, 30);
+</code></pre>
+<p>Because the constructor is private, callers can&#39;t use object initializers or bypass the factory method. All creation logic is centralized in one place, and the object is always fully initialized before it becomes accessible.</p>
+<h3>4. Builder Pattern</h3>
+<p>When an object has many optional properties or when the construction process involves multiple steps, the Builder pattern provides a fluent API that accumulates configuration before producing the final object:</p>
+<pre><code class="language-csharp">public class PersonBuilder
+{
+    private string name;
+    private int age;
+
+    public PersonBuilder WithName(string name)
+    {
+        this.name = name;
+        return this;
+    }
+
+    public PersonBuilder WithAge(int age)
+    {
+        this.age = age;
+        return this;
+    }
+
+    public Person Build()
+    {
+        return new Person(name, age);
+    }
+}
+
+// Usage
+var person = new PersonBuilder()
+    .WithName(&quot;John&quot;)
+    .WithAge(30)
+    .Build();
+</code></pre>
+<p>The builder accumulates state incrementally, but the target object is constructed atomically. Validation can run inside <code>Build()</code>, ensuring the final object meets all invariants.</p>
+<h2>Best Practices</h2>
+<ol>
+<li><p><strong>Favor immutability.</strong> Objects that are fully initialized at construction time and can&#39;t be modified afterward eliminate an entire category of state-related bugs. This is doubly true when object initializers are involved, because mutable properties invite the two-phase initialization trap.</p>
+</li>
+<li><p><strong>Use constructor parameters for required data.</strong> If a property must be set for the object to function correctly, make it a constructor parameter. This turns a runtime surprise into a compile-time error.</p>
+</li>
+<li><p><strong>Validate early, validate in the constructor.</strong> When using parameterized constructors, the constructor is the natural place for input validation. The object either constructs successfully in a valid state or throws before it ever exists.</p>
+</li>
+<li><p><strong>Reserve object initializers for optional, non-critical properties.</strong> Object initializers work well for configuration-style properties that have sensible defaults. They&#39;re a poor fit for properties that drive core behavior.</p>
+</li>
+<li><p><strong>Remember that collection initializers follow the same rules.</strong> The <code>Add</code> calls happen after construction, so any constructor logic in a custom collection won&#39;t see the initial items.</p>
+</li>
+</ol>
+<h2>Under the Hood</h2>
+<p>The C# compiler transforms object initializer syntax into a constructor call followed by a sequence of property setter calls. Examining the generated IL makes the ordering unambiguous:</p>
+<pre><code class="language-il">// Create new instance
+IL_0000: newobj instance void Person::.ctor()
+IL_0005: dup
+
+// Set Name property
+IL_0006: ldstr &quot;John&quot;
+IL_000B: callvirt instance void Person::set_Name(string)
+IL_0010: dup
+
+// Set Age property
+IL_0011: ldc.i4.s 30
+IL_0013: callvirt instance void Person::set_Age(int32)
+</code></pre>
+<p>The <code>newobj</code> instruction runs the constructor. Only after it returns do the <code>callvirt</code> instructions execute the property setters. There&#39;s no mechanism for the constructor to defer to or interleave with the initializer. They&#39;re separate operations at the IL level.</p>
+<p>These transformations are easy to explore directly with tools like <a href="https://sharplab.io/">SharpLab</a> or <a href="https://dotnetfiddle.net/">.NET Fiddle</a>.</p>
+<h2>Conclusion</h2>
+<p>The execution order of object initializers in C# is deterministic and well-defined: the constructor runs first, and property assignments follow. This isn&#39;t a quirk or an edge case. It&#39;s a fundamental aspect of how the language compiles initializer syntax. Understanding this ordering is essential for writing constructors that behave predictably and for choosing initialization patterns that keep an object in a consistent state from the moment it is created.</p>
+<p>For the authoritative specification, see the <a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">Microsoft documentation on Object and Collection Initializers</a>.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#object-initializers">C# Language Specification</a></li>
+<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">C# Object Initializers Documentation</a></li>
+<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers#collection-initializers">C# Collection Initializers Documentation</a></li>
+<li><a href="https://refactoring.guru/design-patterns/factory-method">Factory Method Pattern</a></li>
+<li><a href="https://refactoring.guru/design-patterns/builder">Builder Pattern</a></li>
+<li><a href="https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Binder/Binder_Expressions.cs">Roslyn Compiler Source</a></li>
+<li><a href="https://sharplab.io/">SharpLab</a> - Interactive C# compiler explorer</li>
+</ul>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

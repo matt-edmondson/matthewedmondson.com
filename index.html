@@ -265,6 +265,27 @@
     .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
 
     .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
 </style>
 </head>
 <body>
@@ -315,17 +336,32 @@
       <h2>Writing</h2>
       <ul class="post-list">
         <li>
-          <h3><a href="/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/">C# Object Initializers Run After Code in the Default Constructor</a></h3>
-          <time datetime="2025-07-18">July 18, 2025</time>
-          <p>How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior.</p>
+          <h3><a href="/blog/csharp-linq-except-builds-its-own-set/">Why C# LINQ Except Builds Its Own Set Instead of Calling Contains</a></h3>
+          <time datetime="2026-06-24">June 24, 2026</time>
+          <p>A close look at how LINQ's Except works, why it never delegates to the collection's Contains, and how that changes when to materialize a query and which container to use.</p>
         </li>
         <li>
-          <h3><a href="/blog/dotnet-project-guid-conflicts-build-server-debugging/">Debugging the Mysterious 'Unable to find a project to restore' Error in .NET</a></h3>
-          <time datetime="2025-06-14">June 14, 2025</time>
-          <p>Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks.</p>
+          <h3><a href="/blog/direct-and-empowering-coaching-style/">Direct and Empowering: A Coaching Style That Trusts People With Authority</a></h3>
+          <time datetime="2026-04-30">April 30, 2026</time>
+          <p>Why I lead with recognition, follow with pressure, and try to give the people I coach authority over their work rather than just instructions about it.</p>
+        </li>
+        <li>
+          <h3><a href="/blog/crisis-mode-composure-authoring-postmortems/">Crisis-Mode Composure: Authoring Postmortems, Not Pointing Fingers</a></h3>
+          <time datetime="2026-04-27">April 27, 2026</time>
+          <p>Two infrastructure crises played out the same way. Stay calm, work the problem, communicate steadily, recognize the people who got through it alongside the team, and write the postmortem rather than pointing fingers. A producer's playbook for crisis composure as a learnable practice.</p>
+        </li>
+        <li>
+          <h3><a href="/blog/scope-discipline-as-structural-defense/">Scope Discipline as Structural Defense</a></h3>
+          <time datetime="2026-04-14">April 14, 2026</time>
+          <p>Defending project scope is a structural problem, not a personal one. The escalation curve runs from gentle reminders to admin-level locks, and each step is a defense against drift rather than an attack on someone's judgment.</p>
+        </li>
+        <li>
+          <h3><a href="/blog/zero-trust-for-unreal-development/">Zero-Trust for Unreal Development</a></h3>
+          <time datetime="2026-03-26">March 26, 2026</time>
+          <p>Every change reaches main through the same gate (PR, review, CI), with review scaling to risk and the failsafe itself subject to review. The principle, the threat model, and how the approach actually works inside an Unreal studio.</p>
         </li>
       </ul>
-      <p class="all-posts"><a href="/blog/">All 2 posts &rarr;</a></p>
+      <p class="all-posts"><a href="/blog/">All 14 posts &rarr;</a></p>
     </section>
 
     <div class="links">

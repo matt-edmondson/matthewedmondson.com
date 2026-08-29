@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Threading and Synchronization Patterns in Production .NET Libraries | Matt Edmondson</title>
+  <meta name="description" content="Practical threading patterns from production .NET code, including lock objects as parameters, thread dispatch queues, ReaderWriterLockSlim vs Lock, and how to actually test for thread safety." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/csharp-threading-synchronization-patterns-production-libraries/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Threading and Synchronization Patterns in Production .NET Libraries | Matt Edmondson" />
+  <meta property="og:description" content="Practical threading patterns from production .NET code, including lock objects as parameters, thread dispatch queues, ReaderWriterLockSlim vs Lock, and how to actually test for thread safety." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/csharp-threading-synchronization-patterns-production-libraries/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-09-02">September 2, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+      </div>
+<h1>Threading and Synchronization Patterns in Production .NET Libraries</h1>
+<p>Threading bugs occupy a uniquely miserable position in the taxonomy of software defects. They&#39;re intermittent, resistant to reproduction, and frequently invisible until the system is under real load in production. After maintaining dozens of .NET libraries that must be thread-safe, I&#39;ve converged on a set of patterns that make concurrency explicit, testable, and, above all, predictable.</p>
+<p>This post walks through the threading patterns I use across the ktsu.dev library ecosystem, illustrated with code drawn from production libraries.</p>
+<h2>Pattern 1: Lock Objects as Parameters</h2>
+<p>The most common threading mistake I encounter is synchronization hidden inside a class where callers can&#39;t see or coordinate with it. The ktsu.dev libraries take a different approach: <strong>make the lock object a parameter</strong>.</p>
+<pre><code class="language-csharp">public static TDest DeepClone&lt;TItem, TDest&gt;(
+    this IEnumerable&lt;TItem&gt; items, object lockObj)
+    where TItem : class, IDeepCloneable&lt;TItem&gt;
+    where TDest : ICollection&lt;TItem&gt;, new()
+{
+    ArgumentNullException.ThrowIfNull(items);
+    ArgumentNullException.ThrowIfNull(lockObj);
+    lock (lockObj)
+    {
+        return DeepClone&lt;TItem, TDest&gt;(items);
+    }
+}
+</code></pre>
+<p>The rationale for passing the lock object in from the caller is straightforward: the <strong>caller</strong> is the one who understands the broader synchronization context. If the lock is buried inside the method, callers must trust that the internal lock covers everything they need coordinated, and in practice, it rarely does. Two operations that are individually thread-safe can still produce a race condition when composed, unless they share the same lock.</p>
+<p>This pattern makes threading contracts explicit in three ways:</p>
+<ul>
+<li>The method signature declares that synchronization is required. It&#39;s part of the API surface, not an implementation detail.</li>
+<li>The caller chooses which lock to use, enabling coordination across multiple operations that must appear atomic.</li>
+<li>Null validation on the lock object catches accidental omissions at the point of call rather than producing mysterious behavior later.</li>
+</ul>
+<p>The naming convention reinforces visibility. Methods that accept a lock object use signatures like <code>ForEach(lockObj, action)</code> or <code>DeepClone&lt;T&gt;(items, lockObj)</code>, so the threading requirement is apparent at every call site without consulting documentation.</p>
+<h2>Pattern 2: Thread Dispatch Queues</h2>
+<p>When operations must execute on a specific thread (UI updates, GPU resource access, or single-threaded subsystems), a dispatch queue is a cleaner solution than scattering <code>Invoke</code> calls throughout the codebase. The <a href="https://github.com/ktsu-dev/Invoker">Invoker</a> library implements this pattern:</p>
+<pre><code class="language-csharp">public class Invoker
+{
+    private int ThreadId { get; } = Environment.CurrentManagedThreadId;
+    internal ConcurrentQueue&lt;Task&gt; TaskQueue { get; } = new();
+
+    public async Task InvokeAsync(Action func)
+    {
+        Ensure.NotNull(func);
+
+        if (ThreadId == Environment.CurrentManagedThreadId)
+        {
+            func();  // Same thread — execute immediately
+            return;
+        }
+
+        Task task = new(func);
+        TaskQueue.Enqueue(task);
+        await task.ConfigureAwait(false);
+    }
+
+    public void DoInvokes()
+    {
+        if (ThreadId != Environment.CurrentManagedThreadId)
+        {
+            throw new InvalidOperationException(
+                &quot;This method must be called on the thread that created the Invoker instance.&quot;);
+        }
+
+        while (TaskQueue.TryDequeue(out Task? task))
+        {
+            task.RunSynchronously();
+        }
+    }
+}
+</code></pre>
+<p>The design follows four principles:</p>
+<ol>
+<li><strong>Capture the thread identity at construction.</strong> The <code>Invoker</code> remembers which thread owns it, establishing the contract for the lifetime of the object.</li>
+<li><strong>Same-thread calls bypass the queue entirely.</strong> If the calling code is already on the correct thread, queueing would add latency for no benefit.</li>
+<li><strong>Cross-thread calls enqueue and await.</strong> The caller blocks (asynchronously) until the owning thread processes the work, providing a clear completion signal.</li>
+<li><strong>The owning thread drains the queue on its own schedule.</strong> Typically this happens in an update loop or frame tick, giving the owning thread full control over when queued work executes.</li>
+</ol>
+<p><code>ConcurrentQueue&lt;Task&gt;</code> handles the thread-safe producer-consumer mechanics. <code>ConfigureAwait(false)</code> prevents deadlocks by avoiding attempts to resume on the original synchronization context. The thread ID check in <code>DoInvokes</code> turns misuse (calling it from the wrong thread) into an immediate, diagnosable exception rather than a silent corruption.</p>
+<p>This pattern is used throughout the <a href="https://github.com/ktsu-dev/ImGuiApp">ImGuiApp</a> framework to marshal operations onto the render thread:</p>
+<pre><code class="language-csharp">public static Invoker Invoker { get; internal set; } = null!;
+
+// From any thread:
+await ImGuiApp.Invoker.InvokeAsync(() =&gt; UpdateTexture(newData));
+</code></pre>
+<h2>Pattern 3: Preventing Overlapping Execution</h2>
+<p>The <a href="https://github.com/ktsu-dev/IntervalAction">IntervalAction</a> library runs an action on a recurring timer, but it must guarantee that a slow execution doesn&#39;t overlap with the next scheduled run. Overlapping periodic work is a common source of resource contention and data corruption:</p>
+<pre><code class="language-csharp">public class IntervalAction
+{
+    private Lock Lock { get; } = new();
+    internal bool ShouldPoll { get; set; }
+    internal Task? ActionTask { get; set; }
+    internal DateTimeOffset LastRunTime { get; set; } = DateTimeOffset.MinValue;
+
+    internal bool TryRun()
+    {
+        // Check if previous task completed (and propagate exceptions)
+        if (ActionTask?.IsCompleted ?? false)
+        {
+            if (ActionTask.Exception is not null)
+                throw ActionTask.Exception.GetBaseException();
+            ActionTask = null;
+        }
+
+        DateTimeOffset lastRunTime;
+        lock (Lock) { lastRunTime = LastRunTime; }
+
+        if (ActionInterval &gt;= TimeSpan.Zero
+            &amp;&amp; ActionTask is null
+            &amp;&amp; DateTimeOffset.Now - lastRunTime &gt; ActionInterval)
+        {
+            ActionTask = Task.Run(() =&gt;
+            {
+                if (IntervalType == IntervalType.FromLastStart)
+                    lock (Lock) { LastRunTime = DateTimeOffset.Now; }
+
+                Action();
+
+                if (IntervalType == IntervalType.FromLastCompletion)
+                    lock (Lock) { LastRunTime = DateTimeOffset.Now; }
+            });
+
+            return true;
+        }
+        return false;
+    }
+}
+</code></pre>
+<p>Several deliberate decisions shape this implementation:</p>
+<ul>
+<li><strong>The <code>ActionTask is null</code> check guards against overlap.</strong> If the previous task is still running, <code>TryRun</code> returns without starting another. The null check acts as a non-blocking gate.</li>
+<li><strong>Lock scopes are kept minimal.</strong> The lock protects only the reads and writes of <code>LastRunTime</code>, not the action itself. Holding a lock for the duration of the user&#39;s action would serialize all callers and defeat the purpose of asynchronous execution.</li>
+<li><strong>Two interval modes serve different use cases.</strong> <code>FromLastStart</code> records the timestamp before the action begins, producing a fixed rhythm regardless of execution time. <code>FromLastCompletion</code> records it after the action finishes, ensuring a minimum gap between the end of one run and the start of the next. The choice depends on whether the caller needs consistent scheduling or consistent cooldown.</li>
+<li><strong>Exceptions propagate on the next poll</strong> rather than being silently swallowed. This ensures that failures in periodic work surface promptly instead of accumulating unnoticed.</li>
+</ul>
+<h2>Pattern 4: ReaderWriterLockSlim to Lock Migration</h2>
+<p>.NET 9 introduced the <code>Lock</code> type, which is simpler, faster, and doesn&#39;t require disposal. For libraries that multi-target across framework versions, both mechanisms must coexist. The <a href="https://github.com/ktsu-dev/MachineMonitor">MachineMonitor</a> project demonstrates this with conditional compilation:</p>
+<pre><code class="language-csharp">public record MetricHistory(TimeSpan Duration, string Unit = &quot;&quot;) : IDisposable
+{
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly ReaderWriterLockSlim _lock = new();
+#endif
+
+    public float Current
+    {
+        get
+        {
+#if NET9_0_OR_GREATER
+            lock (_lock) { return Values.Count &gt; 0 ? Values.Back() : 0; }
+#else
+            try
+            {
+                _lock.EnterReadLock();
+                return Values.Count &gt; 0 ? Values.Back() : 0;
+            }
+            finally { _lock.ExitReadLock(); }
+#endif
+        }
+    }
+
+    public void Add(float value)
+    {
+#if NET9_0_OR_GREATER
+        lock (_lock) { /* write logic */ }
+#else
+        try
+        {
+            _lock.EnterWriteLock();
+            // same write logic
+        }
+        finally { _lock.ExitWriteLock(); }
+#endif
+    }
+}
+</code></pre>
+<p>The selection criteria are straightforward:</p>
+<ul>
+<li><strong><code>Lock</code> (.NET 9+)</strong>: The default choice for new code. It&#39;s simpler to use, doesn&#39;t require <code>IDisposable</code> implementation, and performs well for general-purpose mutual exclusion.</li>
+<li><strong><code>ReaderWriterLockSlim</code></strong>: Justified when the workload has many concurrent readers and infrequent writers. The read/write distinction allows readers to proceed in parallel, which can meaningfully improve throughput in read-heavy scenarios.</li>
+<li><strong><code>lock</code> on <code>object</code></strong>: Still correct for simple cases on older target frameworks, but <code>Lock</code> is strictly superior on .NET 9+.</li>
+</ul>
+<p>The <code>try/finally</code> approach with <code>ReaderWriterLockSlim</code> is verbose, but it&#39;s non-negotiable. If the protected code throws an exception, the lock must still be released. Omitting the <code>finally</code> block risks deadlocking the entire application on the next access attempt.</p>
+<h2>Pattern 5: Thread-Safe Singletons</h2>
+<p>The <a href="https://github.com/ktsu-dev/CredentialCache">CredentialCache</a> library uses a singleton with an additional constraint: it must be configurable <em>before</em> first access, and configuration must be impossible afterward:</p>
+<pre><code class="language-csharp">public sealed class CredentialCache : IDisposable
+{
+    private static readonly object _lock = new();
+    private static CredentialCache? _instance;
+    private static IPersistenceProvider&lt;string&gt;? _persistenceProvider;
+
+    public static CredentialCache Instance
+    {
+        get
+        {
+            lock (_lock)
+            {
+                if (_instance is null)
+                {
+                    _persistenceProvider ??= CreateDefaultPersistenceProvider();
+                    _instance = new CredentialCache(_persistenceProvider);
+                }
+                return _instance;
+            }
+        }
+    }
+
+    public static void ConfigurePersistenceProvider(
+        IPersistenceProvider&lt;string&gt; persistenceProvider)
+    {
+        lock (_lock)
+        {
+            if (_instance is not null)
+                throw new InvalidOperationException(
+                    &quot;Cannot configure after instance has been created.&quot;);
+            _persistenceProvider = persistenceProvider;
+        }
+    }
+}
+</code></pre>
+<p>The design centers on a single shared lock that governs both configuration and instance creation. <code>ConfigurePersistenceProvider</code> and <code>Instance</code> contend on the same lock, so the ordering invariant (configure before access) is enforced mechanically rather than by documentation alone. An <code>InvalidOperationException</code> at runtime makes violations immediately visible.</p>
+<p>For the credential data itself, the class relies on <code>ConcurrentDictionary</code> rather than manual locking:</p>
+<pre><code class="language-csharp">private ConcurrentDictionary&lt;PersonaGUID, Credential&gt; Credentials { get; }
+
+public bool TryGet(PersonaGUID guid, out Credential? credential) =&gt;
+    Data.Credentials.TryGetValue(guid, out credential);
+</code></pre>
+<p>The guideline here is simple: use <code>ConcurrentDictionary</code> when individual operations are independent and self-contained. Use explicit locking when multiple operations must appear atomic, such as a read-then-write sequence where the write depends on the result of the read.</p>
+<h2>Testing for Thread Safety</h2>
+<p>Thread safety that is not tested is thread safety that does not exist. The following patterns are designed to surface real concurrency bugs, not just verify single-threaded correctness.</p>
+<h3>Concurrent Access Stress Tests</h3>
+<p>The goal is to hammer a shared resource from multiple threads simultaneously, verifying that every operation produces the correct result:</p>
+<pre><code class="language-csharp">[TestMethod]
+public void CredentialCacheIsThreadSafeUnderConcurrentAccess()
+{
+    var cache = CredentialCache.Instance;
+    int numberOfThreads = 10;
+    int operationsPerThread = 100;
+    List&lt;Task&gt; tasks = [];
+
+    for (int i = 0; i &lt; numberOfThreads; i++)
+    {
+        tasks.Add(Task.Run(() =&gt;
+        {
+            for (int j = 0; j &lt; operationsPerThread; j++)
+            {
+                var guid = CredentialCache.CreatePersonaGUID();
+                var credential = factory.Create();
+                cache.AddOrReplace(guid, credential);
+                bool result = cache.TryGet(guid, out var retrieved);
+                Assert.IsTrue(result);
+                Assert.AreEqual(credential, retrieved);
+            }
+        }));
+    }
+
+    Task.WaitAll([.. tasks]);
+}
+</code></pre>
+<p>Ten threads each performing a hundred add-then-retrieve cycles creates a high probability of interleaving. If any synchronization is missing, the assertions will fail intermittently. That&#39;s exactly the failure mode a test suite should catch before production does.</p>
+<h3>No-Overlap Verification</h3>
+<p>This test verifies that the overlap-prevention logic in <code>IntervalAction</code> actually works under timing pressure:</p>
+<pre><code class="language-csharp">[TestMethod]
+public async Task NoOverlappingExecutions()
+{
+    int executions = 0;
+    var options = new IntervalActionOptions
+    {
+        PollingInterval = TimeSpan.FromMilliseconds(50),
+        ActionInterval = TimeSpan.FromMilliseconds(100),
+        Action = () =&gt;
+        {
+            Interlocked.Increment(ref executions);
+            Thread.Sleep(500);  // Simulate slow work
+        }
+    };
+
+    var action = IntervalAction.Start(options);
+    await Task.Delay(1200);
+    action.Stop();
+
+    // If overlapping occurred, executions would be much higher
+    Assert.IsTrue(executions &lt;= 3);
+}
+</code></pre>
+<p>The action takes 500ms but is polled every 50ms with a 100ms interval. Without overlap prevention, the system would start many concurrent executions. The assertion that <code>executions &lt;= 3</code> verifies that the guard is working. Note the use of <code>Interlocked.Increment</code>. A bare <code>executions++</code> would itself be a race condition, and the test would be unreliable for the exact reason it&#39;s trying to test.</p>
+<h3>Parallel Clone Independence</h3>
+<p>This test confirms that deep cloning under concurrent access produces truly independent copies:</p>
+<pre><code class="language-csharp">[TestMethod]
+public void ConcurrentDeepClone_ProducesIndependentCopies()
+{
+    var original = new ComplexObject { Id = 1, Name = &quot;Parent&quot; };
+    ConcurrentBag&lt;ComplexObject&gt; results = [];
+
+    Parallel.For(0, 100, _ =&gt;
+    {
+        var clone = original.DeepClone();
+        results.Add(clone);
+    });
+
+    Assert.AreEqual(100, results.Count);
+    foreach (var clone in results)
+    {
+        clone.Id = 999;  // Mutate clone
+    }
+    Assert.AreEqual(1, original.Id);  // Original unchanged
+}
+</code></pre>
+<p><code>ConcurrentBag&lt;T&gt;</code> is the appropriate collection here because it&#39;s optimized for scenarios where threads both add and consume items, and it handles concurrent additions without external locking. The test mutates every clone and then verifies the original is untouched, confirming true value independence.</p>
+<h2>Summary of Patterns</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>When to Use</th>
+<th>Key Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Lock as parameter</td>
+<td>Caller needs to coordinate multiple operations</td>
+<td><code>object</code> + <code>lock</code></td>
+</tr>
+<tr>
+<td>Thread dispatch queue</td>
+<td>Operations must run on a specific thread</td>
+<td><code>ConcurrentQueue&lt;Task&gt;</code></td>
+</tr>
+<tr>
+<td>Overlap prevention</td>
+<td>Periodic actions that shouldn&#39;t stack</td>
+<td><code>Task</code> null-check + <code>Lock</code></td>
+</tr>
+<tr>
+<td>ReaderWriterLockSlim</td>
+<td>Many readers, few writers</td>
+<td><code>ReaderWriterLockSlim</code></td>
+</tr>
+<tr>
+<td>Lock (.NET 9+)</td>
+<td>General-purpose mutual exclusion</td>
+<td><code>Lock</code></td>
+</tr>
+<tr>
+<td>Thread-safe singleton</td>
+<td>Lazy initialization with pre-configuration</td>
+<td><code>lock</code> + null check</td>
+</tr>
+<tr>
+<td>Interlocked</td>
+<td>Simple counters and flags</td>
+<td><code>Interlocked.Increment</code></td>
+</tr>
+</tbody></table></div>
+<p>The common thread across all of these patterns is <strong>making concurrency visible</strong>. Lock parameters in method signatures, thread ID checks that throw on violation, naming conventions that call out synchronization requirements. These all resist the natural tendency for threading concerns to become invisible and, consequently, broken. When concurrency is explicit in the API surface, it becomes something the team reasons about deliberately rather than something that fails silently under load.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/ktsu-dev/Invoker">ktsu.dev Invoker library</a></li>
+<li><a href="https://github.com/ktsu-dev/IntervalAction">ktsu.dev IntervalAction library</a></li>
+<li><a href="https://github.com/ktsu-dev/CredentialCache">ktsu.dev CredentialCache library</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.threading.lock">System.Threading.Lock (.NET 9)</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim">ReaderWriterLockSlim</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2">ConcurrentDictionary&lt;TKey,TValue&gt;</a></li>
+</ul>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Four Themes of ktsu.dev | Matt Edmondson</title>
+  <meta name="description" content="ktsu.dev is the open-source .NET project I have been building since 2023. The libraries vary in size and scope, but they share four principles that govern what I will build and what I won't. This is the design philosophy underneath the library catalog." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-themes-of-ktsu-dev/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="The Four Themes of ktsu.dev | Matt Edmondson" />
+  <meta property="og:description" content="ktsu.dev is the open-source .NET project I have been building since 2023. The libraries vary in size and scope, but they share four principles that govern what I will build and what I won't. This is the design philosophy underneath the library catalog." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-themes-of-ktsu-dev/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-11-19">November 19, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+      </div>
+<h1>The Four Themes of ktsu.dev</h1>
+<p><code>ktsu.dev</code> is the open-source .NET project I&#39;ve been building since 2023. The catalog has grown to something like thirty NuGet packages (type-safety libraries, data-management libraries, build-tooling libraries, UI libraries), and the temptation, when describing it, is to enumerate the packages and let the catalog speak for itself.</p>
+<p>That framing misses what actually matters. The libraries vary substantially in size and scope, but they share a small number of design commitments that determine which libraries I&#39;ll build, which problems I&#39;ll address, and which compromises I won&#39;t make. The commitments come first. The catalog follows from them.</p>
+<p>This post is the four themes underneath ktsu.dev, what each one means in practice, and what the project deliberately is not trying to be.</p>
+<h2>Theme 1: Semantic Clarity Through Strong Typing</h2>
+<p>The first commitment is that code should communicate intent at compile time, and the type system is the main tool for that.</p>
+<p>The bug class this is aimed at is primitive obsession, the failure mode where everything in an application is a <code>string</code>, a <code>double</code>, or an <code>int</code>, and the compiler can do nothing to distinguish between user IDs and email addresses, between distances and durations, between absolute paths and relative paths. The compiler reduces to a syntax checker, and every distinction that matters becomes a code-review or a runtime-check responsibility.</p>
+<p>The ktsu position is that the cost of defining types is paid once, and the value of those types being unmistakable is collected across every function signature, every parameter, every assignment, every refactor. The most explicit expression of this is <code>ktsu.Semantics</code>, which provides semantic-string types, path types, and physics quantities with built-in validation and zero runtime cost. But the theme runs through other libraries too (typed handles instead of opaque tokens, typed identifiers instead of strings, typed configurations instead of dictionaries).</p>
+<p>The plain version of the principle is this. If the domain has a concept, give it a type, and let the compiler do the work. Most projects underuse this. The libraries make it cheap.</p>
+<h2>Theme 2: Simplified and Streamlined APIs</h2>
+<p>The second commitment is that the right amount of boilerplate is the smallest amount that still leaves the design comprehensible, and the library&#39;s job is to remove the boilerplate without obscuring the model.</p>
+<p>This shows up most visibly in libraries like <code>AppDataStorage</code>, where the entire API for persisting a settings type is &quot;inherit from <code>AppData&lt;T&gt;</code>, call <code>LoadOrCreate()</code>.&quot; The library handles the parts that would otherwise be ceremonial (directory creation, JSON serialization, atomic writes, backup management) without exposing them to the consumer. The consumer&#39;s code stays focused on the domain.</p>
+<p>The theme also shows up in <code>Extensions</code>, the utility library where small, frequently-needed operations get a single short name instead of a multi-line idiom. Checking whether a collection is null or empty should be one short method, not three lines of guard clauses scattered through every function that uses a collection.</p>
+<p>There&#39;s a line I&#39;m conscious of here. Simplified isn&#39;t the same as magic. A library that&#39;s &quot;easy to use because it does everything behind the scenes&quot; is the wrong kind of easy. The consumer ends up not understanding what the library is doing, and the first time something breaks they have no model to repair it with. The ktsu approach is to make the common case short while keeping the uncommon case possible. Sensible defaults plus visible escape hatches.</p>
+<p>The test is simple. Every library should make the new user productive in their first hour, and should still make the same library productive for the user who&#39;s been with it for three years and wants to do something it didn&#39;t anticipate.</p>
+<h2>Theme 3: Designed for Maintainability</h2>
+<p>The third commitment is to libraries that are nice to live with, not just nice to introduce.</p>
+<p>This is the theme that&#39;s easiest to articulate as principles and hardest to evaluate from the outside. It looks like consistent patterns across the library catalog, thorough documentation that doesn&#39;t lie about edge cases, comprehensive test coverage so refactors don&#39;t break consumers, clear deprecation paths when something has to change, and semantic-version discipline so consumers can predict the impact of an upgrade.</p>
+<p>A few specific properties this produces.</p>
+<p><strong>Predictable upgrade behavior.</strong> A <code>1.x</code> to <code>1.y</code> upgrade is non-breaking for consumers. A <code>2.x</code> upgrade may require code changes, but those changes are documented in a CHANGELOG entry that names the breaking change and the migration path. Consumers can decide whether to upgrade based on a real cost estimate.</p>
+<p><strong>Self-explanatory exception messages.</strong> When a ktsu library throws, the message names the input that caused the throw, the constraint that was violated, and where to look for documentation. The most expensive part of debugging library-thrown exceptions is working out what the library was trying to say, and that shouldn&#39;t be expensive.</p>
+<p><strong>Tests that double as examples.</strong> The test projects for most ktsu libraries are written readably enough that a consumer can use them as a usage reference. The intent is that someone reading the tests learns how the library is supposed to be used, not just whether it works.</p>
+<p><strong>A single shared SDK</strong> (<code>ktsu.Sdk</code>) that handles cross-cutting build, packaging, and metadata concerns across the catalog. Adding a new library starts from a known-good baseline, and bug fixes to the SDK propagate to every library. The downside is that the libraries are tightly coupled to the SDK. The upside is that they&#39;re consistent in ways that hand-rolled project files never are.</p>
+<p>This theme matters because most libraries a project depends on aren&#39;t libraries it will only use once. The team will upgrade them, hit edge cases, and need to read the source the first time something doesn&#39;t behave as expected. A library designed for maintenance over years is a substantially different thing to live with than a library that was built for an initial release and then frozen.</p>
+<h2>Theme 4: Leveraging Modern .NET Tooling</h2>
+<p>The fourth commitment is to take advantage of where .NET is now, not pretend it&#39;s still 2015.</p>
+<p>This shows up in obvious ways (multi-targeting from <code>netstandard2.1</code> through <code>net10.0</code>, async/await everywhere it&#39;s appropriate, nullable reference types enabled and honored, source generators where they buy real value, span-based APIs in performance-sensitive code). It also shows up in less obvious ways, like using the new <code>Lock</code> type on .NET 9+ for synchronization, using generic math features where they reduce code duplication, and using analyzer packages to keep code consistent across the catalog.</p>
+<p>The principle that drives it is that modern .NET is a meaningfully better platform than .NET Framework, .NET Core 3.1, or .NET 5. Pretending otherwise, sticking to lowest-common-denominator APIs to maximize compatibility, costs the consumer more in clunky code than they save in marginal compatibility.</p>
+<p>The pragmatic compromise is to multi-target enough to be usable in older codebases (<code>netstandard2.1</code> is broadly compatible) while letting the implementation be modern. Consumers on older runtimes get the API, and consumers on newer runtimes get the performance benefits of the newer-API implementations under the hood.</p>
+<p>There&#39;s a related point about polyfills. ktsu libraries use the <code>Polyfill</code> package liberally to make newer-.NET idioms available in older targets. The library author writes the modern idiom, and the polyfill makes it work on older runtimes. The alternative, <code>#if NET6_0_OR_GREATER</code> conditional compilation scattered through the code, produces source that&#39;s hard to read and harder to maintain. Polyfills push that complexity out of the source and into a dedicated layer that&#39;s easier to reason about.</p>
+<h2>What the Themes Are Not About</h2>
+<p>Three things worth being explicit about because they&#39;re conspicuously absent from the list.</p>
+<p><strong>This isn&#39;t a framework.</strong> ktsu is a catalog of small, focused libraries that compose with whatever else is in the project. There&#39;s no opinionated overall structure a consumer has to adopt to use any one library. Pull in <code>ktsu.Semantics</code> for type-safe paths, pull in <code>ktsu.AppDataStorage</code> for config persistence, pull in <code>ktsu.Extensions</code> for utility methods. They work together, but they don&#39;t require each other, and they don&#39;t require anything about the application&#39;s architecture.</p>
+<p><strong>It&#39;s not about performance optimization as the primary value.</strong> Some of the libraries are performance-conscious where it matters (the source-generator-backed paths in <code>Semantics</code>, the span-based APIs in performance-sensitive code), but performance isn&#39;t the lead. The lead is expressiveness and safety. Performance is the table-stakes baseline that lets the libraries be used in real code without apologizing.</p>
+<p><strong>It&#39;s not trying to compete with the BCL.</strong> When the .NET base class library has a thing, ktsu uses the BCL&#39;s thing. The libraries fill gaps the BCL doesn&#39;t address (semantic types, opinionated persistence, specific utilities). They don&#39;t reimplement collections, threading primitives, networking, or anything else the platform already does well.</p>
+<h2>Why the Themes Hold Together</h2>
+<p>The four themes aren&#39;t independent. They reinforce each other in specific ways:</p>
+<ul>
+<li>Semantic clarity requires modern tooling to be cheap (source generators, span-based APIs, nullable reference types).</li>
+<li>Simplified APIs require maintainability to be honest (a one-line API that breaks in confusing ways at edge cases is worse than no library).</li>
+<li>Maintainability requires semantic clarity (libraries that lean on primitive types accumulate edge cases that better-typed libraries don&#39;t).</li>
+<li>Modern tooling requires simplified APIs (the new platform features are only useful if they show up in the library&#39;s surface, not just its implementation).</li>
+</ul>
+<p>A library that picked any one of these themes and ignored the others would be a worse library. The themes are linked because the underlying philosophy is linked. Make .NET development pleasant by making the things that should be easy actually easy, and making the things that should be unmistakable actually unmistakable.</p>
+<h2>Advice for Coming to ktsu Fresh</h2>
+<p>Three pieces of advice for anyone considering using any of the libraries.</p>
+<p><strong>Start narrow.</strong> Pick the library that addresses the most acute problem in the current project and try it on that. <code>Semantics</code> for a domain with too many string-typed identifiers, <code>AppDataStorage</code> for a desktop app with config to persist, <code>Extensions</code> for a project that&#39;s been accumulating utility functions. One library, one project, one evaluation cycle.</p>
+<p><strong>Read the README, then the tests.</strong> Both are written to be readable, and the tests show the library in normal use. An hour is usually enough to tell whether the library fits the problem at hand.</p>
+<p><strong>Don&#39;t feel obligated to adopt the whole catalog.</strong> Each library is independent. Using one doesn&#39;t commit a project to using others, and the libraries are designed not to be sticky. If a library stops being useful, removing it is a one-line <code>dotnet remove package</code> and a localized refactor, not a project-wide migration.</p>
+<p>The themes are what make me build the libraries. They&#39;re also what should help a consumer decide whether the libraries are right for them. If &quot;make domain types unmistakable, keep APIs short, design for years not months, use modern .NET well&quot; sounds like the right set of priorities, the catalog is going to feel coherent. If it doesn&#39;t, the libraries probably aren&#39;t the right fit, and that&#39;s fine. There are other catalogs with different commitments, and the right one for a given team is the one whose commitments match its priorities.</p>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

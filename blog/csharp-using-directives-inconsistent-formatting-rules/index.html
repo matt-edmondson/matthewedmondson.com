@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C# Using Directives: IDE0055 Format Violations Don't Always Trigger as Expected | Matt Edmondson</title>
+  <meta name="description" content="How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/csharp-using-directives-inconsistent-formatting-rules/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="C# Using Directives: IDE0055 Format Violations Don't Always Trigger as Expected | Matt Edmondson" />
+  <meta property="og:description" content="How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/csharp-using-directives-inconsistent-formatting-rules/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-07-29">July 29, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+      </div>
+<h1>C# Using Directives: IDE0055 Format Violations Don&#39;t Always Trigger as Expected</h1>
+<blockquote>
+<p><strong>Update (February 2026):</strong> This issue has been <strong>resolved</strong>. The Roslyn team merged <a href="https://github.com/dotnet/roslyn/pull/81202">PR #81202</a> on November 13, 2025, which fixes IDE0055 to enforce <code>dotnet_separate_import_directive_groups</code> based on <strong>grouping (contiguity)</strong> rather than <strong>alphabetical sorting</strong>. The fix shipped after the .NET 10.0 GA release (November 11, 2025) and is expected to be available in .NET 10 servicing updates (SDK 10.0.1xx+). See the <a href="#resolution">Resolution</a> section below for details.</p>
+</blockquote>
+<p>Many C# teams rely on analyzer rule IDE0055 to enforce consistent code formatting across their projects. It&#39;s one of the standard tools in the .editorconfig-driven approach to code style, and for most formatting concerns, it works as expected. However, I discovered an undocumented interaction between IDE0055 and the <code>dotnet_separate_import_directive_groups</code> option that caused the rule to silently skip violations under specific conditions. This post documents the issue, the root cause in the Roslyn source, the real-world consequences, and the eventual fix.</p>
+<h2>The Unexpected Behavior</h2>
+<p>While configuring formatting rules for a project, I noticed that IDE0055 wasn&#39;t flagging certain files where using directives lacked the required group separators. After investigation, I <a href="https://github.com/dotnet/roslyn/issues/77831">reported the issue</a> to the Roslyn team.</p>
+<p>What I found was this: <strong>IDE0055 only enforced the separation of using directive groups when those directives were already in alphabetical order.</strong> If the directives were out of alphabetical order, even if they were properly grouped by namespace, no violation was reported.</p>
+<p>The following two examples illustrate the discrepancy.</p>
+<h3>Example 1: Alphabetically Sorted Directives (Triggers IDE0055)</h3>
+<pre><code class="language-csharp">namespace MyNamespace;
+
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using NuGet.Versioning;
+using System.Diagnostics;
+</code></pre>
+<p>With <code>dotnet_separate_import_directive_groups = true</code> in <code>.editorconfig</code>, the analyzer correctly flags this code because the Azure, NuGet, and System groups should be separated by blank lines.</p>
+<h3>Example 2: Non-Alphabetically Sorted Directives (No IDE0055 Violation)</h3>
+<pre><code class="language-csharp">namespace MyNamespace;
+
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using System.Diagnostics;
+using NuGet.Versioning;
+</code></pre>
+<p>This code has the same formatting problem (unseparated groups) but <strong>doesn&#39;t trigger a violation</strong>. The only difference is that <code>System.Diagnostics</code> and <code>NuGet.Versioning</code> aren&#39;t in alphabetical order.</p>
+<h2>Root Cause (Prior to the Fix)</h2>
+<p>I traced the cause to the <code>TokenBasedFormattingRule.AdjustNewLinesAfterSemicolonToken()</code> method in the Roslyn source. The relevant code path contained this conditional check:</p>
+<pre><code class="language-csharp">if (usings.IsSorted(UsingsAndExternAliasesDirectiveComparer.SystemFirstInstance) ||
+    usings.IsSorted(UsingsAndExternAliasesDirectiveComparer.NormalInstance))
+{
+    // Only apply the formatting rule if usings are sorted
+    // ...
+}
+</code></pre>
+<p>The formatting rule intentionally verified that the using directives were already sorted before enforcing group separation. A comment in the Roslyn source confirmed this was deliberate:</p>
+<blockquote>
+<p>&quot;if the user is separating using-groups, and we&#39;re between two usings, and these usings <em>should</em> be separated, then do so (if the usings were already properly sorted).&quot;</p>
+</blockquote>
+<p>The original intent was presumably to avoid inserting separators into a disordered list of usings, where group boundaries would be ambiguous. In practice, however, this created a silent gap in enforcement.</p>
+<h2>The Documentation Gap</h2>
+<p>None of this behavior was documented. The <a href="https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/dotnet-formatting-options#dotnet%5Fseparate%5Fimport%5Fdirective%5Fgroups">official documentation for <code>dotnet_separate_import_directive_groups</code></a> made no mention of a prerequisite that using directives must be alphabetically sorted for the rule to take effect. The option appeared to be unconditional, and developers configured it with that expectation.</p>
+<h2>Impact and Implications</h2>
+<p>The hidden dependency on sorting order produced several concrete problems:</p>
+<ol>
+<li><p><strong>Inconsistent enforcement.</strong> The same logical violation (missing group separators) would be reported in one file and silently ignored in another, depending on an unrelated property of the code (alphabetical order).</p>
+</li>
+<li><p><strong>Silent non-compliance.</strong> Files that appeared to conform to the team&#39;s coding standard actually violated it, with no analyzer warning to surface the discrepancy. Over time, this led to codebase inconsistency that was difficult to detect through automated tooling.</p>
+</li>
+<li><p><strong>Misleading configuration.</strong> Developers reasonably believed that enabling the option was sufficient to enforce group separation. The absence of warnings on certain files reinforced the false impression that those files were already compliant.</p>
+</li>
+</ol>
+<h2>Real-World Impact Scenarios</h2>
+<p>While this may appear to be a narrow formatting concern, its effects propagated through several common development workflows.</p>
+<h3>Enforcing Corporate Coding Standards</h3>
+<p>Organizations that rely on automated analysis to enforce coding standards had a gap in their validation pipeline. Code that appeared compliant could pass all automated checks while actually violating the intended standard, undermining confidence in the tooling.</p>
+<h3>Code Review Inconsistencies and Team Onboarding</h3>
+<p>When the same logical issue triggers violations in some files but not others, code reviews become unpredictable. Reviewers may enforce standards inconsistently, and new team members struggle to understand why identical patterns are flagged in one context and ignored in another. This erodes trust in the development process and increases onboarding friction.</p>
+<h3>Build Server Validation</h3>
+<p>Teams that configure their builds to fail on style violations encountered a frustrating asymmetry: builds might pass locally but fail on the build server, or vice versa, depending on the ordering of usings in the files being checked and which tools were performing the validation.</p>
+<h3>Legacy Code Migration</h3>
+<p>When migrating legacy codebases to modern formatting standards, teams depend on automated tooling to identify every instance of non-compliance. If some violations are invisible to the analyzer, pockets of legacy formatting persist through the migration, creating long-lived technical debt that requires manual intervention to discover and correct.</p>
+<h3>Cross-Project Consistency</h3>
+<p>In solutions with multiple projects sharing developers and code, the inconsistent enforcement led to subtle formatting divergence across projects. Developers moving between projects encountered different formatting patterns despite identical <code>.editorconfig</code> configurations, making code navigation and maintenance more difficult than necessary.</p>
+<h2>The Core Issue</h2>
+<p>What made this problem particularly stubborn was that the standard remediation approaches didn&#39;t address it:</p>
+<ol>
+<li><p><strong>Combining rules didn&#39;t help.</strong> Configuring both <code>dotnet_sort_system_directives_first</code> and <code>dotnet_separate_import_directive_groups</code> still left the issue in place. The sorting rule ordered System namespaces before others, but without full alphabetical order within each group, the separation rule remained inactive.</p>
+</li>
+<li><p><strong>Code Cleanup didn&#39;t fix it.</strong> Visual Studio&#39;s Code Cleanup feature operates only on triggered violations. Since the rule never triggered for non-sorted usings, Code Cleanup had nothing to act on.</p>
+</li>
+<li><p><strong>Format Document didn&#39;t catch it.</strong> The Format Document command similarly relied on the rule firing, and in the absence of a violation, it left the non-compliant formatting untouched.</p>
+</li>
+</ol>
+<h2>Working Around the Issue</h2>
+<blockquote>
+<p><strong>Note:</strong> On a .NET SDK version that includes the fix (see <a href="#resolution">Resolution</a> below), these workarounds are no longer necessary. Updating the SDK is the recommended solution.</p>
+</blockquote>
+<p>For teams still on older SDK versions, the following approaches mitigate the problem:</p>
+<h3>1. Update the .NET SDK</h3>
+<p>The most effective resolution is to update to a .NET SDK version that includes the Roslyn fix from <a href="https://github.com/dotnet/roslyn/pull/81202">PR #81202</a>. The fix was merged on November 13, 2025, and is expected in .NET 10 servicing updates (SDK 10.0.1xx+).</p>
+<h3>2. Manual Inspection</h3>
+<p>If updating isn&#39;t feasible, manual review remains the only reliable way to identify this specific formatting issue. Teams can also develop custom scripts or tooling to scan for unseparated using groups.</p>
+<h3>3. Custom Roslyn Analyzer</h3>
+<p>A custom Roslyn analyzer that checks for using directive grouping regardless of sorting order provides a permanent solution for older target frameworks. This requires development effort, but the analyzer can be packaged as a NuGet package and shared across the organization.</p>
+<h3>4. Documentation and Team Awareness</h3>
+<p>Ensuring that the team understands this quirk reduces confusion during code reviews and prevents wasted time investigating why the analyzer doesn&#39;t flag certain files.</p>
+<h3>5. Comprehensive EditorConfig</h3>
+<p>While a comprehensive <code>.editorconfig</code> doesn&#39;t fully solve the issue on older SDKs, it minimizes the window of opportunity for non-compliance when combined with deliberate formatting practices:</p>
+<pre><code class="language-ini"># .editorconfig
+# Enforce using directive sorting and grouping
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Make the rule an error to catch it during build
+dotnet_diagnostic.IDE0055.severity = error
+
+# Other related formatting options
+csharp_using_directive_placement = outside_namespace
+</code></pre>
+<p>The strategy is to ensure usings are properly sorted <em>first</em>, through manual formatting or automated tools, so that IDE0055 can then effectively enforce grouping. With the fix applied, this <code>.editorconfig</code> configuration works as originally expected without the sorting prerequisite.</p>
+<h2>Affected Tools and Automation</h2>
+<p>This issue affected a broad range of tools and automation systems that rely on <code>.editorconfig</code> and Roslyn analyzers to enforce code standards.</p>
+<h3>CI/CD Pipeline Tools</h3>
+<ul>
+<li><strong>GitHub Actions workflows</strong> running <code>dotnet format</code> to validate pull requests</li>
+<li><strong>Azure DevOps build pipelines</strong> with code formatting quality gates</li>
+<li><strong>Jenkins jobs</strong> enforcing .NET code style compliance</li>
+<li><strong>TeamCity build configurations</strong> that fail on style violations</li>
+</ul>
+<p>These systems could inconsistently enforce standards, allowing builds to pass that should have failed or producing failures that were difficult to reproduce locally.</p>
+<h3>Code Analysis Tools</h3>
+<ul>
+<li><strong>SonarQube/SonarCloud</strong> .NET code style checks</li>
+<li><strong>NDepend</strong> code rules incorporating style validation</li>
+<li><strong>StyleCop Analyzers</strong> interacting with built-in Roslyn analyzers</li>
+<li><strong>JetBrains ReSharper/Rider</strong> code cleanup and inspections</li>
+</ul>
+<p>Different analysis tools could report conflicting results depending on how they interpreted and applied the underlying rules.</p>
+<h3>Git Hooks and Pre-Commit Validation</h3>
+<ul>
+<li><strong>Husky.NET</strong> pre-commit hooks running formatting checks</li>
+<li><strong>Git pre-commit hooks</strong> using <code>dotnet format --verify-no-changes</code></li>
+<li><strong>Local git hooks</strong> enforcing organization-wide standards</li>
+</ul>
+<p>These systems could fail to catch formatting issues that should have been corrected before committing.</p>
+<h3>IDE Extensions and Plugins</h3>
+<ul>
+<li><strong>Visual Studio extensions</strong> for code cleanup and formatting</li>
+<li><strong>VS Code extensions</strong> such as C# Dev Kit</li>
+<li><strong>Custom IDE plugins</strong> built for organization-specific standards</li>
+</ul>
+<p>IDE plugins could apply inconsistent fixes or fail to identify violations, creating a disconnect between what developers saw locally and what the CI pipeline enforced.</p>
+<p>The inconsistency of IDE0055&#39;s behavior meant that none of these tools could reliably enforce the intended standard, undermining automated code quality workflows throughout the development lifecycle.</p>
+<h2>Technical Explanation</h2>
+<p>The root cause was a hidden dependency in IDE0055&#39;s implementation of <code>dotnet_separate_import_directive_groups</code>. The <code>UsingsAndExternAliasesOrganizer.NeedsGrouping()</code> method correctly determined when two namespaces should belong to different groups based on their first token. However, the actual enforcement of group separation was gated behind a check that the using directives were already sorted in one of two orders:</p>
+<ol>
+<li>Full alphabetical order, or</li>
+<li>System namespaces first, followed by other namespaces in alphabetical order</li>
+</ol>
+<p>This implementation detail contradicted the documented behavior of both <code>dotnet_separate_import_directive_groups</code> and <code>dotnet_sort_system_directives_first</code>, creating a gap between what the documentation promised and what the tooling delivered.</p>
+<h2>Resolution</h2>
+<p>On November 13, 2025, the Roslyn team merged <a href="https://github.com/dotnet/roslyn/pull/81202">PR #81202</a>, resolving the issue. The fix was reviewed and merged by Cyrus Najmabadi (a Roslyn team contributor) and approved by Joe Robich (a Roslyn team member).</p>
+<h3>What Changed</h3>
+<p>The fix changed how IDE0055 decides whether to enforce group separation:</p>
+<ul>
+<li><strong>Before</strong>: The rule checked if usings were <strong>alphabetically sorted</strong> (either fully sorted or sorted with System namespaces first). Only if they were sorted would it enforce group separation.</li>
+<li><strong>After</strong>: The rule checks if usings are <strong>properly grouped</strong> (contiguous). As long as all usings sharing the same first namespace token are adjacent to each other, group separators are enforced regardless of alphabetical order.</li>
+</ul>
+<p>The old sorting check in <code>TokenBasedFormattingRule.cs</code>:</p>
+<pre><code class="language-csharp">if (usings.IsSorted(UsingsAndExternAliasesDirectiveComparer.SystemFirstInstance) ||
+    usings.IsSorted(UsingsAndExternAliasesDirectiveComparer.NormalInstance))
+</code></pre>
+<p>Was replaced with a new <code>AreUsingsProperlyGrouped()</code> method that checks <strong>contiguity</strong>, verifying that all usings with the same first namespace token appear together, without requiring any particular order between groups.</p>
+<h3>The New Behavior</h3>
+<p>With the fix applied, <strong>Example 2 from above now correctly triggers an IDE0055 violation</strong>, because the Azure, System, and NuGet groups are contiguous even though they aren&#39;t alphabetically sorted. The only scenario where separators aren&#39;t enforced is when usings of the same namespace group are genuinely scattered. For example, Azure usings at both the beginning and end of the list with other namespaces in between, since the grouping boundaries would be ambiguous in that case.</p>
+<h3>Availability</h3>
+<p>The fix was merged to Roslyn&#39;s main branch on November 13, 2025, two days after the .NET 10.0 GA release (November 11, 2025). It&#39;s expected to be available in .NET 10 servicing SDK updates (10.0.1xx+). Users on .NET 9 or earlier will need to upgrade to a .NET 10+ SDK to benefit from this fix.</p>
+<h2>Conclusion</h2>
+<p>This article documented an undocumented behavior in IDE0055&#39;s handling of using directive formatting, a gap between the expected and actual functionality of a widely used code analysis rule. The issue report led to a productive discussion with the Roslyn team, and the bug was ultimately fixed in <a href="https://github.com/dotnet/roslyn/pull/81202">PR #81202</a>, which shifted the enforcement logic from requiring alphabetical sorting to requiring contiguous grouping.</p>
+<p>For teams still on older SDK versions, the workarounds described above remain relevant. For everyone else, updating to a .NET SDK that includes the fix is the straightforward path forward.</p>
+<blockquote>
+<p><strong>Note</strong>: The original behavior described in this article was verified with .NET SDK version 9.0.201 and Visual Studio 2022 (17.13.5). The fix was merged into Roslyn on November 13, 2025 and is expected in .NET 10 servicing SDK updates. To confirm a given SDK includes the fix, test it with non-sorted but contiguous using directives.</p>
+</blockquote>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/dotnet/roslyn/issues/77831">My Issue Report: Undocumented requirement for import directives to be alphabetically sorted to trigger IDE0055</a></li>
+<li><a href="https://github.com/dotnet/roslyn/pull/81202">Fix PR #81202: Enforce import directive grouping when groups are contiguous, regardless of sorting</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/dotnet-formatting-options">Microsoft Docs: .NET formatting options</a></li>
+<li><a href="https://github.com/dotnet/roslyn">Roslyn GitHub Repository</a></li>
+</ul>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

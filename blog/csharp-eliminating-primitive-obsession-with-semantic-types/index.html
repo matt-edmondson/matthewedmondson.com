@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eliminating Primitive Obsession in C# with Semantic Types | Matt Edmondson</title>
+  <meta name="description" content="How wrapping strings and paths in semantic types catches entire categories of bugs at compile time, and a look at the CRTP-based approach used in the ktsu.dev Semantics library." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/csharp-eliminating-primitive-obsession-with-semantic-types/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Eliminating Primitive Obsession in C# with Semantic Types | Matt Edmondson" />
+  <meta property="og:description" content="How wrapping strings and paths in semantic types catches entire categories of bugs at compile time, and a look at the CRTP-based approach used in the ktsu.dev Semantics library." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/csharp-eliminating-primitive-obsession-with-semantic-types/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    .post-list { list-style: none; margin: 0; padding: 0; }
+    .post-list li {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
+    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
+    .post-list h3 a { color: var(--ctp-text); }
+    .post-list h3 a:hover { color: var(--ctp-sapphire); }
+    .post-list time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--ctp-overlay0);
+    }
+    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2025-08-19">August 19, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+      </div>
+<h1>Eliminating Primitive Obsession in C# with Semantic Types</h1>
+<p>Most C# codebases harbor a code smell so pervasive that we barely register it: <strong>primitive obsession</strong>. We pass <code>string</code> where we mean an email address, a file path, a repository name, or a URL. We pass <code>double</code> where we mean meters, kilograms, or seconds. The type system treats all of these identically, which means the compiler can&#39;t help us when we accidentally pass a username where a password was expected.</p>
+<p>This post examines what primitive obsession costs us in practice, and how a technique built on the <strong>Curiously Recurring Template Pattern (CRTP)</strong> can eliminate entire categories of bugs at compile time.</p>
+<h2>When Everything Is a String</h2>
+<p>Consider a method signature that turns up in just about any codebase:</p>
+<pre><code class="language-csharp">public void CloneRepository(string name, string remotePath, string localPath)
+{
+    // ...
+}
+</code></pre>
+<p>Nothing prevents a caller from writing:</p>
+<pre><code class="language-csharp">// Oops — arguments in the wrong order
+CloneRepository(remotePath, name, localDirectory);
+</code></pre>
+<p>The compiler accepts this without complaint. Every type matches: <code>string</code>, <code>string</code>, <code>string</code>. The bug won&#39;t surface until runtime, and possibly not until production.</p>
+<p>This isn&#39;t a contrived example. Whenever a method accepts two or more parameters of the same primitive type, the door is open for transposition bugs. The more parameters there are, the worse the odds become.</p>
+<h3>Paths</h3>
+<p>Paths are an especially treacherous case. A <code>string</code> can represent an absolute path, a relative path, a directory path, or a file path. The compiler has no awareness of which one the caller intended:</p>
+<pre><code class="language-csharp">string configDir = @&quot;C:\app\config&quot;;
+string logFile = @&quot;logs\app.log&quot;;
+
+// This compiles fine but is semantically wrong —
+// we&#39;re treating a relative path as an absolute one
+File.Delete(logFile);
+
+// And this silently produces garbage —
+// combining two absolute paths doesn&#39;t do what you&#39;d expect
+string combined = Path.Combine(configDir, @&quot;C:\other\path&quot;);
+// Result: &quot;C:\other\path&quot; — the first argument is silently discarded
+</code></pre>
+<h2>Semantic Types</h2>
+<p>The fix is to make the type system carry the semantic meaning that <code>string</code> discards. Instead of bare <code>string</code>, we define distinct types that the compiler can differentiate:</p>
+<pre><code class="language-csharp">public sealed record GitRepositoryName : SemanticString&lt;GitRepositoryName&gt; { }
+public sealed record GitRepositoryWebURI : SemanticString&lt;GitRepositoryWebURI&gt; { }
+public sealed record GitRepositoryRemotePath : SemanticString&lt;GitRepositoryRemotePath&gt; { }
+</code></pre>
+<p>Each of these is a one-line declaration, yet it creates a completely distinct type in the eyes of the compiler. The method signature becomes both self-documenting and compiler-enforced:</p>
+<pre><code class="language-csharp">public void CloneRepository(
+    GitRepositoryName name,
+    GitRepositoryRemotePath remotePath,
+    AbsoluteDirectoryPath localPath)
+{
+    // ...
+}
+</code></pre>
+<p>Try transposing the arguments now. The compiler will refuse to build.</p>
+<p>This is the approach used in the <a href="https://github.com/ktsu-dev/Semantics">ktsu.dev Semantics library</a>. The <code>GitRepository</code> class from the ktsu.dev ecosystem shows how this looks in practice:</p>
+<pre><code class="language-csharp">public class GitRepository
+{
+    public GitRepositoryName Name { get; init; } = new();
+    public GitRepositoryWebURI WebURI { get; init; } = new();
+    public GitRepositoryRemotePath RemotePath { get; init; } = new();
+    public AbsoluteDirectoryPath LocalPath { get; init; } = new();
+
+    public bool IsCloned =&gt; Directory.Exists(LocalPath);
+}
+</code></pre>
+<p>Every property carries a distinct type. There&#39;s no way to accidentally assign a <code>GitRepositoryName</code> to a <code>GitRepositoryWebURI</code>. The compiler won&#39;t allow it.</p>
+<h2>The Curiously Recurring Template Pattern</h2>
+<p>The foundation of this approach is a base class that employs CRTP, sometimes called the &quot;self-referencing generic&quot; pattern in C#:</p>
+<pre><code class="language-csharp">public abstract record SemanticString&lt;TDerived&gt; : ISemanticString
+    where TDerived : SemanticString&lt;TDerived&gt;
+{
+    public string WeakString { get; init; } = string.Empty;
+
+    // Factory method — creates an instance of any semantic string type
+    public static TDest Create&lt;TDest&gt;(string? value)
+        where TDest : SemanticString&lt;TDest&gt;
+    {
+        TDest newInstance = FromStringInternal&lt;TDest&gt;(value);
+        return PerformValidation(newInstance);
+    }
+
+    // Implicit conversion back to string — no ceremony needed
+    public static implicit operator string(SemanticString&lt;TDerived&gt;? value)
+        =&gt; value?.WeakString ?? string.Empty;
+}
+</code></pre>
+<p>The <code>TDerived</code> type parameter is what makes this work. Because the base class knows the exact derived type, factory methods like <code>Create</code> can return the correct concrete type without requiring a cast. Creating a semantic string is straightforward:</p>
+<pre><code class="language-csharp">var repoName = GitRepositoryName.Create(&quot;my-project&quot;);
+</code></pre>
+<p>And because of the implicit conversion to <code>string</code>, a semantic string passes to any API that expects a regular string with no friction:</p>
+<pre><code class="language-csharp">Console.WriteLine($&quot;Cloning {repoName}...&quot;);  // Just works
+</code></pre>
+<p>The property name <code>WeakString</code> is deliberately chosen. Accessing the raw string value is an escape hatch that breaks type safety, and the name ensures that cost is visible in every code review.</p>
+<h3>The <code>.As&lt;T&gt;()</code> Extension Method</h3>
+<p>While the <code>Create</code> factory method works well, the library provides something more fluent, an <code>As&lt;T&gt;()</code> extension method defined directly on <code>string</code>:</p>
+<pre><code class="language-csharp">public static class SemanticStringExtensions
+{
+    public static TDerived As&lt;TDerived&gt;(this string? value)
+        where TDerived : SemanticString&lt;TDerived&gt;
+        =&gt; SemanticString&lt;TDerived&gt;.Create&lt;TDerived&gt;(value);
+}
+</code></pre>
+<p>This enables the following syntax:</p>
+<pre><code class="language-csharp">var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
+</code></pre>
+<p>The string literal reads first, followed by the type it&#39;s being cast into. It flows like natural language, &quot;take this string <em>as</em> a GitRepositoryName.&quot; Compare the two approaches:</p>
+<pre><code class="language-csharp">// Factory method — type comes first, then the value
+var repoName = GitRepositoryName.Create(&quot;my-project&quot;);
+
+// Extension method — value comes first, then the type
+var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
+</code></pre>
+<p>Both produce identical results. Canonicalization and validation run regardless of which path the call takes. But <code>.As&lt;T&gt;()</code> reads particularly well when chaining or working inline:</p>
+<pre><code class="language-csharp">repository.Name = config[&quot;repo-name&quot;].As&lt;GitRepositoryName&gt;();
+</code></pre>
+<p>The same <code>.As&lt;T&gt;()</code> pattern also supports converting between semantic types. Given one semantic string that needs to be viewed through the lens of another type, the instance method on the base class handles the conversion:</p>
+<pre><code class="language-csharp">var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
+var displayLabel = repoName.As&lt;DisplayLabel&gt;();  // re-validates for the target type
+</code></pre>
+<p>From this point forward, I will use <code>.As&lt;T&gt;()</code> as the primary way to create semantic values in the examples that follow.</p>
+<h2>Type-Safe Paths</h2>
+<p>Semantic strings show what they&#39;re good for once a type hierarchy is built on top of them. The Semantics library defines a path type system with validation built into each layer:</p>
+<pre><code>SemanticString&lt;T&gt;
+  └─ SemanticPath&lt;T&gt;          [IsPath]
+       ├─ SemanticDirectoryPath&lt;T&gt;
+       │    ├─ AbsoluteDirectoryPath  [IsAbsolutePath]
+       │    └─ RelativeDirectoryPath  [IsRelativePath]
+       └─ SemanticFilePath&lt;T&gt;
+            ├─ AbsoluteFilePath       [IsAbsolutePath]
+            └─ RelativeFilePath       [IsRelativePath]
+</code></pre>
+<p>Each level in the hierarchy adds validation through attributes. <code>[IsPath]</code> ensures no invalid path characters are present. <code>[IsAbsolutePath]</code> ensures the path is fully qualified. This validation runs automatically at creation time. It&#39;s impossible to construct an <code>AbsoluteDirectoryPath</code> from a relative path string.</p>
+<h3>Operator Overloading for Path Composition</h3>
+<p>The path types overload the <code>/</code> operator for combining paths, and the return type changes based on what is being combined:</p>
+<pre><code class="language-csharp">var outputDir = @&quot;C:\output&quot;.As&lt;AbsoluteDirectoryPath&gt;();
+var logFile = @&quot;logs\app.log&quot;.As&lt;RelativeFilePath&gt;();
+var readme = &quot;README.md&quot;.As&lt;FileName&gt;();
+
+// Directory / RelativeFile → AbsoluteFilePath
+AbsoluteFilePath fullLogPath = outputDir / logFile;
+
+// Directory / FileName → AbsoluteFilePath
+AbsoluteFilePath readmePath = outputDir / readme;
+
+// Directory / RelativeDirectory → AbsoluteDirectoryPath
+var subDir = &quot;subdir&quot;.As&lt;RelativeDirectoryPath&gt;();
+AbsoluteDirectoryPath nested = outputDir / subDir;
+
+// Convert between semantic types with the instance .As&lt;T&gt;()
+AbsolutePath genericPath = fullLogPath.As&lt;AbsolutePath&gt;();
+</code></pre>
+<p>Each <code>/</code> overload returns the correct result type. Combining an absolute directory with a relative file produces an absolute file path, not a <code>string</code> that the caller has to hope is correct.</p>
+<p>Compare this to <code>Path.Combine</code>:</p>
+<pre><code class="language-csharp">// Path.Combine returns string — no type information about what kind of path this is
+string result = Path.Combine(@&quot;C:\output&quot;, @&quot;logs\app.log&quot;);
+// Is this a file? A directory? Absolute? Relative? The type doesn&#39;t say.
+</code></pre>
+<h3>Relationship Queries</h3>
+<p>Because the types carry semantic meaning, the library can provide operations that would be meaningless on raw strings:</p>
+<pre><code class="language-csharp">var project = @&quot;C:\projects\myapp&quot;.As&lt;AbsoluteDirectoryPath&gt;();
+var src = @&quot;C:\projects\myapp\src&quot;.As&lt;AbsoluteDirectoryPath&gt;();
+
+bool isChild = src.IsChildOf(project);        // true
+bool isParent = project.IsParentOf(src);       // true
+
+// Walk up the directory tree
+foreach (var ancestor in src.GetAncestors())
+{
+    Console.WriteLine(ancestor);
+}
+
+// Get a relative path between two absolute paths
+RelativeDirectoryPath relative = project.GetRelativePathTo(src);
+</code></pre>
+<p>These methods use span-based comparison internally for performance, but the type system ensures <code>IsChildOf</code> can only be called with another <code>AbsoluteDirectoryPath</code>, not with a file path, a relative path, or an arbitrary string.</p>
+<h2>Validation at Compile Time and Runtime</h2>
+<p>Semantic types operate at two complementary levels:</p>
+<ol>
+<li><p><strong>Compile-time.</strong> The type system prevents mixing incompatible types entirely. An <code>AbsoluteFilePath</code> can&#39;t be passed where an <code>AbsoluteDirectoryPath</code> is expected.</p>
+</li>
+<li><p><strong>Runtime.</strong> Validation attributes enforce constraints that can&#39;t be expressed in the type system alone, such as valid path characters, fully qualified paths, and similar rules.</p>
+</li>
+</ol>
+<p>The validation relies on an attribute-based system:</p>
+<pre><code class="language-csharp">[IsPath]
+public abstract record SemanticPath&lt;TDerived&gt; : SemanticString&lt;TDerived&gt;
+    where TDerived : SemanticPath&lt;TDerived&gt;
+{ }
+
+[IsAbsolutePath]
+public sealed record AbsoluteDirectoryPath : SemanticDirectoryPath&lt;AbsoluteDirectoryPath&gt;
+{ }
+</code></pre>
+<p>The <code>[IsPath]</code> attribute validates that the string contains no invalid path characters and has a reasonable length. The <code>[IsAbsolutePath]</code> attribute validates that the path is fully qualified. These checks execute automatically on every call to <code>.As&lt;T&gt;()</code> or <code>Create</code>. If the string fails to meet the requirements, an exception is thrown immediately rather than producing a silent failure at some later, harder-to-diagnose point.</p>
+<p>For cases involving user input or external data, a <code>TryCreate</code> method provides safe fallback behavior:</p>
+<pre><code class="language-csharp">if (AbsoluteDirectoryPath.TryCreate(userInput, out var path))
+{
+    // path is guaranteed to be valid
+}
+else
+{
+    // handle invalid input
+}
+</code></pre>
+<h2>The Cost and the Tradeoff</h2>
+<p>Semantic types are not free. Here is what they cost:</p>
+<ul>
+<li><strong>One-line type declarations</strong> for each semantic concept in the domain.</li>
+<li><strong><code>.As&lt;T&gt;()</code> calls</strong> at the boundaries where raw strings enter the system, in place of bare string assignment. (Implicit conversion back to <code>string</code> is free and requires no ceremony.)</li>
+<li><strong>A dependency</strong> on the base library.</li>
+</ul>
+<p>Here is what they give back:</p>
+<ul>
+<li>Transposition bugs become <strong>compile errors</strong> instead of runtime mysteries.</li>
+<li>Method signatures become <strong>self-documenting</strong>. The types are the documentation.</li>
+<li>Invalid values are caught <strong>at the boundary</strong> where they enter the system, not buried deep in business logic.</li>
+<li>Path operations become <strong>type-safe</strong>. No more guessing whether a string is a file or a directory, absolute or relative.</li>
+</ul>
+<p>In my experience maintaining a monorepo of 79+ .NET libraries, the upfront cost of defining semantic types pays for itself quickly. The bugs that never happen are the ones nobody has to debug.</p>
+<h2>Getting Started</h2>
+<p>Adopting this approach doesn&#39;t have to be all-in from day one. Start with the areas where primitive obsession causes the most pain:</p>
+<ol>
+<li><strong>Method signatures with multiple string parameters</strong>. These are transposition bugs waiting to happen.</li>
+<li><strong>File path handling</strong>. The distinction between absolute and relative, file and directory, is well worth encoding in types.</li>
+<li><strong>Domain identifiers</strong> such as user IDs, order numbers, and API keys. Anything where mixing them up would constitute a bug.</li>
+</ol>
+<p>Define a semantic type for each concept:</p>
+<pre><code class="language-csharp">public sealed record UserId : SemanticString&lt;UserId&gt; { }
+public sealed record OrderNumber : SemanticString&lt;OrderNumber&gt; { }
+public sealed record ApiKey : SemanticString&lt;ApiKey&gt; { }
+</code></pre>
+<p>Three lines, and the compiler is now working on the problem.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/ktsu-dev/Semantics">ktsu.dev Semantics library on GitHub</a></li>
+<li><a href="https://refactoring.guru/smells/primitive-obsession">Primitive Obsession, Refactoring Guru</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">Curiously Recurring Template Pattern</a></li>
+<li><a href="https://martinfowler.com/bliki/ValueObject.html">Domain-Driven Design: Value Objects</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record">C# Record Types</a></li>
+</ul>
+
+    </article>
+  </main>
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+</body>
+</html>

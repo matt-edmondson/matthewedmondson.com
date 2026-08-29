@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Writing | Matt Edmondson</title>
-  <meta name="description" content="Posts on game production, engineering, and studio process by Matt Edmondson." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/" />
+  <title>Direct and Empowering: A Coaching Style That Trusts People With Authority | Matt Edmondson</title>
+  <meta name="description" content="Why I lead with recognition, follow with pressure, and try to give the people I coach authority over their work rather than just instructions about it." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/direct-and-empowering-coaching-style/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Writing | Matt Edmondson" />
-  <meta property="og:description" content="Posts on game production, engineering, and studio process by Matt Edmondson." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/" />
+  <meta property="og:title" content="Direct and Empowering: A Coaching Style That Trusts People With Authority | Matt Edmondson" />
+  <meta property="og:description" content="Why I lead with recognition, follow with pressure, and try to give the people I coach authority over their work rather than just instructions about it." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/direct-and-empowering-coaching-style/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -290,81 +290,40 @@
 </head>
 <body>
   <main>
-    <nav class="breadcrumb"><a href="/">&larr; Matt Edmondson</a></nav>
-    <h1>Writing</h1>
-    <p class="tagline">Notes on production, engineering, and the places they meet.</p>
-      <ul class="post-list">
-        <li>
-          <h3><a href="/blog/csharp-linq-except-builds-its-own-set/">Why C# LINQ Except Builds Its Own Set Instead of Calling Contains</a></h3>
-          <time datetime="2026-06-24">June 24, 2026</time>
-          <p>A close look at how LINQ's Except works, why it never delegates to the collection's Contains, and how that changes when to materialize a query and which container to use.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/direct-and-empowering-coaching-style/">Direct and Empowering: A Coaching Style That Trusts People With Authority</a></h3>
-          <time datetime="2026-04-30">April 30, 2026</time>
-          <p>Why I lead with recognition, follow with pressure, and try to give the people I coach authority over their work rather than just instructions about it.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/crisis-mode-composure-authoring-postmortems/">Crisis-Mode Composure: Authoring Postmortems, Not Pointing Fingers</a></h3>
-          <time datetime="2026-04-27">April 27, 2026</time>
-          <p>Two infrastructure crises played out the same way. Stay calm, work the problem, communicate steadily, recognize the people who got through it alongside the team, and write the postmortem rather than pointing fingers. A producer's playbook for crisis composure as a learnable practice.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/scope-discipline-as-structural-defense/">Scope Discipline as Structural Defense</a></h3>
-          <time datetime="2026-04-14">April 14, 2026</time>
-          <p>Defending project scope is a structural problem, not a personal one. The escalation curve runs from gentle reminders to admin-level locks, and each step is a defense against drift rather than an attack on someone's judgment.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/zero-trust-for-unreal-development/">Zero-Trust for Unreal Development</a></h3>
-          <time datetime="2026-03-26">March 26, 2026</time>
-          <p>Every change reaches main through the same gate (PR, review, CI), with review scaling to risk and the failsafe itself subject to review. The principle, the threat model, and how the approach actually works inside an Unreal studio.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/four-themes-of-ktsu-dev/">The Four Themes of ktsu.dev</a></h3>
-          <time datetime="2025-11-19">November 19, 2025</time>
-          <p>ktsu.dev is the open-source .NET project I have been building since 2023. The libraries vary in size and scope, but they share four principles that govern what I will build and what I won't. This is the design philosophy underneath the library catalog.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/ktsu-appdatastorage-zero-friction-config-persistence/">ktsu.AppDataStorage: Zero-Friction Config Persistence in .NET</a></h3>
-          <time datetime="2025-11-10">November 10, 2025</time>
-          <p>Persisting application config is the kind of work every project does, every project gets slightly wrong, and every project regrets having rolled its own. ktsu.AppDataStorage is the small library I built so I would never write that code again (safe writes, debounced saves, automatic backups, and a one-line API).</p>
-        </li>
-        <li>
-          <h3><a href="/blog/ktsu-semantics-type-safe-strings-paths-quantities/">ktsu.Semantics: Type-Safe Strings, Paths, and Quantities in .NET</a></h3>
-          <time datetime="2025-10-30">October 30, 2025</time>
-          <p>Primitive obsession is the bug class where everything is a string or a double and the compiler can't help. ktsu.Semantics is the library I built to make domain types impossible to misuse. Email addresses, file paths, temperatures, and user IDs become first-class types with built-in validation and zero runtime cost over their primitives.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/dotnet-object-pooling-memory-management-high-performance/">Object Pooling and Memory Management in High-Performance .NET</a></h3>
-          <time datetime="2025-09-15">September 15, 2025</time>
-          <p>Practical techniques for reducing GC pressure in .NET: object pooling, Span&lt;T&gt;, ArrayPool, LOH management, and continuous memory monitoring.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/csharp-threading-synchronization-patterns-production-libraries/">Threading and Synchronization Patterns in Production .NET Libraries</a></h3>
-          <time datetime="2025-09-02">September 2, 2025</time>
-          <p>Practical threading patterns from production .NET code, including lock objects as parameters, thread dispatch queues, ReaderWriterLockSlim vs Lock, and how to actually test for thread safety.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/csharp-eliminating-primitive-obsession-with-semantic-types/">Eliminating Primitive Obsession in C# with Semantic Types</a></h3>
-          <time datetime="2025-08-19">August 19, 2025</time>
-          <p>How wrapping strings and paths in semantic types catches entire categories of bugs at compile time, and a look at the CRTP-based approach used in the ktsu.dev Semantics library.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/csharp-using-directives-inconsistent-formatting-rules/">C# Using Directives: IDE0055 Format Violations Don't Always Trigger as Expected</a></h3>
-          <time datetime="2025-07-29">July 29, 2025</time>
-          <p>How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/">C# Object Initializers Run After Code in the Default Constructor</a></h3>
-          <time datetime="2025-07-18">July 18, 2025</time>
-          <p>How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior.</p>
-        </li>
-        <li>
-          <h3><a href="/blog/dotnet-project-guid-conflicts-build-server-debugging/">Debugging the Mysterious 'Unable to find a project to restore' Error in .NET</a></h3>
-          <time datetime="2025-06-14">June 14, 2025</time>
-          <p>Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks.</p>
-        </li>
-      </ul>
+    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <article>
+      <div class="post-meta">
+        <time datetime="2026-04-30">April 30, 2026</time>
+        <span class="category-tag">Production</span>
+        <span class="category-tag">Leadership</span>
+      </div>
+<h1>Direct and Empowering: A Coaching Style That Trusts People With Authority</h1>
+<p>There&#39;s an asymmetry in how people respond to feedback, and I&#39;ve watched it play out for years. The people who are doing it well usually assume they aren&#39;t doing it well enough. The people who aren&#39;t doing it usually assume the message isn&#39;t aimed at them and ignore it.</p>
+<p>That asymmetry is the lens for everything I&#39;m going to say in this post. Once I started seeing it, every general broadcast I sent to a team turned into something different. It became a message that landed harder than I wanted on the wrong people, and softer than I needed on the right ones. The whole apparatus of &quot;be more diligent about X&quot; or &quot;we need to tighten up Y&quot; is calibrated against a population that doesn&#39;t exist.</p>
+<h2>Recognition First, Pressure Second</h2>
+<p>The coaching habit I trust most is to lead with recognition and follow with pressure, in that order, and to weight the recognition heavier than feels comfortable.</p>
+<p>Naming someone publicly for doing the thing well, by name, for a specific action, is the cheapest, highest-signal thing I can do as a coach. It tells the asymmetry-vulnerable people that the standard exists and is achievable. It makes them feel seen. It also tells the people who aren&#39;t doing the thing that the message is, in fact, aimed at them, because someone else just got recognized for it. Recognition isn&#39;t soft, it&#39;s a forcing function.</p>
+<p>Pressure is what comes after, and only after. It rides on top of the recognition, where it can survive landing a little harder than expected. Pressure first, recognition never, is how teams lose their best people in slow motion.</p>
+<p>A practical version of this: when I notice someone consistently doing something well, I&#39;ll DM them privately, thank them for it, and ask them to help others on the team improve. That converts a recognition signal into peer pressure that comes from the right direction. The people who would normally take a &quot;be better at this&quot; broadcast as something aimed at them now have a peer-level path to act on it.</p>
+<h2>Authority over Instructions</h2>
+<p>The other thing I rely on is to give people authority instead of just instructions.</p>
+<p>What this looks like is small but consequential. Instead of &quot;here&#39;s what I want you to do, run it past me before you ship it,&quot; I&#39;ll say something closer to &quot;here&#39;s the outcome we need, you&#39;re the owner, if anyone gives you grief about it tell them to talk to me.&quot; That backstop converts a task into a mandate. The person now has cover to defend the work on their own terms, which means they can say no to the predictable interruptions without having to escalate every one of them through me.</p>
+<p>Authority isn&#39;t permission to do whatever they want. It&#39;s permission to make decisions inside a defined scope without needing to relitigate the scope every time someone pushes back on it. The producer&#39;s job, when this is working, is to be the visible boundary that the person can point at when they&#39;re being asked to step outside it.</p>
+<p>This works because most of the friction that wears people down on cross-functional teams isn&#39;t about the work itself. It&#39;s about the meta-conversation about who gets to decide what, and how often. Pre-deciding that, in writing, with public backing, removes a category of friction wholesale.</p>
+<h2>Asking to Be Called Out</h2>
+<p>Something I&#39;ve added over the years: I tell the people I coach that if they ever feel I&#39;m getting it wrong, I want them to tell me. Out loud. As soon as they think it.</p>
+<p>This isn&#39;t a humble-brag, and it&#39;s not a request for performance reviews on demand. It&#39;s a deliberate inversion of the usual coaching power dynamic. Most coaching feels like a one-way street where the senior person evaluates the junior person and the junior person nods. Saying &quot;please call me out&quot; turns it into a two-way relationship. It also lowers the cost of raising a concern. Once the precedent is set, future concerns don&#39;t require the same activation energy.</p>
+<p>The people who take me up on it are the ones whose feedback I most want, and they&#39;re also the ones who would never have offered it unsolicited. The people who don&#39;t take me up on it are also fine. I&#39;ve made the offer, the door is open, and they&#39;ll use it when they need it.</p>
+<p>The cost of this is that I have to actually accept the feedback when it comes, gracefully, in real time, in front of whoever is around. The first few times that happens are uncomfortable, and that discomfort is the price of the contract I set up.</p>
+<h2>Direct and Empowering as One Stance</h2>
+<p>The phrase &quot;direct and empowering&quot; sounds like a contradiction the first time someone hears it. The reflex is to read &quot;direct&quot; as &quot;harsh&quot; and &quot;empowering&quot; as &quot;soft,&quot; and to assume one cancels the other.</p>
+<p>It works because the directness is about the content and the empowerment is about the frame. Saying plainly what I think, with the recognition that the other person is the one who decides what to do with it, treats them as a peer in the conversation rather than a subordinate receiving instructions. Direct without empowering is dictation. Empowering without direct is hand-waving. The combination produces the kind of conversation where someone walks away knowing both what I actually think and what they&#39;re actually going to do about it.</p>
+<h2>Designing Processes for Humans</h2>
+<p>Underneath all of this is a principle I&#39;ve come back to often enough that I&#39;ve started writing it down: <em>don&#39;t deny humanity, design processes for humans.</em></p>
+<p>Teams are made of people with finite attention, varying communication styles, ADHD, anxiety, recent grief, sick partners, lapses in sleep, and lives that are larger than their job descriptions. Coaching that pretends otherwise is coaching that works on a hypothetical team rather than the actual one. The asymmetry I started with is one expression of that fact. Recognition first, authority over instructions, and asking to be called out are all attempts to build coaching practices that work for the team I actually have.</p>
+<p>The teams I have most enjoyed working with were the ones where this kind of practice was the default rather than the exception. The teams that produced their best work were almost always the same ones.</p>
+
+    </article>
   </main>
 
   <footer>

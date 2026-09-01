@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Duplicate Project GUIDs and MSBuild Build Server State | Matt Edmondson</title>
   <meta name="description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-duplicate-project-guids-build-server-state/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="Duplicate Project GUIDs and MSBuild Build Server State | Matt Edmondson" />
   <meta property="og:description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-duplicate-project-guids-build-server-state/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,6 +24,8 @@
       --ctp-sky: #91d7e3;
       --ctp-green: #a6da95;
       --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
       --ctp-lavender: #b7bdf8;
       --ctp-text: #cad3f5;
       --ctp-subtext1: #b8c0e0;
@@ -574,7 +576,7 @@
         <a class="post-tag" href="/#tag=architecture">architecture</a>
         <a class="post-tag" href="/#tag=design-flaw">design-flaw</a>
       </div>
-      <img class="post-hero" src="/assets-blog/dotnet-project-guid-conflicts-build-server-debugging.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/dotnet-duplicate-project-guids-build-server-state.jpg" alt="" width="1200" height="675" />
 
 <p>Not long ago, I ran into one of those .NET errors that appears simple on the surface and has a deep web of potential causes behind it. The error message itself was disarmingly brief:</p>
 <pre><code>Unable to find a project to restore!</code></pre>

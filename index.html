@@ -24,6 +24,8 @@
       --ctp-sky: #91d7e3;
       --ctp-green: #a6da95;
       --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
       --ctp-lavender: #b7bdf8;
       --ctp-text: #cad3f5;
       --ctp-subtext1: #b8c0e0;
@@ -554,6 +556,7 @@
 </head>
 <body>
   <main class="wide">
+
     <p class="eyebrow">matthewedmondson.com</p>
     <h1>Matt Edmondson</h1>
     <p class="tagline">
@@ -573,23 +576,30 @@
           <button class="filter-more" type="button" id="drawer-close">Close</button>
         </div>
         <div class="filter-group">
+          <h4>Sort</h4>
+          <div class="filter-list">
+            <button class="filter-opt" type="button" aria-pressed="true" data-sort="new"><span>Newest first</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-sort="old"><span>Oldest first</span></button>
+          </div>
+        </div>
+        <div class="filter-group">
           <h4>Category</h4>
           <div class="filter-list">
-            <button class="filter-opt" type="button" aria-pressed="true" data-cat=""><span>All</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Development"><span>Development</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C#"><span>C#</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Architecture"><span>Architecture</span><span class="n">3</span></button>
+            <button class="filter-opt" type="button" aria-pressed="true" data-cat=""><span>All</span><span class="n">6</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Development"><span>Development</span><span class="n">6</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C#"><span>C#</span><span class="n">5</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Architecture"><span>Architecture</span><span class="n">4</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-cat="Debugging"><span>Debugging</span><span class="n">1</span></button>
           </div>
         </div>
         <div class="filter-group">
           <h4>Tag</h4>
           <div class="filter-list long">
-            <button class="filter-opt" type="button" aria-pressed="true" data-tag=""><span>All</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="csharp"><span>csharp</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="dotnet"><span>dotnet</span><span class="n">3</span></button>
+            <button class="filter-opt" type="button" aria-pressed="true" data-tag=""><span>All</span><span class="n">6</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="csharp"><span>csharp</span><span class="n">5</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="dotnet"><span>dotnet</span><span class="n">4</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="design-patterns"><span>design-patterns</span><span class="n">3</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-tag="architecture"><span>architecture</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="design-patterns"><span>design-patterns</span><span class="n">2</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-tag="build-server"><span>build-server</span><span class="n">1</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-tag="concurrency"><span>concurrency</span><span class="n">1</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-tag="constructors"><span>constructors</span><span class="n">1</span></button>
@@ -598,9 +608,11 @@
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="formatting"><span>formatting</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="git-worktrees"><span>git-worktrees</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ide0055"><span>ide0055</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="memory-management"><span>memory-management</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="msbuild"><span>msbuild</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="nuget"><span>nuget</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="object-initializers"><span>object-initializers</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="performance"><span>performance</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="project-guid"><span>project-guid</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="roslyn"><span>roslyn</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="strong-typing"><span>strong-typing</span><span class="n">1</span></button>
@@ -609,20 +621,22 @@
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="type-safety"><span>type-safety</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="using-directives"><span>using-directives</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="visual-studio"><span>visual-studio</span><span class="n">1</span></button>
-            <button class="filter-more" type="button" data-tag-more="1" data-label="Show 15 more">Show 15 more</button>
-          </div>
-        </div>
-        <div class="filter-group">
-          <h4>Sort</h4>
-          <div class="filter-list">
-            <button class="filter-opt" type="button" aria-pressed="true" data-sort="new"><span>Newest first</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-sort="old"><span>Oldest first</span></button>
+            <button class="filter-more" type="button" data-tag-more="1" data-label="Show 17 more">Show 17 more</button>
           </div>
         </div>
         <p class="filter-count" id="filter-count"></p>
       </aside>
       <div class="writing-main">
       <ul class="post-grid">
+        <li class="post-card" data-tags="csharp dotnet performance memory-management design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-09-15T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/dotnet-reducing-gc-pressure-arraypool-span.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-09-15">September 15, 2025</time>
+            <h3><a href="/blog/dotnet-reducing-gc-pressure-arraypool-span/">Reducing GC Pressure in .NET with ArrayPool and Span</a></h3>
+            <p>Practical techniques for reducing GC pressure in .NET: object pooling, Span&lt;T&gt;, ArrayPool, LOH management, and continuous memory monitoring.</p>
+          </div>
+
+        </li>
         <li class="post-card" data-tags="csharp dotnet threading concurrency design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-09-02T00:00:00.000Z">
           <img class="post-thumb" src="/assets-blog/csharp-threading-synchronization-patterns-production-libraries.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
@@ -642,28 +656,28 @@
 
         </li>
         <li class="post-card" data-tags="csharp formatting roslyn ide0055 using-directives" data-cats="|Development|C#|" data-date="2025-07-29T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-using-directives-inconsistent-formatting-rules.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/csharp-ide0055-using-directive-grouping.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-07-29">July 29, 2025</time>
-            <h3><a href="/blog/csharp-using-directives-inconsistent-formatting-rules/">Enforcing Using Directive Grouping with IDE0055 in C#</a></h3>
+            <h3><a href="/blog/csharp-ide0055-using-directive-grouping/">Enforcing Using Directive Grouping with IDE0055 in C#</a></h3>
             <p>How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp object-initializers constructors" data-cats="|Development|C#|" data-date="2025-07-18T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-object-initializers-run-after-code-in-the-default-constructor.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/csharp-object-initialization-order.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-07-18">July 18, 2025</time>
-            <h3><a href="/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/">Object Initialization Order in C# and How to Design Around It</a></h3>
+            <h3><a href="/blog/csharp-object-initialization-order/">Object Initialization Order in C# and How to Design Around It</a></h3>
             <p>How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet debugging nuget msbuild troubleshooting build-server project-guid visual-studio git-worktrees architecture design-flaw" data-cats="|Development|Debugging|Architecture|" data-date="2025-06-14T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-project-guid-conflicts-build-server-debugging.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/dotnet-duplicate-project-guids-build-server-state.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-06-14">June 14, 2025</time>
-            <h3><a href="/blog/dotnet-project-guid-conflicts-build-server-debugging/">Duplicate Project GUIDs and MSBuild Build Server State</a></h3>
+            <h3><a href="/blog/dotnet-duplicate-project-guids-build-server-state/">Duplicate Project GUIDs and MSBuild Build Server State</a></h3>
             <p>Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks.</p>
           </div>
 
@@ -672,6 +686,7 @@
       <p class="filter-empty" hidden>Nothing matches that combination.</p>
       </div>
     </div>
+
 
     <div class="links">
       <a class="primary" href="https://ktsu.dev">ktsu.dev</a>
@@ -708,6 +723,23 @@
     var cards = [].slice.call(grid.querySelectorAll('.post-card'));
     var empty = document.querySelector('.filter-empty');
     var state = { tag: '', cat: '', status: '', fc: '', sort: 'new' };
+
+    // Filters live in the hash so a view can be linked, and are mirrored to
+    // sessionStorage so returning from a post restores what was on screen. The
+    // post page's back link is a bare "/", which would otherwise discard it.
+    var STORE = 'writing-filters';
+    function save(h) { try { sessionStorage.setItem(STORE, h); } catch (e) {} }
+    function stored() { try { return sessionStorage.getItem(STORE) || ''; } catch (e) { return ''; } }
+    // Only restore when arriving from a post. A bare "/" typed, bookmarked or
+    // followed from elsewhere should be the unfiltered index.
+    function cameFromPost() {
+      try {
+        var r = document.referrer;
+        if (!r) return false;
+        var u = new URL(r);
+        return u.origin === location.origin && u.pathname.indexOf('/blog/') === 0;
+      } catch (e) { return false; }
+    }
 
     function press(sel, attr, value) {
       [].forEach.call(bar.querySelectorAll(sel), function (c) {
@@ -767,7 +799,9 @@
       if (state.status) p.push('status=' + state.status);
       if (state.fc) p.push('fc=' + state.fc);
       if (state.sort !== 'new') p.push('sort=' + state.sort);
-      history.replaceState(null, '', p.length ? '#' + p.join('&') : location.pathname);
+      var h = p.join('&');
+      save(h);
+      history.replaceState(null, '', h ? '#' + h : location.pathname);
     }
 
     bar.addEventListener('click', function (e) {
@@ -800,6 +834,10 @@
 
     function readHash() {
       var h = location.hash.replace(/^#/, '');
+      if (!h && cameFromPost()) {
+        h = stored();
+        if (h) history.replaceState(null, '', '#' + h);
+      }
       var get = function (k) {
         var m = new RegExp('(?:^|&)' + k + '=([^&]*)').exec(h);
         return m ? decodeURIComponent(m[1]) : '';

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Debugging the Mysterious 'Unable to find a project to restore' Error in .NET | Matt Edmondson</title>
+  <title>Duplicate Project GUIDs and MSBuild Build Server State | Matt Edmondson</title>
   <meta name="description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
   <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Debugging the Mysterious 'Unable to find a project to restore' Error in .NET | Matt Edmondson" />
+  <meta property="og:title" content="Duplicate Project GUIDs and MSBuild Build Server State | Matt Edmondson" />
   <meta property="og:description" content="Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks." />
   <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-project-guid-conflicts-build-server-debugging/" />
   <meta name="twitter:card" content="summary" />
@@ -181,6 +181,30 @@
       margin: 2rem 0 0.6rem;
     }
 
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
     .post-meta {
       display: flex;
       align-items: center;
@@ -199,6 +223,168 @@
       background-color: var(--ctp-surface0);
       padding: 0.15rem 0.6rem;
       border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
     }
 
     article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
@@ -248,23 +434,101 @@
     th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
     td { color: var(--ctp-subtext1); }
 
-    .post-list { list-style: none; margin: 0; padding: 0; }
-    .post-list li {
-      padding: 1.1rem 0;
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
       border-bottom: 1px solid var(--ctp-surface0);
     }
-    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
-    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
-    .post-list h3 a { color: var(--ctp-text); }
-    .post-list h3 a:hover { color: var(--ctp-sapphire); }
-    .post-list time {
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
       color: var(--ctp-overlay0);
     }
-    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
 
     .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
 
     .draft-badge {
       font-family: 'JetBrains Mono', monospace;
@@ -290,18 +554,30 @@
 </head>
 <body>
   <main>
-    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
+      <h1>Duplicate Project GUIDs and MSBuild Build Server State</h1>
       <div class="post-meta">
         <time datetime="2025-06-14">June 14, 2025</time>
         <span class="category-tag">Development</span>
         <span class="category-tag">Debugging</span>
         <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=debugging">debugging</a>
+        <a class="post-tag" href="/#tag=nuget">nuget</a>
+        <a class="post-tag" href="/#tag=msbuild">msbuild</a>
+        <a class="post-tag" href="/#tag=troubleshooting">troubleshooting</a>
+        <a class="post-tag" href="/#tag=build-server">build-server</a>
+        <a class="post-tag" href="/#tag=project-guid">project-guid</a>
+        <a class="post-tag" href="/#tag=visual-studio">visual-studio</a>
+        <a class="post-tag" href="/#tag=git-worktrees">git-worktrees</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=design-flaw">design-flaw</a>
       </div>
-<h1>Debugging the Mysterious &quot;Unable to find a project to restore&quot; Error in .NET</h1>
-<p>Not long ago, I ran into one of those .NET errors that appears simple on the surface but conceals a surprisingly deep web of potential causes. The error message itself was disarmingly brief:</p>
-<pre><code>Unable to find a project to restore!
-</code></pre>
+      <img class="post-hero" src="/assets-blog/dotnet-project-guid-conflicts-build-server-debugging.jpg" alt="" width="1200" height="675" />
+
+<p>Not long ago, I ran into one of those .NET errors that appears simple on the surface and has a deep web of potential causes behind it. The error message itself was disarmingly brief:</p>
+<pre><code>Unable to find a project to restore!</code></pre>
 <p>What made the situation genuinely puzzling was that everything appeared to be correctly configured. My solution file was valid, my project files existed at their expected paths, and the directory structure was sound. Yet <code>dotnet restore</code> kept failing with this cryptic message.</p>
 <p>What followed was an extended debugging session that led me from routine troubleshooting into a fundamental architectural issue in how MSBuild identifies projects, one that affects any developer who uses Git worktrees, repository forks, or templates.</p>
 <h2>Part 1: The Investigation</h2>
@@ -322,9 +598,7 @@
 <li><strong>Solution file integrity</strong>: was the <code>.sln</code> file well-formed?</li>
 </ol>
 <p>A quick PowerShell check confirmed everything was in order:</p>
-<pre><code class="language-powershell">Get-ChildItem -Path . -Recurse -Include *.csproj, *.sln | Select-Object FullName
-</code></pre>
-<p>All files were present and accounted for:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">Get-ChildItem</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">Path </span><span style="color:#8BD5CA">.</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">Recurse </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">Include </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">.csproj</span><span style="color:#8BD5CA">,</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5">.sln </span><span style="color:#8BD5CA">|</span><span style="color:#8AADF4;font-style:italic"> Select-Object</span><span style="color:#CAD3F5"> FullName</span></span></code></pre><p>All files were present and accounted for:</p>
 <ul>
 <li><code>UndoRedo.Core\UndoRedo.Core.csproj</code></li>
 <li><code>UndoRedo.Test\UndoRedo.Test.csproj</code></li>
@@ -334,32 +608,28 @@
 <h3>Investigating Non-Standard Configuration</h3>
 <p>With the basics eliminated, I turned my attention to the non-standard parts of my setup. I use custom MSBuild SDKs and centralized package management across all my projects, and while both are well-supported features, investigating anything non-standard is sound debugging practice.</p>
 <p>My <code>global.json</code> defined custom SDK versions:</p>
-<pre><code class="language-json">{
-  &quot;sdk&quot;: {
-    &quot;version&quot;: &quot;9.0.300&quot;,
-    &quot;rollForward&quot;: &quot;latestFeature&quot;
-  },
-  &quot;msbuild-sdks&quot;: {
-    &quot;ktsu.Sdk&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.Lib&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.ConsoleApp&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.Test&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.ImGuiApp&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.WinApp&quot;: &quot;1.38.0&quot;,
-    &quot;ktsu.Sdk.WinTest&quot;: &quot;1.38.0&quot;,
-    &quot;MSTest.Sdk&quot;: &quot;3.9.1&quot;
-  }
-}
-</code></pre>
-<p>My project files relied on centralized SDK versioning and centralized package management:</p>
-<pre><code class="language-xml">&lt;Project Sdk=&quot;ktsu.Sdk.Lib&quot;&gt;
-    &lt;ItemGroup&gt;
-        &lt;PackageReference Include=&quot;Microsoft.Extensions.DependencyInjection&quot; /&gt;
-        &lt;PackageReference Include=&quot;Microsoft.Extensions.DependencyInjection.Abstractions&quot; /&gt;
-    &lt;/ItemGroup&gt;
-&lt;/Project&gt;
-</code></pre>
-<p>The <code>PackageReference</code> elements intentionally omit version numbers because those are managed centrally in <code>Directory.Packages.props</code>. This is the officially recommended approach for both centralized SDK versioning and centralized package management.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7">  "</span><span style="color:#8AADF4">sdk</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">version</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "9.0.300"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">rollForward</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "latestFeature"</span></span>
+<span class="line"><span style="color:#939AB7">  },</span></span>
+<span class="line"><span style="color:#939AB7">  "</span><span style="color:#8AADF4">msbuild-sdks</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.Lib</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.ConsoleApp</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.Test</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.ImGuiApp</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.WinApp</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">ktsu.Sdk.WinTest</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "1.38.0"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">MSTest.Sdk</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "3.9.1"</span></span>
+<span class="line"><span style="color:#939AB7">  }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>My project files relied on centralized SDK versioning and centralized package management:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">Project</span><span style="color:#EED49F"> Sdk</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"ktsu.Sdk.Lib"</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">    &#x3C;</span><span style="color:#8AADF4">ItemGroup</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">        &#x3C;</span><span style="color:#8AADF4">PackageReference</span><span style="color:#EED49F"> Include</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"Microsoft.Extensions.DependencyInjection"</span><span style="color:#8BD5CA"> /></span></span>
+<span class="line"><span style="color:#8BD5CA">        &#x3C;</span><span style="color:#8AADF4">PackageReference</span><span style="color:#EED49F"> Include</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"Microsoft.Extensions.DependencyInjection.Abstractions"</span><span style="color:#8BD5CA"> /></span></span>
+<span class="line"><span style="color:#8BD5CA">    &#x3C;/</span><span style="color:#8AADF4">ItemGroup</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">Project</span><span style="color:#8BD5CA">></span></span></code></pre><p>The <code>PackageReference</code> elements intentionally omit version numbers because those are managed centrally in <code>Directory.Packages.props</code>. This is the officially recommended approach for both centralized SDK versioning and centralized package management.</p>
 <h3>The Red Herring Problem</h3>
 <p>When I searched online for solutions, the available advice consistently pointed to my non-standard configuration as the likely culprit. Common suggestions included:</p>
 <ul>
@@ -371,14 +641,11 @@
 </ul>
 <p>The combination of my non-standard setup and this chorus of advice sent me down a prolonged investigation of both custom SDK resolution and centralized package management. I spent considerable time exploring these directions.</p>
 <p>However, I had one critical piece of conflicting evidence: <strong>the identical configuration was working perfectly across dozens of my other projects.</strong> The same <code>global.json</code>, the same custom SDK versions, the same centralized versioning approach, all functioning flawlessly elsewhere.</p>
-<p>This was the most important insight of the entire investigation. When debugging, trust the known-good configurations. Don&#39;t second-guess working patterns because they&#39;re non-standard.</p>
+<p>This was the insight that unlocked the investigation. When debugging, trust the known-good configurations. Don&#39;t second-guess working patterns because they&#39;re non-standard.</p>
 <h3>MSBuild Preprocessing as a Check</h3>
 <p>To verify what MSBuild was actually seeing, I used its preprocessing feature:</p>
-<pre><code class="language-powershell">dotnet msbuild -preprocess UndoRedo.Core\UndoRedo.Core.csproj &gt; preprocess.xml
-</code></pre>
-<p>MSBuild was successfully resolving my custom SDK:</p>
-<pre><code>C:\Users\MatthewEdmondson\.nuget\packages\ktsu.sdk.lib\1.38.0\Sdk\Sdk.props
-</code></pre>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">dotnet msbuild </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">preprocess UndoRedo.Core\UndoRedo.Core.csproj </span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> preprocess.xml</span></span></code></pre><p>MSBuild was successfully resolving my custom SDK:</p>
+<pre><code>C:\Users\MatthewEdmondson\.nuget\packages\ktsu.sdk.lib\1.38.0\Sdk\Sdk.props</code></pre>
 <p>This definitively ruled out SDK resolution as the problem, which left one remaining possibility.</p>
 <h2>Part 2: The Root Cause</h2>
 <h3>The GUID Duplication Hypothesis</h3>
@@ -440,73 +707,69 @@
 <h2>Part 4: The Solution</h2>
 <h3>Detecting GUID Conflicts</h3>
 <p>The following PowerShell script scans all solution files under a directory tree and reports any duplicate project GUIDs:</p>
-<pre><code class="language-powershell"># Find all solution files with better performance and error handling
-Write-Host &quot;Searching for solution files...&quot; -ForegroundColor Yellow
-
-# Exclude common problematic directories and limit depth
-$excludeDirs = @(&#39;node_modules&#39;, &#39;.git&#39;, &#39;bin&#39;, &#39;obj&#39;, &#39;.vs&#39;, &#39;.vscode&#39;, &#39;packages&#39;)
-$solutions = @()
-
-try {
-    $solutions = Get-ChildItem -Path . -Filter &quot;*.sln&quot; -Recurse -Depth 10 -ErrorAction SilentlyContinue |
-        Where-Object {
-            $exclude = $false
-            foreach ($dir in $excludeDirs) {
-                if ($_.FullName -like &quot;*\$dir\*&quot;) {
-                    $exclude = $true
-                    break
-                }
-            }
-            -not $exclude
-        }
-
-    Write-Host &quot;Found $($solutions.Count) solution files&quot; -ForegroundColor Green
-} catch {
-    Write-Host &quot;Error searching for solution files: $($_.Exception.Message)&quot; -ForegroundColor Red
-    return
-}
-
-$projectGuids = @{}
-
-foreach ($sln in $solutions) {
-    Write-Host &quot;Processing: $($sln.Name)&quot; -ForegroundColor Cyan
-    try {
-        $content = Get-Content $sln.FullName -ErrorAction Stop
-        foreach ($line in $content) {
-            if ($line -match &#39;Project\(&quot;.*&quot;\)\s*=\s*&quot;.*&quot;,\s*&quot;.*&quot;,\s*&quot;([^&quot;]+)&quot;&#39;) {
-                $guid = $matches[1]
-                if (-not $projectGuids.ContainsKey($guid)) {
-                    $projectGuids[$guid] = @()
-                }
-                $projectGuids[$guid] += $sln.FullName
-            }
-        }
-    } catch {
-        Write-Host &quot;  Warning: Could not read $($sln.FullName)&quot; -ForegroundColor Yellow
-    }
-}
-
-# Find and report duplicates
-$duplicates = $projectGuids.GetEnumerator() | Where-Object { $_.Value.Count -gt 1 }
-if ($duplicates) {
-    Write-Host &quot;`nFound duplicate project GUIDs:&quot; -ForegroundColor Red
-    foreach ($duplicate in $duplicates) {
-        Write-Host &quot;GUID: $($duplicate.Key)&quot; -ForegroundColor Yellow
-        Write-Host &quot;Found in solutions:&quot; -ForegroundColor White
-        foreach ($solution in $duplicate.Value) {
-            Write-Host &quot;  - $solution&quot; -ForegroundColor Cyan
-        }
-        Write-Host &quot;&quot;
-    }
-} else {
-    Write-Host &quot;`nNo duplicate project GUIDs found.&quot; -ForegroundColor Green
-}
-</code></pre>
-<h3>Resolving Conflicts</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic"># Find all solution files with better performance and error handling</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">Write-Host</span><span style="color:#A6DA95"> "Searching for solution files..."</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Yellow</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic"># Exclude common problematic directories and limit depth</span></span>
+<span class="line"><span style="color:#CAD3F5">$excludeDirs </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6"> @</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">'node_modules'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> '.git'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> 'bin'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> 'obj'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> '.vs'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> '.vscode'</span><span style="color:#8BD5CA">,</span><span style="color:#A6DA95"> 'packages'</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">$solutions </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6"> @</span><span style="color:#939AB7">()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">try</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">    $solutions </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> Get-ChildItem</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">Path </span><span style="color:#8BD5CA">.</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">Filter </span><span style="color:#A6DA95">"*.sln"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">Recurse </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">Depth </span><span style="color:#F5A97F">10</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ErrorAction SilentlyContinue </span><span style="color:#8BD5CA">|</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        Where-Object</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">            $exclude </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> $</span><span style="color:#ED8796">false</span></span>
+<span class="line"><span style="color:#C6A0F6">            foreach</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$dir </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> $excludeDirs</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">                if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$_.FullName </span><span style="color:#8BD5CA">-like</span><span style="color:#A6DA95"> "*\</span><span style="color:#CAD3F5">$dir</span><span style="color:#A6DA95">\*"</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">                    $exclude </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> $</span><span style="color:#ED8796">true</span></span>
+<span class="line"><span style="color:#C6A0F6">                    break</span></span>
+<span class="line"><span style="color:#939AB7">                }</span></span>
+<span class="line"><span style="color:#939AB7">            }</span></span>
+<span class="line"><span style="color:#8BD5CA">            -not</span><span style="color:#CAD3F5"> $exclude</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    Write-Host</span><span style="color:#A6DA95"> "Found </span><span style="color:#939AB7">$(</span><span style="color:#CAD3F5">$solutions.Count</span><span style="color:#939AB7">)</span><span style="color:#A6DA95"> solution files"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Green</span></span>
+<span class="line"><span style="color:#939AB7">}</span><span style="color:#C6A0F6"> catch</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    Write-Host</span><span style="color:#A6DA95"> "Error searching for solution files: </span><span style="color:#939AB7">$(</span><span style="color:#CAD3F5">$</span><span style="color:#A6DA95">_</span><span style="color:#CAD3F5">.Exception.Message</span><span style="color:#939AB7">)</span><span style="color:#A6DA95">"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Red</span></span>
+<span class="line"><span style="color:#C6A0F6">    return</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">$projectGuids </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6"> @</span><span style="color:#939AB7">{}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">foreach</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$sln </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> $solutions</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    Write-Host</span><span style="color:#A6DA95"> "Processing: </span><span style="color:#939AB7">$(</span><span style="color:#CAD3F5">$sln.Name</span><span style="color:#939AB7">)</span><span style="color:#A6DA95">"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Cyan</span></span>
+<span class="line"><span style="color:#C6A0F6">    try</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">        $content </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> Get-Content</span><span style="color:#CAD3F5"> $sln.FullName </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">ErrorAction Stop</span></span>
+<span class="line"><span style="color:#C6A0F6">        foreach</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$line </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> $content</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">            if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$line </span><span style="color:#8BD5CA">-match</span><span style="color:#A6DA95"> 'Project\(".*"\)\s*=\s*".*",\s*".*",\s*"([^"]+)"'</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">                $guid </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> $matches</span><span style="color:#939AB7">[</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">                if</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">-not</span><span style="color:#CAD3F5"> $projectGuids.ContainsKey</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">$guid</span><span style="color:#939AB7">))</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">                    $projectGuids</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">$guid</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> =</span><span style="color:#C6A0F6"> @</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">                }</span></span>
+<span class="line"><span style="color:#CAD3F5">                $projectGuids</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">$guid</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#CAD3F5"> $sln.FullName</span></span>
+<span class="line"><span style="color:#939AB7">            }</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span><span style="color:#C6A0F6"> catch</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        Write-Host</span><span style="color:#A6DA95"> "  Warning: Could not read </span><span style="color:#939AB7">$(</span><span style="color:#CAD3F5">$sln.FullName</span><span style="color:#939AB7">)</span><span style="color:#A6DA95">"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Yellow</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic"># Find and report duplicates</span></span>
+<span class="line"><span style="color:#CAD3F5">$duplicates </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> $projectGuids.GetEnumerator</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> |</span><span style="color:#8AADF4;font-style:italic"> Where-Object</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> $_.Value.Count </span><span style="color:#8BD5CA">-gt</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$duplicates</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    Write-Host</span><span style="color:#A6DA95"> "</span><span style="color:#F5BDE6">`n</span><span style="color:#A6DA95">Found duplicate project GUIDs:"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Red</span></span>
+<span class="line"><span style="color:#C6A0F6">    foreach</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$duplicate </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> $duplicates</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        Write-Host</span><span style="color:#A6DA95"> "GUID: </span><span style="color:#939AB7">$(</span><span style="color:#CAD3F5">$duplicate.Key</span><span style="color:#939AB7">)</span><span style="color:#A6DA95">"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Yellow</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        Write-Host</span><span style="color:#A6DA95"> "Found in solutions:"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor White</span></span>
+<span class="line"><span style="color:#C6A0F6">        foreach</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">$solution </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> $duplicate.Value</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">            Write-Host</span><span style="color:#A6DA95"> "  - </span><span style="color:#CAD3F5">$solution</span><span style="color:#A6DA95">"</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Cyan</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        Write-Host</span><span style="color:#A6DA95"> ""</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span><span style="color:#C6A0F6"> else</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    Write-Host</span><span style="color:#A6DA95"> "</span><span style="color:#F5BDE6">`n</span><span style="color:#A6DA95">No duplicate project GUIDs found."</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5">ForegroundColor Green</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><h3>Resolving Conflicts</h3>
 <p>When the script identifies duplicates, the fix is to generate a new GUID:</p>
-<pre><code class="language-powershell">[guid]::NewGuid().ToString().ToUpper()
-</code></pre>
-<p>Then replace the duplicate GUID in one of the affected solution files, and in the corresponding project file if it contains the GUID as well.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#C6A0F6">guid</span><span style="color:#939AB7">]</span><span style="color:#CAD3F5">::NewGuid</span><span style="color:#939AB7">()</span><span style="color:#CAD3F5">.ToString</span><span style="color:#939AB7">()</span><span style="color:#CAD3F5">.ToUpper</span><span style="color:#939AB7">()</span></span></code></pre><p>Then replace the duplicate GUID in one of the affected solution files, and in the corresponding project file if it contains the GUID as well.</p>
 <h3>Why This Works</h3>
 <p>Assigning a unique GUID forces MSBuild and its build server processes to recognize the project as a distinct entity. This eliminates the ambiguity in the internal dependency graph and resets the project&#39;s identity in the server&#39;s in-memory state.</p>
 <p>This explanation accounts for all the observed symptoms:</p>
@@ -559,9 +822,11 @@ if ($duplicates) {
     </article>
   </main>
 
+
   <footer>
     <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
     <span class="copy">&copy; 2026 Matt Edmondson</span>
   </footer>
+
 </body>
 </html>

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matt Edmondson</title>
-  <meta name="description" content="Writing on game production, engineering, and studio process by Matt Edmondson, Studio Production Lead at The Three Thousands." />
-  <link rel="canonical" href="https://matthewedmondson.com/" />
+  <title>About | Matt Edmondson</title>
+  <meta name="description" content="Producer, game developer, and software engineer in Melbourne, Australia. Studio Production Lead at The Three Thousands." />
+  <link rel="canonical" href="https://matthewedmondson.com/about/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Matt Edmondson" />
-  <meta property="og:description" content="Writing on game production, engineering, and studio process by Matt Edmondson, Studio Production Lead at The Three Thousands." />
-  <meta property="og:url" content="https://matthewedmondson.com/" />
+  <meta property="og:title" content="About | Matt Edmondson" />
+  <meta property="og:description" content="Producer, game developer, and software engineer in Melbourne, Australia. Studio Production Lead at The Three Thousands." />
+  <meta property="og:url" content="https://matthewedmondson.com/about/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -553,125 +553,48 @@
 </style>
 </head>
 <body>
-  <main class="wide">
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <p class="eyebrow">matthewedmondson.com</p>
     <h1>Matt Edmondson</h1>
     <p class="tagline">
       Producer <span class="dot">·</span> Game Developer <span class="dot">·</span>
       Software Engineer <span class="dot">·</span> Melbourne, Australia
     </p>
-    <p class="lede">Notes on game production, engineering, and the places they meet.
-      <a href="/about/">More about me &rarr;</a></p>
+    <section class="intro">
+      <p>
+        I've been building games and software for about 30 years, from Amiga BASIC, to custom
+        engines in C++ and OpenGL, to co-founding an indie studio and shipping on Steam. I spent
+        a decade at EA on the <em>Real Racing</em> series, and I'm now Studio Production Lead at
+        <strong>The Three Thousands</strong>, where we're making a racing game in Unreal Engine.
+      </p>
+      <p>
+        The arc has been a gradual shift from writing code all day to leading the teams that do.
+        I still review PRs, maintain build infrastructure, and catch math errors in the vehicle
+        model. But the job is production now: coaching people, running sprints, making scope
+        calls, keeping the machine moving.
+      </p>
+    </section>
 
-    <p class="writing-heading">Writing</p>
-    <div class="writing-layout">
-      <button class="drawer-toggle" type="button" id="drawer-open" aria-expanded="false" aria-controls="filters">Filters</button>
-      <div class="drawer-scrim" id="drawer-scrim" hidden></div>
-      <aside class="filter-drawer" id="filters" aria-label="Filter and sort posts">
-        <div class="drawer-head">
-          <span>Filters</span>
-          <button class="filter-more" type="button" id="drawer-close">Close</button>
-        </div>
-        <div class="filter-group">
-          <h4>Category</h4>
-          <div class="filter-list">
-            <button class="filter-opt" type="button" aria-pressed="true" data-cat=""><span>All</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Development"><span>Development</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C#"><span>C#</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Architecture"><span>Architecture</span><span class="n">3</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Debugging"><span>Debugging</span><span class="n">1</span></button>
-          </div>
-        </div>
-        <div class="filter-group">
-          <h4>Tag</h4>
-          <div class="filter-list long">
-            <button class="filter-opt" type="button" aria-pressed="true" data-tag=""><span>All</span><span class="n">5</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="csharp"><span>csharp</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="dotnet"><span>dotnet</span><span class="n">3</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="architecture"><span>architecture</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="design-patterns"><span>design-patterns</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="build-server"><span>build-server</span><span class="n">1</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="concurrency"><span>concurrency</span><span class="n">1</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="constructors"><span>constructors</span><span class="n">1</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="debugging"><span>debugging</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="design-flaw"><span>design-flaw</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="formatting"><span>formatting</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="git-worktrees"><span>git-worktrees</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ide0055"><span>ide0055</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="msbuild"><span>msbuild</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="nuget"><span>nuget</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="object-initializers"><span>object-initializers</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="project-guid"><span>project-guid</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="roslyn"><span>roslyn</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="strong-typing"><span>strong-typing</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="threading"><span>threading</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="troubleshooting"><span>troubleshooting</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="type-safety"><span>type-safety</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="using-directives"><span>using-directives</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="visual-studio"><span>visual-studio</span><span class="n">1</span></button>
-            <button class="filter-more" type="button" data-tag-more="1" data-label="Show 15 more">Show 15 more</button>
-          </div>
-        </div>
-        <div class="filter-group">
-          <h4>Sort</h4>
-          <div class="filter-list">
-            <button class="filter-opt" type="button" aria-pressed="true" data-sort="new"><span>Newest first</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-sort="old"><span>Oldest first</span></button>
-          </div>
-        </div>
-        <p class="filter-count" id="filter-count"></p>
-      </aside>
-      <div class="writing-main">
-      <ul class="post-grid">
-        <li class="post-card" data-tags="csharp dotnet threading concurrency design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-09-02T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-threading-synchronization-patterns-production-libraries.jpg" alt="" loading="lazy" width="1200" height="675" />
-          <div class="post-card-body">
-            <time datetime="2025-09-02">September 2, 2025</time>
-            <h3><a href="/blog/csharp-threading-synchronization-patterns-production-libraries/">Threading and Synchronization Patterns in Production .NET Libraries</a></h3>
-            <p>Practical threading patterns from production .NET code, including lock objects as parameters, thread dispatch queues, ReaderWriterLockSlim vs Lock, and how to actually test for thread safety.</p>
-          </div>
+    <section>
+      <h2>ktsu.dev</h2>
+      <p>
+        Outside studio work, most of my energy goes into
+        <a href="https://ktsu.dev">ktsu.dev</a>, a collection of open-source .NET libraries and
+        tools built around making invalid states unrepresentable: strongly-typed file paths,
+        type-safe physical quantities with dimensional analysis, and a pile of utilities that
+        eliminate the bugs that waste everyone's time. 60+ packages on NuGet and counting.
+      </p>
+    </section>
 
-        </li>
-        <li class="post-card" data-tags="csharp type-safety design-patterns architecture dotnet strong-typing" data-cats="|Development|C#|Architecture|" data-date="2025-08-19T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-eliminating-primitive-obsession-with-semantic-types.jpg" alt="" loading="lazy" width="1200" height="675" />
-          <div class="post-card-body">
-            <time datetime="2025-08-19">August 19, 2025</time>
-            <h3><a href="/blog/csharp-eliminating-primitive-obsession-with-semantic-types/">Eliminating Primitive Obsession in C# with Semantic Types</a></h3>
-            <p>How wrapping strings and paths in semantic types catches entire categories of bugs at compile time, and a look at the CRTP-based approach used in the ktsu.dev Semantics library.</p>
-          </div>
-
-        </li>
-        <li class="post-card" data-tags="csharp formatting roslyn ide0055 using-directives" data-cats="|Development|C#|" data-date="2025-07-29T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-using-directives-inconsistent-formatting-rules.jpg" alt="" loading="lazy" width="1200" height="675" />
-          <div class="post-card-body">
-            <time datetime="2025-07-29">July 29, 2025</time>
-            <h3><a href="/blog/csharp-using-directives-inconsistent-formatting-rules/">Enforcing Using Directive Grouping with IDE0055 in C#</a></h3>
-            <p>How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it.</p>
-          </div>
-
-        </li>
-        <li class="post-card" data-tags="csharp object-initializers constructors" data-cats="|Development|C#|" data-date="2025-07-18T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-object-initializers-run-after-code-in-the-default-constructor.jpg" alt="" loading="lazy" width="1200" height="675" />
-          <div class="post-card-body">
-            <time datetime="2025-07-18">July 18, 2025</time>
-            <h3><a href="/blog/csharp-object-initializers-run-after-code-in-the-default-constructor/">Object Initialization Order in C# and How to Design Around It</a></h3>
-            <p>How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior.</p>
-          </div>
-
-        </li>
-        <li class="post-card" data-tags="dotnet debugging nuget msbuild troubleshooting build-server project-guid visual-studio git-worktrees architecture design-flaw" data-cats="|Development|Debugging|Architecture|" data-date="2025-06-14T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-project-guid-conflicts-build-server-debugging.jpg" alt="" loading="lazy" width="1200" height="675" />
-          <div class="post-card-body">
-            <time datetime="2025-06-14">June 14, 2025</time>
-            <h3><a href="/blog/dotnet-project-guid-conflicts-build-server-debugging/">Duplicate Project GUIDs and MSBuild Build Server State</a></h3>
-            <p>Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks.</p>
-          </div>
-
-        </li>
-      </ul>
-      <p class="filter-empty" hidden>Nothing matches that combination.</p>
-      </div>
-    </div>
+    <section>
+      <h2>Other Things I Make</h2>
+      <p>
+        Analog synth modules, guitar pedals, CNC machines. Amateur race-car mechanic, CAD
+        designer, 3D-print enthusiast, miniature painter, music producer, and photographer.
+        The medium changes, the satisfaction of making things doesn't.
+      </p>
+    </section>
 
     <div class="links">
       <a class="primary" href="https://ktsu.dev">ktsu.dev</a>
@@ -686,134 +609,6 @@
     <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
     <span class="copy">&copy; 2026 Matt Edmondson</span>
   </footer>
-  <script>
-  (function () {
-    var bar = document.querySelector('.filter-drawer');
-    var grid = document.querySelector('.post-grid');
-    if (!bar || !grid) return;
 
-    // The drawer is a plain sidebar at desktop width and slides in below it.
-    var openBtn = document.getElementById('drawer-open');
-    var closeBtn = document.getElementById('drawer-close');
-    var scrim = document.getElementById('drawer-scrim');
-    function setDrawer(on) {
-      bar.classList.toggle('open', on);
-      if (scrim) scrim.hidden = !on;
-      if (openBtn) openBtn.setAttribute('aria-expanded', String(on));
-    }
-    if (openBtn) openBtn.addEventListener('click', function () { setDrawer(true); });
-    if (closeBtn) closeBtn.addEventListener('click', function () { setDrawer(false); });
-    if (scrim) scrim.addEventListener('click', function () { setDrawer(false); });
-    addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
-    var cards = [].slice.call(grid.querySelectorAll('.post-card'));
-    var empty = document.querySelector('.filter-empty');
-    var state = { tag: '', cat: '', status: '', fc: '', sort: 'new' };
-
-    function press(sel, attr, value) {
-      [].forEach.call(bar.querySelectorAll(sel), function (c) {
-        c.setAttribute('aria-pressed', String(c.getAttribute(attr) === value));
-      });
-    }
-
-    function apply() {
-      var shown = 0;
-      cards.forEach(function (card) {
-        var tags = (card.getAttribute('data-tags') || '').split(' ');
-        var cats = card.getAttribute('data-cats') || '';
-        // Absent in a deploy build, where neither axis has any controls to drive it.
-        var st = card.getAttribute('data-status') || '';
-        var fc = card.getAttribute('data-fc') || 'none';
-        var fcHit = state.fc === '' ? true
-          : state.fc === 'review'
-            ? (fc === 'open' || fc === 'drift' || fc === 'unconfirmed')
-            : fc === state.fc;
-        var hit = (state.tag === '' || tags.indexOf(state.tag) !== -1)
-          && (state.cat === '' || cats.indexOf('|' + state.cat + '|') !== -1)
-          && (state.status === '' || st === state.status)
-          && fcHit;
-        card.hidden = !hit;
-        if (hit) shown++;
-      });
-      press('[data-tag]', 'data-tag', state.tag);
-      press('[data-cat]', 'data-cat', state.cat);
-      press('[data-status]', 'data-status', state.status);
-      press('[data-fc]', 'data-fc', state.fc);
-      press('[data-sort]', 'data-sort', state.sort);
-      if (empty) empty.hidden = shown > 0;
-
-      var dir = state.sort === 'old' ? 1 : -1;
-      var sorted = cards.slice().sort(function (a, b) {
-        var x = a.getAttribute('data-date'), y = b.getAttribute('data-date');
-        return x === y ? 0 : (x < y ? -1 : 1) * dir;
-      });
-      // appendChild moves an existing node, so appending every card in order
-      // yields exactly the sorted order. Doing it through a fragment keeps it
-      // to one reflow instead of one per card.
-      var frag = document.createDocumentFragment();
-      sorted.forEach(function (c) { frag.appendChild(c); });
-      grid.appendChild(frag);
-
-      var count = document.getElementById('filter-count');
-      if (count) count.textContent = shown + (shown === 1 ? ' post' : ' posts');
-
-      var active = bar.querySelector('[data-tag][aria-pressed="true"]');
-      if (active && active.classList.contains('extra')) bar.classList.add('expanded');
-    }
-
-    function writeHash() {
-      var p = [];
-      if (state.cat) p.push('cat=' + encodeURIComponent(state.cat));
-      if (state.tag) p.push('tag=' + encodeURIComponent(state.tag));
-      if (state.status) p.push('status=' + state.status);
-      if (state.fc) p.push('fc=' + state.fc);
-      if (state.sort !== 'new') p.push('sort=' + state.sort);
-      history.replaceState(null, '', p.length ? '#' + p.join('&') : location.pathname);
-    }
-
-    bar.addEventListener('click', function (e) {
-      var btn = e.target.closest('button');
-      if (!btn || !bar.contains(btn)) return;
-      if (btn.hasAttribute('data-tag-more')) {
-        bar.classList.toggle('expanded');
-        btn.textContent = bar.classList.contains('expanded') ? 'Show fewer' : btn.dataset.label;
-        return;
-      }
-      // Selecting the active chip on an axis clears that axis.
-      if (btn.hasAttribute('data-tag')) {
-        var tg = btn.getAttribute('data-tag');
-        state.tag = (tg !== '' && state.tag === tg) ? '' : tg;
-      } else if (btn.hasAttribute('data-cat')) {
-        var ct = btn.getAttribute('data-cat');
-        state.cat = (ct !== '' && state.cat === ct) ? '' : ct;
-      } else if (btn.hasAttribute('data-status')) {
-        var sv = btn.getAttribute('data-status');
-        state.status = (sv !== '' && state.status === sv) ? '' : sv;
-      } else if (btn.hasAttribute('data-fc')) {
-        var fv = btn.getAttribute('data-fc');
-        state.fc = (fv !== '' && state.fc === fv) ? '' : fv;
-      } else if (btn.hasAttribute('data-sort')) {
-        state.sort = btn.getAttribute('data-sort');
-      } else return;
-      writeHash();
-      apply();
-    });
-
-    function readHash() {
-      var h = location.hash.replace(/^#/, '');
-      var get = function (k) {
-        var m = new RegExp('(?:^|&)' + k + '=([^&]*)').exec(h);
-        return m ? decodeURIComponent(m[1]) : '';
-      };
-      state.tag = get('tag');
-      state.cat = get('cat');
-      state.status = get('status');
-      state.fc = get('fc');
-      state.sort = get('sort') === 'old' ? 'old' : 'new';
-      apply();
-    }
-    readHash();
-    window.addEventListener('hashchange', readHash);
-  })();
-  </script>
 </body>
 </html>

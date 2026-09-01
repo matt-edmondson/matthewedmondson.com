@@ -181,6 +181,30 @@
       margin: 2rem 0 0.6rem;
     }
 
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
     .post-meta {
       display: flex;
       align-items: center;
@@ -199,6 +223,168 @@
       background-color: var(--ctp-surface0);
       padding: 0.15rem 0.6rem;
       border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
     }
 
     article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
@@ -248,23 +434,101 @@
     th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
     td { color: var(--ctp-subtext1); }
 
-    .post-list { list-style: none; margin: 0; padding: 0; }
-    .post-list li {
-      padding: 1.1rem 0;
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
       border-bottom: 1px solid var(--ctp-surface0);
     }
-    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
-    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
-    .post-list h3 a { color: var(--ctp-text); }
-    .post-list h3 a:hover { color: var(--ctp-sapphire); }
-    .post-list time {
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
       color: var(--ctp-overlay0);
     }
-    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
 
     .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
 
     .draft-badge {
       font-family: 'JetBrains Mono', monospace;
@@ -290,126 +554,106 @@
 </head>
 <body>
   <main>
-    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
+      <h1>Eliminating Primitive Obsession in C# with Semantic Types</h1>
       <div class="post-meta">
         <time datetime="2025-08-19">August 19, 2025</time>
         <span class="category-tag">Development</span>
         <span class="category-tag">C#</span>
         <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=type-safety">type-safety</a>
+        <a class="post-tag" href="/#tag=design-patterns">design-patterns</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=strong-typing">strong-typing</a>
       </div>
-<h1>Eliminating Primitive Obsession in C# with Semantic Types</h1>
+      <img class="post-hero" src="/assets-blog/csharp-eliminating-primitive-obsession-with-semantic-types.jpg" alt="" width="1200" height="675" />
+
 <p>Most C# codebases harbor a code smell so pervasive that we barely register it: <strong>primitive obsession</strong>. We pass <code>string</code> where we mean an email address, a file path, a repository name, or a URL. We pass <code>double</code> where we mean meters, kilograms, or seconds. The type system treats all of these identically, which means the compiler can&#39;t help us when we accidentally pass a username where a password was expected.</p>
 <p>This post examines what primitive obsession costs us in practice, and how a technique built on the <strong>Curiously Recurring Template Pattern (CRTP)</strong> can eliminate entire categories of bugs at compile time.</p>
 <h2>When Everything Is a String</h2>
 <p>Consider a method signature that turns up in just about any codebase:</p>
-<pre><code class="language-csharp">public void CloneRepository(string name, string remotePath, string localPath)
-{
-    // ...
-}
-</code></pre>
-<p>Nothing prevents a caller from writing:</p>
-<pre><code class="language-csharp">// Oops — arguments in the wrong order
-CloneRepository(remotePath, name, localDirectory);
-</code></pre>
-<p>The compiler accepts this without complaint. Every type matches: <code>string</code>, <code>string</code>, <code>string</code>. The bug won&#39;t surface until runtime, and possibly not until production.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> CloneRepository</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> remotePath</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> localPath</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // ...</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Nothing prevents a caller from writing:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Oops — arguments in the wrong order</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">CloneRepository</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">remotePath</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> localDirectory</span><span style="color:#939AB7">);</span></span></code></pre><p>The compiler accepts this without complaint. Every type matches: <code>string</code>, <code>string</code>, <code>string</code>. The bug won&#39;t surface until runtime, and possibly not until production.</p>
 <p>This isn&#39;t a contrived example. Whenever a method accepts two or more parameters of the same primitive type, the door is open for transposition bugs. The more parameters there are, the worse the odds become.</p>
 <h3>Paths</h3>
 <p>Paths are an especially treacherous case. A <code>string</code> can represent an absolute path, a relative path, a directory path, or a file path. The compiler has no awareness of which one the caller intended:</p>
-<pre><code class="language-csharp">string configDir = @&quot;C:\app\config&quot;;
-string logFile = @&quot;logs\app.log&quot;;
-
-// This compiles fine but is semantically wrong —
-// we&#39;re treating a relative path as an absolute one
-File.Delete(logFile);
-
-// And this silently produces garbage —
-// combining two absolute paths doesn&#39;t do what you&#39;d expect
-string combined = Path.Combine(configDir, @&quot;C:\other\path&quot;);
-// Result: &quot;C:\other\path&quot; — the first argument is silently discarded
-</code></pre>
-<h2>Semantic Types</h2>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> configDir </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"C:\app\config"</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> logFile </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"logs\app.log"</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// This compiles fine but is semantically wrong —</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// we're treating a relative path as an absolute one</span></span>
+<span class="line"><span style="color:#CAD3F5">File</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Delete</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">logFile</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// And this silently produces garbage —</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// combining two absolute paths doesn't do what you'd expect</span></span>
+<span class="line"><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> combined </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Path</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Combine</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">configDir</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> @"C:\other\path"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Result: "C:\other\path" — the first argument is silently discarded</span></span></code></pre><h2>Semantic Types</h2>
 <p>The fix is to make the type system carry the semantic meaning that <code>string</code> discards. Instead of bare <code>string</code>, we define distinct types that the compiler can differentiate:</p>
-<pre><code class="language-csharp">public sealed record GitRepositoryName : SemanticString&lt;GitRepositoryName&gt; { }
-public sealed record GitRepositoryWebURI : SemanticString&lt;GitRepositoryWebURI&gt; { }
-public sealed record GitRepositoryRemotePath : SemanticString&lt;GitRepositoryRemotePath&gt; { }
-</code></pre>
-<p>Each of these is a one-line declaration, yet it creates a completely distinct type in the eyes of the compiler. The method signature becomes both self-documenting and compiler-enforced:</p>
-<pre><code class="language-csharp">public void CloneRepository(
-    GitRepositoryName name,
-    GitRepositoryRemotePath remotePath,
-    AbsoluteDirectoryPath localPath)
-{
-    // ...
-}
-</code></pre>
-<p>Try transposing the arguments now. The compiler will refuse to build.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> GitRepositoryName</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryName</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> GitRepositoryWebURI</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryWebURI</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> GitRepositoryRemotePath</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryRemotePath</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span></code></pre><p>Each of these is a one-line declaration, yet it creates a completely distinct type in the eyes of the compiler. The method signature becomes both self-documenting and compiler-enforced:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> CloneRepository</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    GitRepositoryName</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    GitRepositoryRemotePath</span><span style="color:#CAD3F5"> remotePath</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    AbsoluteDirectoryPath</span><span style="color:#CAD3F5"> localPath</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // ...</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Try transposing the arguments now. The compiler will refuse to build.</p>
 <p>This is the approach used in the <a href="https://github.com/ktsu-dev/Semantics">ktsu.dev Semantics library</a>. The <code>GitRepository</code> class from the ktsu.dev ecosystem shows how this looks in practice:</p>
-<pre><code class="language-csharp">public class GitRepository
-{
-    public GitRepositoryName Name { get; init; } = new();
-    public GitRepositoryWebURI WebURI { get; init; } = new();
-    public GitRepositoryRemotePath RemotePath { get; init; } = new();
-    public AbsoluteDirectoryPath LocalPath { get; init; } = new();
-
-    public bool IsCloned =&gt; Directory.Exists(LocalPath);
-}
-</code></pre>
-<p>Every property carries a distinct type. There&#39;s no way to accidentally assign a <code>GitRepositoryName</code> to a <code>GitRepositoryWebURI</code>. The compiler won&#39;t allow it.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> GitRepository</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> GitRepositoryName</span><span style="color:#CAD3F5"> Name </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> init</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> GitRepositoryWebURI</span><span style="color:#CAD3F5"> WebURI </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> init</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> GitRepositoryRemotePath</span><span style="color:#CAD3F5"> RemotePath </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> init</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> AbsoluteDirectoryPath</span><span style="color:#CAD3F5"> LocalPath </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> init</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> bool</span><span style="color:#CAD3F5"> IsCloned </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> Directory</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Exists</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">LocalPath</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Every property carries a distinct type. There&#39;s no way to accidentally assign a <code>GitRepositoryName</code> to a <code>GitRepositoryWebURI</code>. The compiler won&#39;t allow it.</p>
 <h2>The Curiously Recurring Template Pattern</h2>
 <p>The foundation of this approach is a base class that employs CRTP, sometimes called the &quot;self-referencing generic&quot; pattern in C#:</p>
-<pre><code class="language-csharp">public abstract record SemanticString&lt;TDerived&gt; : ISemanticString
-    where TDerived : SemanticString&lt;TDerived&gt;
-{
-    public string WeakString { get; init; } = string.Empty;
-
-    // Factory method — creates an instance of any semantic string type
-    public static TDest Create&lt;TDest&gt;(string? value)
-        where TDest : SemanticString&lt;TDest&gt;
-    {
-        TDest newInstance = FromStringInternal&lt;TDest&gt;(value);
-        return PerformValidation(newInstance);
-    }
-
-    // Implicit conversion back to string — no ceremony needed
-    public static implicit operator string(SemanticString&lt;TDerived&gt;? value)
-        =&gt; value?.WeakString ?? string.Empty;
-}
-</code></pre>
-<p>The <code>TDerived</code> type parameter is what makes this work. Because the base class knows the exact derived type, factory methods like <code>Create</code> can return the correct concrete type without requiring a cast. Creating a semantic string is straightforward:</p>
-<pre><code class="language-csharp">var repoName = GitRepositoryName.Create(&quot;my-project&quot;);
-</code></pre>
-<p>And because of the implicit conversion to <code>string</code>, a semantic string passes to any API that expects a regular string with no friction:</p>
-<pre><code class="language-csharp">Console.WriteLine($&quot;Cloning {repoName}...&quot;);  // Just works
-</code></pre>
-<p>The property name <code>WeakString</code> is deliberately chosen. Accessing the raw string value is an escape hatch that breaks type safety, and the name ensures that cost is visible in every code review.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> abstract</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> ISemanticString</span></span>
+<span class="line"><span style="color:#C6A0F6">    where</span><span style="color:#EED49F;font-style:italic"> TDerived</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> WeakString </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> init</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#C6A0F6"> string</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Empty</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // Factory method — creates an instance of any semantic string type</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#8AADF4;font-style:italic"> Create</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDest</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">string</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">        where</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDest</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">        TDest</span><span style="color:#CAD3F5"> newInstance </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> FromStringInternal</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDest</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">value</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#8AADF4;font-style:italic"> PerformValidation</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">newInstance</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // Implicit conversion back to string — no ceremony needed</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> implicit</span><span style="color:#C6A0F6"> operator</span><span style="color:#C6A0F6"> string</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">        =></span><span style="color:#CAD3F5"> value</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">WeakString </span><span style="color:#8BD5CA">??</span><span style="color:#C6A0F6"> string</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Empty</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The <code>TDerived</code> type parameter is what makes this work. Because the base class knows the exact derived type, factory methods like <code>Create</code> can return the correct concrete type without requiring a cast. Creating a semantic string is straightforward:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> repoName </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> GitRepositoryName</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"my-project"</span><span style="color:#939AB7">);</span></span></code></pre><p>And because of the implicit conversion to <code>string</code>, a semantic string passes to any API that expects a regular string with no friction:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">Console</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WriteLine</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">$"Cloning </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">repoName</span><span style="color:#939AB7">}</span><span style="color:#A6DA95">..."</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">  // Just works</span></span></code></pre><p>The property name <code>WeakString</code> is deliberately chosen. Accessing the raw string value is an escape hatch that breaks type safety, and the name ensures that cost is visible in every code review.</p>
 <h3>The <code>.As&lt;T&gt;()</code> Extension Method</h3>
 <p>While the <code>Create</code> factory method works well, the library provides something more fluent, an <code>As&lt;T&gt;()</code> extension method defined directly on <code>string</code>:</p>
-<pre><code class="language-csharp">public static class SemanticStringExtensions
-{
-    public static TDerived As&lt;TDerived&gt;(this string? value)
-        where TDerived : SemanticString&lt;TDerived&gt;
-        =&gt; SemanticString&lt;TDerived&gt;.Create&lt;TDerived&gt;(value);
-}
-</code></pre>
-<p>This enables the following syntax:</p>
-<pre><code class="language-csharp">var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
-</code></pre>
-<p>The string literal reads first, followed by the type it&#39;s being cast into. It flows like natural language, &quot;take this string <em>as</em> a GitRepositoryName.&quot; Compare the two approaches:</p>
-<pre><code class="language-csharp">// Factory method — type comes first, then the value
-var repoName = GitRepositoryName.Create(&quot;my-project&quot;);
-
-// Extension method — value comes first, then the type
-var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
-</code></pre>
-<p>Both produce identical results. Canonicalization and validation run regardless of which path the call takes. But <code>.As&lt;T&gt;()</code> reads particularly well when chaining or working inline:</p>
-<pre><code class="language-csharp">repository.Name = config[&quot;repo-name&quot;].As&lt;GitRepositoryName&gt;();
-</code></pre>
-<p>The same <code>.As&lt;T&gt;()</code> pattern also supports converting between semantic types. Given one semantic string that needs to be viewed through the lens of another type, the instance method on the base class handles the conversion:</p>
-<pre><code class="language-csharp">var repoName = &quot;my-project&quot;.As&lt;GitRepositoryName&gt;();
-var displayLabel = repoName.As&lt;DisplayLabel&gt;();  // re-validates for the target type
-</code></pre>
-<p>From this point forward, I will use <code>.As&lt;T&gt;()</code> as the primary way to create semantic values in the examples that follow.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> SemanticStringExtensions</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> TDerived</span><span style="color:#8AADF4;font-style:italic"> As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">this</span><span style="color:#C6A0F6"> string</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">        where</span><span style="color:#EED49F;font-style:italic"> TDerived</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#8BD5CA">        =></span><span style="color:#CAD3F5"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">value</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>This enables the following syntax:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> repoName </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "my-project"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryName</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span></code></pre><p>The string literal reads first, followed by the type it&#39;s being cast into. It flows like natural language, &quot;take this string <em>as</em> a GitRepositoryName.&quot; Compare the two approaches:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Factory method — type comes first, then the value</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> repoName </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> GitRepositoryName</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"my-project"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Extension method — value comes first, then the type</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> repoName </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "my-project"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryName</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span></code></pre><p>Both produce identical results. Canonicalization and validation run regardless of which path the call takes. But <code>.As&lt;T&gt;()</code> reads particularly well when chaining or working inline:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">repository</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Name </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> config</span><span style="color:#939AB7">[</span><span style="color:#A6DA95">"repo-name"</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryName</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span></code></pre><p>The same <code>.As&lt;T&gt;()</code> pattern also supports converting between semantic types. Given one semantic string that needs to be viewed through the lens of another type, the instance method on the base class handles the conversion:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> repoName </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "my-project"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GitRepositoryName</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> displayLabel </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> repoName</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DisplayLabel</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span><span style="color:#939AB7;font-style:italic">  // re-validates for the target type</span></span></code></pre><p>From this point forward, I will use <code>.As&lt;T&gt;()</code> as the primary way to create semantic values in the examples that follow.</p>
 <h2>Type-Safe Paths</h2>
 <p>Semantic strings show what they&#39;re good for once a type hierarchy is built on top of them. The Semantics library defines a path type system with validation built into each layer:</p>
 <pre><code>SemanticString&lt;T&gt;
@@ -419,52 +663,45 @@ var displayLabel = repoName.As&lt;DisplayLabel&gt;();  // re-validates for the t
        │    └─ RelativeDirectoryPath  [IsRelativePath]
        └─ SemanticFilePath&lt;T&gt;
             ├─ AbsoluteFilePath       [IsAbsolutePath]
-            └─ RelativeFilePath       [IsRelativePath]
-</code></pre>
+            └─ RelativeFilePath       [IsRelativePath]</code></pre>
 <p>Each level in the hierarchy adds validation through attributes. <code>[IsPath]</code> ensures no invalid path characters are present. <code>[IsAbsolutePath]</code> ensures the path is fully qualified. This validation runs automatically at creation time. It&#39;s impossible to construct an <code>AbsoluteDirectoryPath</code> from a relative path string.</p>
 <h3>Operator Overloading for Path Composition</h3>
 <p>The path types overload the <code>/</code> operator for combining paths, and the return type changes based on what is being combined:</p>
-<pre><code class="language-csharp">var outputDir = @&quot;C:\output&quot;.As&lt;AbsoluteDirectoryPath&gt;();
-var logFile = @&quot;logs\app.log&quot;.As&lt;RelativeFilePath&gt;();
-var readme = &quot;README.md&quot;.As&lt;FileName&gt;();
-
-// Directory / RelativeFile → AbsoluteFilePath
-AbsoluteFilePath fullLogPath = outputDir / logFile;
-
-// Directory / FileName → AbsoluteFilePath
-AbsoluteFilePath readmePath = outputDir / readme;
-
-// Directory / RelativeDirectory → AbsoluteDirectoryPath
-var subDir = &quot;subdir&quot;.As&lt;RelativeDirectoryPath&gt;();
-AbsoluteDirectoryPath nested = outputDir / subDir;
-
-// Convert between semantic types with the instance .As&lt;T&gt;()
-AbsolutePath genericPath = fullLogPath.As&lt;AbsolutePath&gt;();
-</code></pre>
-<p>Each <code>/</code> overload returns the correct result type. Combining an absolute directory with a relative file produces an absolute file path, not a <code>string</code> that the caller has to hope is correct.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> outputDir </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"C:\output"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AbsoluteDirectoryPath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> logFile </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"logs\app.log"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">RelativeFilePath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> readme </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "README.md"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">FileName</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Directory / RelativeFile → AbsoluteFilePath</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">AbsoluteFilePath</span><span style="color:#CAD3F5"> fullLogPath </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> outputDir </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> logFile</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Directory / FileName → AbsoluteFilePath</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">AbsoluteFilePath</span><span style="color:#CAD3F5"> readmePath </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> outputDir </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> readme</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Directory / RelativeDirectory → AbsoluteDirectoryPath</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> subDir </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "subdir"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">RelativeDirectoryPath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">AbsoluteDirectoryPath</span><span style="color:#CAD3F5"> nested </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> outputDir </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> subDir</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Convert between semantic types with the instance .As&#x3C;T>()</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">AbsolutePath</span><span style="color:#CAD3F5"> genericPath </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> fullLogPath</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AbsolutePath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span></code></pre><p>Each <code>/</code> overload returns the correct result type. Combining an absolute directory with a relative file produces an absolute file path, not a <code>string</code> that the caller has to hope is correct.</p>
 <p>Compare this to <code>Path.Combine</code>:</p>
-<pre><code class="language-csharp">// Path.Combine returns string — no type information about what kind of path this is
-string result = Path.Combine(@&quot;C:\output&quot;, @&quot;logs\app.log&quot;);
-// Is this a file? A directory? Absolute? Relative? The type doesn&#39;t say.
-</code></pre>
-<h3>Relationship Queries</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Path.Combine returns string — no type information about what kind of path this is</span></span>
+<span class="line"><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> result </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Path</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Combine</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">@"C:\output"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> @"logs\app.log"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Is this a file? A directory? Absolute? Relative? The type doesn't say.</span></span></code></pre><h3>Relationship Queries</h3>
 <p>Because the types carry semantic meaning, the library can provide operations that would be meaningless on raw strings:</p>
-<pre><code class="language-csharp">var project = @&quot;C:\projects\myapp&quot;.As&lt;AbsoluteDirectoryPath&gt;();
-var src = @&quot;C:\projects\myapp\src&quot;.As&lt;AbsoluteDirectoryPath&gt;();
-
-bool isChild = src.IsChildOf(project);        // true
-bool isParent = project.IsParentOf(src);       // true
-
-// Walk up the directory tree
-foreach (var ancestor in src.GetAncestors())
-{
-    Console.WriteLine(ancestor);
-}
-
-// Get a relative path between two absolute paths
-RelativeDirectoryPath relative = project.GetRelativePathTo(src);
-</code></pre>
-<p>These methods use span-based comparison internally for performance, but the type system ensures <code>IsChildOf</code> can only be called with another <code>AbsoluteDirectoryPath</code>, not with a file path, a relative path, or an arbitrary string.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> project </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"C:\projects\myapp"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AbsoluteDirectoryPath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> src </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> @"C:\projects\myapp\src"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">As</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AbsoluteDirectoryPath</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">bool</span><span style="color:#CAD3F5"> isChild </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> src</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsChildOf</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">project</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">        // true</span></span>
+<span class="line"><span style="color:#C6A0F6">bool</span><span style="color:#CAD3F5"> isParent </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> project</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsParentOf</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">src</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">       // true</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Walk up the directory tree</span></span>
+<span class="line"><span style="color:#C6A0F6">foreach</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> ancestor </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> src</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetAncestors</span><span style="color:#939AB7">())</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    Console</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WriteLine</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">ancestor</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Get a relative path between two absolute paths</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">RelativeDirectoryPath</span><span style="color:#CAD3F5"> relative </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> project</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetRelativePathTo</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">src</span><span style="color:#939AB7">);</span></span></code></pre><p>These methods use span-based comparison internally for performance, but the type system ensures <code>IsChildOf</code> can only be called with another <code>AbsoluteDirectoryPath</code>, not with a file path, a relative path, or an arbitrary string.</p>
 <h2>Validation at Compile Time and Runtime</h2>
 <p>Semantic types operate at two complementary levels:</p>
 <ol>
@@ -474,27 +711,23 @@ RelativeDirectoryPath relative = project.GetRelativePathTo(src);
 </li>
 </ol>
 <p>The validation relies on an attribute-based system:</p>
-<pre><code class="language-csharp">[IsPath]
-public abstract record SemanticPath&lt;TDerived&gt; : SemanticString&lt;TDerived&gt;
-    where TDerived : SemanticPath&lt;TDerived&gt;
-{ }
-
-[IsAbsolutePath]
-public sealed record AbsoluteDirectoryPath : SemanticDirectoryPath&lt;AbsoluteDirectoryPath&gt;
-{ }
-</code></pre>
-<p>The <code>[IsPath]</code> attribute validates that the string contains no invalid path characters and has a reasonable length. The <code>[IsAbsolutePath]</code> attribute validates that the path is fully qualified. These checks execute automatically on every call to <code>.As&lt;T&gt;()</code> or <code>Create</code>. If the string fails to meet the requirements, an exception is thrown immediately rather than producing a silent failure at some later, harder-to-diagnose point.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">IsPath</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> abstract</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> SemanticPath</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#C6A0F6">    where</span><span style="color:#EED49F;font-style:italic"> TDerived</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticPath</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TDerived</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#939AB7">{</span><span style="color:#939AB7"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">IsAbsolutePath</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> AbsoluteDirectoryPath</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticDirectoryPath</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AbsoluteDirectoryPath</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#939AB7">{</span><span style="color:#939AB7"> }</span></span></code></pre><p>The <code>[IsPath]</code> attribute validates that the string contains no invalid path characters and has a reasonable length. The <code>[IsAbsolutePath]</code> attribute validates that the path is fully qualified. These checks execute automatically on every call to <code>.As&lt;T&gt;()</code> or <code>Create</code>. If the string fails to meet the requirements, an exception is thrown immediately rather than producing a silent failure at some later, harder-to-diagnose point.</p>
 <p>For cases involving user input or external data, a <code>TryCreate</code> method provides safe fallback behavior:</p>
-<pre><code class="language-csharp">if (AbsoluteDirectoryPath.TryCreate(userInput, out var path))
-{
-    // path is guaranteed to be valid
-}
-else
-{
-    // handle invalid input
-}
-</code></pre>
-<h2>The Cost and the Tradeoff</h2>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">AbsoluteDirectoryPath</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">TryCreate</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">userInput</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> path</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // path is guaranteed to be valid</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // handle invalid input</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><h2>The Cost and the Tradeoff</h2>
 <p>Semantic types are not free. Here is what they cost:</p>
 <ul>
 <li><strong>One-line type declarations</strong> for each semantic concept in the domain.</li>
@@ -517,11 +750,9 @@ else
 <li><strong>Domain identifiers</strong> such as user IDs, order numbers, and API keys. Anything where mixing them up would constitute a bug.</li>
 </ol>
 <p>Define a semantic type for each concept:</p>
-<pre><code class="language-csharp">public sealed record UserId : SemanticString&lt;UserId&gt; { }
-public sealed record OrderNumber : SemanticString&lt;OrderNumber&gt; { }
-public sealed record ApiKey : SemanticString&lt;ApiKey&gt; { }
-</code></pre>
-<p>Three lines, and the compiler is now working on the problem.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> UserId</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">UserId</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> OrderNumber</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">OrderNumber</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> ApiKey</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">ApiKey</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span></code></pre><p>Three lines, and the compiler is now working on the problem.</p>
 <h2>References</h2>
 <ul>
 <li><a href="https://github.com/ktsu-dev/Semantics">ktsu.dev Semantics library on GitHub</a></li>
@@ -534,9 +765,11 @@ public sealed record ApiKey : SemanticString&lt;ApiKey&gt; { }
     </article>
   </main>
 
+
   <footer>
     <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
     <span class="copy">&copy; 2026 Matt Edmondson</span>
   </footer>
+
 </body>
 </html>

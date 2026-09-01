@@ -181,6 +181,30 @@
       margin: 2rem 0 0.6rem;
     }
 
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
     .post-meta {
       display: flex;
       align-items: center;
@@ -199,6 +223,168 @@
       background-color: var(--ctp-surface0);
       padding: 0.15rem 0.6rem;
       border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
     }
 
     article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
@@ -248,23 +434,101 @@
     th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
     td { color: var(--ctp-subtext1); }
 
-    .post-list { list-style: none; margin: 0; padding: 0; }
-    .post-list li {
-      padding: 1.1rem 0;
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
       border-bottom: 1px solid var(--ctp-surface0);
     }
-    .post-list li:first-child { border-top: 1px solid var(--ctp-surface0); }
-    .post-list h3 { font-size: 1.05rem; margin: 0 0 0.3rem; }
-    .post-list h3 a { color: var(--ctp-text); }
-    .post-list h3 a:hover { color: var(--ctp-sapphire); }
-    .post-list time {
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
       color: var(--ctp-overlay0);
     }
-    .post-list p { font-size: 0.92rem; margin: 0.35rem 0 0; }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
 
     .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
 
     .draft-badge {
       font-family: 'JetBrains Mono', monospace;
@@ -290,33 +554,38 @@
 </head>
 <body>
   <main>
-    <nav class="breadcrumb"><a href="/blog/">&larr; All posts</a></nav>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
+      <h1>Threading and Synchronization Patterns in Production .NET Libraries</h1>
       <div class="post-meta">
         <time datetime="2025-09-02">September 2, 2025</time>
         <span class="category-tag">Development</span>
         <span class="category-tag">C#</span>
         <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=threading">threading</a>
+        <a class="post-tag" href="/#tag=concurrency">concurrency</a>
+        <a class="post-tag" href="/#tag=design-patterns">design-patterns</a>
       </div>
-<h1>Threading and Synchronization Patterns in Production .NET Libraries</h1>
+      <img class="post-hero" src="/assets-blog/csharp-threading-synchronization-patterns-production-libraries.jpg" alt="" width="1200" height="675" />
+
 <p>Threading bugs occupy a uniquely miserable position in the taxonomy of software defects. They&#39;re intermittent, resistant to reproduction, and frequently invisible until the system is under real load in production. After maintaining dozens of .NET libraries that must be thread-safe, I&#39;ve converged on a set of patterns that make concurrency explicit, testable, and, above all, predictable.</p>
 <p>This post walks through the threading patterns I use across the ktsu.dev library ecosystem, illustrated with code drawn from production libraries.</p>
 <h2>Pattern 1: Lock Objects as Parameters</h2>
 <p>The most common threading mistake I encounter is synchronization hidden inside a class where callers can&#39;t see or coordinate with it. The ktsu.dev libraries take a different approach: <strong>make the lock object a parameter</strong>.</p>
-<pre><code class="language-csharp">public static TDest DeepClone&lt;TItem, TDest&gt;(
-    this IEnumerable&lt;TItem&gt; items, object lockObj)
-    where TItem : class, IDeepCloneable&lt;TItem&gt;
-    where TDest : ICollection&lt;TItem&gt;, new()
-{
-    ArgumentNullException.ThrowIfNull(items);
-    ArgumentNullException.ThrowIfNull(lockObj);
-    lock (lockObj)
-    {
-        return DeepClone&lt;TItem, TDest&gt;(items);
-    }
-}
-</code></pre>
-<p>The rationale for passing the lock object in from the caller is straightforward: the <strong>caller</strong> is the one who understands the broader synchronization context. If the lock is buried inside the method, callers must trust that the internal lock covers everything they need coordinated, and in practice, it rarely does. Two operations that are individually thread-safe can still produce a race condition when composed, unless they share the same lock.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#8AADF4;font-style:italic"> DeepClone</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TItem</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#C6A0F6">    this</span><span style="color:#EED49F;font-style:italic"> IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TItem</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> items</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> object</span><span style="color:#CAD3F5"> lockObj</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">    where</span><span style="color:#EED49F;font-style:italic"> TItem</span><span style="color:#939AB7"> :</span><span style="color:#C6A0F6"> class</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> IDeepCloneable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TItem</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#C6A0F6">    where</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> ICollection</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TItem</span><span style="color:#91D7E3">></span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    ArgumentNullException</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ThrowIfNull</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">items</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    ArgumentNullException</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ThrowIfNull</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">lockObj</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">    lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">lockObj</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#8AADF4;font-style:italic"> DeepClone</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TItem</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> TDest</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">items</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The rationale for passing the lock object in from the caller is straightforward: the <strong>caller</strong> is the one who understands the broader synchronization context. If the lock is buried inside the method, callers must trust that the internal lock covers everything they need coordinated, and in practice, it rarely does. Two operations that are individually thread-safe can still produce a race condition when composed, unless they share the same lock.</p>
 <p>This pattern makes threading contracts explicit in three ways:</p>
 <ul>
 <li>The method signature declares that synchronization is required. It&#39;s part of the API surface, not an implementation detail.</li>
@@ -326,42 +595,40 @@
 <p>The naming convention reinforces visibility. Methods that accept a lock object use signatures like <code>ForEach(lockObj, action)</code> or <code>DeepClone&lt;T&gt;(items, lockObj)</code>, so the threading requirement is apparent at every call site without consulting documentation.</p>
 <h2>Pattern 2: Thread Dispatch Queues</h2>
 <p>When operations must execute on a specific thread (UI updates, GPU resource access, or single-threaded subsystems), a dispatch queue is a cleaner solution than scattering <code>Invoke</code> calls throughout the codebase. The <a href="https://github.com/ktsu-dev/Invoker">Invoker</a> library implements this pattern:</p>
-<pre><code class="language-csharp">public class Invoker
-{
-    private int ThreadId { get; } = Environment.CurrentManagedThreadId;
-    internal ConcurrentQueue&lt;Task&gt; TaskQueue { get; } = new();
-
-    public async Task InvokeAsync(Action func)
-    {
-        Ensure.NotNull(func);
-
-        if (ThreadId == Environment.CurrentManagedThreadId)
-        {
-            func();  // Same thread — execute immediately
-            return;
-        }
-
-        Task task = new(func);
-        TaskQueue.Enqueue(task);
-        await task.ConfigureAwait(false);
-    }
-
-    public void DoInvokes()
-    {
-        if (ThreadId != Environment.CurrentManagedThreadId)
-        {
-            throw new InvalidOperationException(
-                &quot;This method must be called on the thread that created the Invoker instance.&quot;);
-        }
-
-        while (TaskQueue.TryDequeue(out Task? task))
-        {
-            task.RunSynchronously();
-        }
-    }
-}
-</code></pre>
-<p>The design follows four principles:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> Invoker</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> ThreadId </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#CAD3F5"> Environment</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">CurrentManagedThreadId</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    internal</span><span style="color:#EED49F;font-style:italic"> ConcurrentQueue</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">Task</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> TaskQueue </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> InvokeAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">Action</span><span style="color:#CAD3F5"> func</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        Ensure</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">NotNull</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">func</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ThreadId </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> Environment</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">CurrentManagedThreadId</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">            func</span><span style="color:#939AB7">();</span><span style="color:#939AB7;font-style:italic">  // Same thread — execute immediately</span></span>
+<span class="line"><span style="color:#C6A0F6">            return</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">        Task</span><span style="color:#CAD3F5"> task </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">func</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        TaskQueue</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Enqueue</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">task</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8BD5CA">        await</span><span style="color:#CAD3F5"> task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ConfigureAwait</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">false</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> DoInvokes</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ThreadId </span><span style="color:#8BD5CA">!=</span><span style="color:#CAD3F5"> Environment</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">CurrentManagedThreadId</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            throw</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> InvalidOperationException</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">                "This method must be called on the thread that created the Invoker instance."</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        while</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">TaskQueue</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">TryDequeue</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">out</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> task</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">RunSynchronously</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The design follows four principles:</p>
 <ol>
 <li><strong>Capture the thread identity at construction.</strong> The <code>Invoker</code> remembers which thread owns it, establishing the contract for the lifetime of the object.</li>
 <li><strong>Same-thread calls bypass the queue entirely.</strong> If the calling code is already on the correct thread, queueing would add latency for no benefit.</li>
@@ -370,55 +637,51 @@
 </ol>
 <p><code>ConcurrentQueue&lt;Task&gt;</code> handles the thread-safe producer-consumer mechanics. <code>ConfigureAwait(false)</code> prevents deadlocks by avoiding attempts to resume on the original synchronization context. The thread ID check in <code>DoInvokes</code> turns misuse (calling it from the wrong thread) into an immediate, diagnosable exception rather than a silent corruption.</p>
 <p>This pattern is used throughout the <a href="https://github.com/ktsu-dev/ImGuiApp">ImGuiApp</a> framework to marshal operations onto the render thread:</p>
-<pre><code class="language-csharp">public static Invoker Invoker { get; internal set; } = null!;
-
-// From any thread:
-await ImGuiApp.Invoker.InvokeAsync(() =&gt; UpdateTexture(newData));
-</code></pre>
-<h2>Pattern 3: Preventing Overlapping Execution</h2>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> static</span><span style="color:#CAD3F5"> Invoker Invoker </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> get</span><span style="color:#939AB7">;</span><span style="color:#EED49F;font-style:italic"> internal</span><span style="color:#CAD3F5"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#ED8796"> null</span><span style="color:#8BD5CA">!</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// From any thread:</span></span>
+<span class="line"><span style="color:#8BD5CA">await</span><span style="color:#CAD3F5"> ImGuiApp</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Invoker</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">InvokeAsync</span><span style="color:#939AB7">(()</span><span style="color:#8BD5CA"> =></span><span style="color:#8AADF4;font-style:italic"> UpdateTexture</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">newData</span><span style="color:#939AB7">));</span></span></code></pre><h2>Pattern 3: Preventing Overlapping Execution</h2>
 <p>The <a href="https://github.com/ktsu-dev/IntervalAction">IntervalAction</a> library runs an action on a recurring timer, but it must guarantee that a slow execution doesn&#39;t overlap with the next scheduled run. Overlapping periodic work is a common source of resource contention and data corruption:</p>
-<pre><code class="language-csharp">public class IntervalAction
-{
-    private Lock Lock { get; } = new();
-    internal bool ShouldPoll { get; set; }
-    internal Task? ActionTask { get; set; }
-    internal DateTimeOffset LastRunTime { get; set; } = DateTimeOffset.MinValue;
-
-    internal bool TryRun()
-    {
-        // Check if previous task completed (and propagate exceptions)
-        if (ActionTask?.IsCompleted ?? false)
-        {
-            if (ActionTask.Exception is not null)
-                throw ActionTask.Exception.GetBaseException();
-            ActionTask = null;
-        }
-
-        DateTimeOffset lastRunTime;
-        lock (Lock) { lastRunTime = LastRunTime; }
-
-        if (ActionInterval &gt;= TimeSpan.Zero
-            &amp;&amp; ActionTask is null
-            &amp;&amp; DateTimeOffset.Now - lastRunTime &gt; ActionInterval)
-        {
-            ActionTask = Task.Run(() =&gt;
-            {
-                if (IntervalType == IntervalType.FromLastStart)
-                    lock (Lock) { LastRunTime = DateTimeOffset.Now; }
-
-                Action();
-
-                if (IntervalType == IntervalType.FromLastCompletion)
-                    lock (Lock) { LastRunTime = DateTimeOffset.Now; }
-            });
-
-            return true;
-        }
-        return false;
-    }
-}
-</code></pre>
-<p>Several deliberate decisions shape this implementation:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> IntervalAction</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#EED49F;font-style:italic"> Lock</span><span style="color:#CAD3F5"> Lock </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    internal</span><span style="color:#C6A0F6"> bool</span><span style="color:#CAD3F5"> ShouldPoll </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">    internal</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> ActionTask </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">    internal</span><span style="color:#EED49F;font-style:italic"> DateTimeOffset</span><span style="color:#CAD3F5"> LastRunTime </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#CAD3F5"> DateTimeOffset</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">MinValue</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    internal</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> TryRun</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Check if previous task completed (and propagate exceptions)</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ActionTask</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">IsCompleted </span><span style="color:#8BD5CA">??</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ActionTask</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Exception </span><span style="color:#8BD5CA">is</span><span style="color:#8BD5CA"> not</span><span style="color:#ED8796"> null</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">                throw</span><span style="color:#CAD3F5"> ActionTask</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Exception</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetBaseException</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">            ActionTask </span><span style="color:#8BD5CA">=</span><span style="color:#ED8796"> null</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">        DateTimeOffset</span><span style="color:#CAD3F5"> lastRunTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">        lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">Lock</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> lastRunTime </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> LastRunTime</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ActionInterval </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> TimeSpan</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Zero</span></span>
+<span class="line"><span style="color:#8BD5CA">            &#x26;&#x26;</span><span style="color:#CAD3F5"> ActionTask </span><span style="color:#8BD5CA">is</span><span style="color:#ED8796"> null</span></span>
+<span class="line"><span style="color:#8BD5CA">            &#x26;&#x26;</span><span style="color:#CAD3F5"> DateTimeOffset</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Now </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5"> lastRunTime </span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> ActionInterval</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            ActionTask </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Run</span><span style="color:#939AB7">(()</span><span style="color:#8BD5CA"> =></span></span>
+<span class="line"><span style="color:#939AB7">            {</span></span>
+<span class="line"><span style="color:#C6A0F6">                if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">IntervalType </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> IntervalType</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FromLastStart</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">                    lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">Lock</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> LastRunTime </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> DateTimeOffset</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Now</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">                Action</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">                if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">IntervalType </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> IntervalType</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FromLastCompletion</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">                    lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">Lock</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> LastRunTime </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> DateTimeOffset</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Now</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">            });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">            return</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Several deliberate decisions shape this implementation:</p>
 <ul>
 <li><strong>The <code>ActionTask is null</code> check guards against overlap.</strong> If the previous task is still running, <code>TryRun</code> returns without starting another. The null check acts as a non-blocking gate.</li>
 <li><strong>Lock scopes are kept minimal.</strong> The lock protects only the reads and writes of <code>LastRunTime</code>, not the action itself. Holding a lock for the duration of the user&#39;s action would serialize all callers and defeat the purpose of asynchronous execution.</li>
@@ -427,47 +690,45 @@ await ImGuiApp.Invoker.InvokeAsync(() =&gt; UpdateTexture(newData));
 </ul>
 <h2>Pattern 4: ReaderWriterLockSlim to Lock Migration</h2>
 <p>.NET 9 introduced the <code>Lock</code> type, which is simpler, faster, and doesn&#39;t require disposal. For libraries that multi-target across framework versions, both mechanisms must coexist. The <a href="https://github.com/ktsu-dev/MachineMonitor">MachineMonitor</a> project demonstrates this with conditional compilation:</p>
-<pre><code class="language-csharp">public record MetricHistory(TimeSpan Duration, string Unit = &quot;&quot;) : IDisposable
-{
-#if NET9_0_OR_GREATER
-    private readonly Lock _lock = new();
-#else
-    private readonly ReaderWriterLockSlim _lock = new();
-#endif
-
-    public float Current
-    {
-        get
-        {
-#if NET9_0_OR_GREATER
-            lock (_lock) { return Values.Count &gt; 0 ? Values.Back() : 0; }
-#else
-            try
-            {
-                _lock.EnterReadLock();
-                return Values.Count &gt; 0 ? Values.Back() : 0;
-            }
-            finally { _lock.ExitReadLock(); }
-#endif
-        }
-    }
-
-    public void Add(float value)
-    {
-#if NET9_0_OR_GREATER
-        lock (_lock) { /* write logic */ }
-#else
-        try
-        {
-            _lock.EnterWriteLock();
-            // same write logic
-        }
-        finally { _lock.ExitWriteLock(); }
-#endif
-    }
-}
-</code></pre>
-<p>The selection criteria are straightforward:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> MetricHistory</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">TimeSpan</span><span style="color:#CAD3F5"> Duration</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> Unit </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> ""</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> IDisposable</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">if</span><span style="color:#CAD3F5"> NET9_0_OR_GREATER</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> Lock</span><span style="color:#CAD3F5"> _lock </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">else</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> ReaderWriterLockSlim</span><span style="color:#CAD3F5"> _lock </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">endif</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> float</span><span style="color:#CAD3F5"> Current</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        get</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">if</span><span style="color:#CAD3F5"> NET9_0_OR_GREATER</span></span>
+<span class="line"><span style="color:#C6A0F6">            lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_lock</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#C6A0F6"> return</span><span style="color:#CAD3F5"> Values</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">></span><span style="color:#F5A97F"> 0</span><span style="color:#8BD5CA"> ?</span><span style="color:#CAD3F5"> Values</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Back</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> :</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">else</span></span>
+<span class="line"><span style="color:#C6A0F6">            try</span></span>
+<span class="line"><span style="color:#939AB7">            {</span></span>
+<span class="line"><span style="color:#CAD3F5">                _lock</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">EnterReadLock</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">                return</span><span style="color:#CAD3F5"> Values</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">></span><span style="color:#F5A97F"> 0</span><span style="color:#8BD5CA"> ?</span><span style="color:#CAD3F5"> Values</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Back</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> :</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">            }</span></span>
+<span class="line"><span style="color:#C6A0F6">            finally</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> _lock</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ExitReadLock</span><span style="color:#939AB7">();</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">endif</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> Add</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">if</span><span style="color:#CAD3F5"> NET9_0_OR_GREATER</span></span>
+<span class="line"><span style="color:#C6A0F6">        lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_lock</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#939AB7;font-style:italic"> /* write logic */</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">else</span></span>
+<span class="line"><span style="color:#C6A0F6">        try</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            _lock</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">EnterWriteLock</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">            // same write logic</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        finally</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> _lock</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ExitWriteLock</span><span style="color:#939AB7">();</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">#</span><span style="color:#C6A0F6">endif</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The selection criteria are straightforward:</p>
 <ul>
 <li><strong><code>Lock</code> (.NET 9+)</strong>: The default choice for new code. It&#39;s simpler to use, doesn&#39;t require <code>IDisposable</code> implementation, and performs well for general-purpose mutual exclusion.</li>
 <li><strong><code>ReaderWriterLockSlim</code></strong>: Justified when the workload has many concurrent readers and infrequent writers. The read/write distinction allows readers to proceed in parallel, which can meaningfully improve throughput in read-heavy scenarios.</li>
@@ -476,130 +737,120 @@ await ImGuiApp.Invoker.InvokeAsync(() =&gt; UpdateTexture(newData));
 <p>The <code>try/finally</code> approach with <code>ReaderWriterLockSlim</code> is verbose, but it&#39;s non-negotiable. If the protected code throws an exception, the lock must still be released. Omitting the <code>finally</code> block risks deadlocking the entire application on the next access attempt.</p>
 <h2>Pattern 5: Thread-Safe Singletons</h2>
 <p>The <a href="https://github.com/ktsu-dev/CredentialCache">CredentialCache</a> library uses a singleton with an additional constraint: it must be configurable <em>before</em> first access, and configuration must be impossible afterward:</p>
-<pre><code class="language-csharp">public sealed class CredentialCache : IDisposable
-{
-    private static readonly object _lock = new();
-    private static CredentialCache? _instance;
-    private static IPersistenceProvider&lt;string&gt;? _persistenceProvider;
-
-    public static CredentialCache Instance
-    {
-        get
-        {
-            lock (_lock)
-            {
-                if (_instance is null)
-                {
-                    _persistenceProvider ??= CreateDefaultPersistenceProvider();
-                    _instance = new CredentialCache(_persistenceProvider);
-                }
-                return _instance;
-            }
-        }
-    }
-
-    public static void ConfigurePersistenceProvider(
-        IPersistenceProvider&lt;string&gt; persistenceProvider)
-    {
-        lock (_lock)
-        {
-            if (_instance is not null)
-                throw new InvalidOperationException(
-                    &quot;Cannot configure after instance has been created.&quot;);
-            _persistenceProvider = persistenceProvider;
-        }
-    }
-}
-</code></pre>
-<p>The design centers on a single shared lock that governs both configuration and instance creation. <code>ConfigurePersistenceProvider</code> and <code>Instance</code> contend on the same lock, so the ordering invariant (configure before access) is enforced mechanically rather than by documentation alone. An <code>InvalidOperationException</code> at runtime makes violations immediately visible.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> CredentialCache</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> IDisposable</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> readonly</span><span style="color:#C6A0F6"> object</span><span style="color:#CAD3F5"> _lock </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> CredentialCache</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> _instance</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> IPersistenceProvider</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#C6A0F6">string</span><span style="color:#91D7E3">></span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> _persistenceProvider</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> CredentialCache</span><span style="color:#CAD3F5"> Instance</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        get</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_lock</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">            {</span></span>
+<span class="line"><span style="color:#C6A0F6">                if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_instance </span><span style="color:#8BD5CA">is</span><span style="color:#ED8796"> null</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">                {</span></span>
+<span class="line"><span style="color:#CAD3F5">                    _persistenceProvider </span><span style="color:#8BD5CA">??=</span><span style="color:#8AADF4;font-style:italic"> CreateDefaultPersistenceProvider</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">                    _instance </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> CredentialCache</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">_persistenceProvider</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">                }</span></span>
+<span class="line"><span style="color:#C6A0F6">                return</span><span style="color:#CAD3F5"> _instance</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">            }</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> ConfigurePersistenceProvider</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">        IPersistenceProvider</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#C6A0F6">string</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> persistenceProvider</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_lock</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">_instance </span><span style="color:#8BD5CA">is</span><span style="color:#8BD5CA"> not</span><span style="color:#ED8796"> null</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#C6A0F6">                throw</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> InvalidOperationException</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">                    "Cannot configure after instance has been created."</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">            _persistenceProvider </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> persistenceProvider</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The design centers on a single shared lock that governs both configuration and instance creation. <code>ConfigurePersistenceProvider</code> and <code>Instance</code> contend on the same lock, so the ordering invariant (configure before access) is enforced mechanically rather than by documentation alone. An <code>InvalidOperationException</code> at runtime makes violations immediately visible.</p>
 <p>For the credential data itself, the class relies on <code>ConcurrentDictionary</code> rather than manual locking:</p>
-<pre><code class="language-csharp">private ConcurrentDictionary&lt;PersonaGUID, Credential&gt; Credentials { get; }
-
-public bool TryGet(PersonaGUID guid, out Credential? credential) =&gt;
-    Data.Credentials.TryGetValue(guid, out credential);
-</code></pre>
-<p>The guideline here is simple: use <code>ConcurrentDictionary</code> when individual operations are independent and self-contained. Use explicit locking when multiple operations must appear atomic, such as a read-then-write sequence where the write depends on the result of the read.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">private</span><span style="color:#CAD3F5"> ConcurrentDictionary</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">PersonaGUID, Credential</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> Credentials </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> get</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> TryGet</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">PersonaGUID</span><span style="color:#CAD3F5"> guid</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#EED49F;font-style:italic"> Credential</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> credential</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> =></span></span>
+<span class="line"><span style="color:#CAD3F5">    Data</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Credentials</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">TryGetValue</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guid</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#CAD3F5"> credential</span><span style="color:#939AB7">);</span></span></code></pre><p>The guideline here is simple: use <code>ConcurrentDictionary</code> when individual operations are independent and self-contained. Use explicit locking when multiple operations must appear atomic, such as a read-then-write sequence where the write depends on the result of the read.</p>
 <h2>Testing for Thread Safety</h2>
 <p>Thread safety that is not tested is thread safety that does not exist. The following patterns are designed to surface real concurrency bugs, not just verify single-threaded correctness.</p>
 <h3>Concurrent Access Stress Tests</h3>
 <p>The goal is to hammer a shared resource from multiple threads simultaneously, verifying that every operation produces the correct result:</p>
-<pre><code class="language-csharp">[TestMethod]
-public void CredentialCacheIsThreadSafeUnderConcurrentAccess()
-{
-    var cache = CredentialCache.Instance;
-    int numberOfThreads = 10;
-    int operationsPerThread = 100;
-    List&lt;Task&gt; tasks = [];
-
-    for (int i = 0; i &lt; numberOfThreads; i++)
-    {
-        tasks.Add(Task.Run(() =&gt;
-        {
-            for (int j = 0; j &lt; operationsPerThread; j++)
-            {
-                var guid = CredentialCache.CreatePersonaGUID();
-                var credential = factory.Create();
-                cache.AddOrReplace(guid, credential);
-                bool result = cache.TryGet(guid, out var retrieved);
-                Assert.IsTrue(result);
-                Assert.AreEqual(credential, retrieved);
-            }
-        }));
-    }
-
-    Task.WaitAll([.. tasks]);
-}
-</code></pre>
-<p>Ten threads each performing a hundred add-then-retrieve cycles creates a high probability of interleaving. If any synchronization is missing, the assertions will fail intermittently. That&#39;s exactly the failure mode a test suite should catch before production does.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> CredentialCacheIsThreadSafeUnderConcurrentAccess</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> cache </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> CredentialCache</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Instance</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    int</span><span style="color:#CAD3F5"> numberOfThreads </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 10</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    int</span><span style="color:#CAD3F5"> operationsPerThread </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 100</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    List</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">Task</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> tasks </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    for</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> numberOfThreads</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        tasks</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Run</span><span style="color:#939AB7">(()</span><span style="color:#8BD5CA"> =></span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            for</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> j </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> j </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> operationsPerThread</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> j</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">            {</span></span>
+<span class="line"><span style="color:#C6A0F6">                var</span><span style="color:#CAD3F5"> guid </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> CredentialCache</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">CreatePersonaGUID</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">                var</span><span style="color:#CAD3F5"> credential </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> factory</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">                cache</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddOrReplace</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guid</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> credential</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">                bool</span><span style="color:#CAD3F5"> result </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> cache</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">TryGet</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guid</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> retrieved</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">                Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsTrue</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">result</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">                Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AreEqual</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">credential</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> retrieved</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">            }</span></span>
+<span class="line"><span style="color:#939AB7">        }));</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">    Task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WaitAll</span><span style="color:#939AB7">([</span><span style="color:#8BD5CA">..</span><span style="color:#CAD3F5"> tasks</span><span style="color:#939AB7">]);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Ten threads each performing a hundred add-then-retrieve cycles creates a high probability of interleaving. If any synchronization is missing, the assertions will fail intermittently. That&#39;s exactly the failure mode a test suite should catch before production does.</p>
 <h3>No-Overlap Verification</h3>
 <p>This test verifies that the overlap-prevention logic in <code>IntervalAction</code> actually works under timing pressure:</p>
-<pre><code class="language-csharp">[TestMethod]
-public async Task NoOverlappingExecutions()
-{
-    int executions = 0;
-    var options = new IntervalActionOptions
-    {
-        PollingInterval = TimeSpan.FromMilliseconds(50),
-        ActionInterval = TimeSpan.FromMilliseconds(100),
-        Action = () =&gt;
-        {
-            Interlocked.Increment(ref executions);
-            Thread.Sleep(500);  // Simulate slow work
-        }
-    };
-
-    var action = IntervalAction.Start(options);
-    await Task.Delay(1200);
-    action.Stop();
-
-    // If overlapping occurred, executions would be much higher
-    Assert.IsTrue(executions &lt;= 3);
-}
-</code></pre>
-<p>The action takes 500ms but is polled every 50ms with a 100ms interval. Without overlap prevention, the system would start many concurrent executions. The assertion that <code>executions &lt;= 3</code> verifies that the guard is working. Note the use of <code>Interlocked.Increment</code>. A bare <code>executions++</code> would itself be a race condition, and the test would be unreliable for the exact reason it&#39;s trying to test.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> NoOverlappingExecutions</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    int</span><span style="color:#CAD3F5"> executions </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> options </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> IntervalActionOptions</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        PollingInterval </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> TimeSpan</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FromMilliseconds</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">50</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#CAD3F5">        ActionInterval </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> TimeSpan</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FromMilliseconds</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">100</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#CAD3F5">        Action </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> ()</span><span style="color:#8BD5CA"> =></span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            Interlocked</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Increment</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">ref</span><span style="color:#CAD3F5"> executions</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">            Thread</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sleep</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">500</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">  // Simulate slow work</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> action </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> IntervalAction</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Start</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">options</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8BD5CA">    await</span><span style="color:#CAD3F5"> Task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Delay</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1200</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    action</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Stop</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // If overlapping occurred, executions would be much higher</span></span>
+<span class="line"><span style="color:#CAD3F5">    Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsTrue</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">executions </span><span style="color:#8BD5CA">&#x3C;=</span><span style="color:#F5A97F"> 3</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The action takes 500ms but is polled every 50ms with a 100ms interval. Without overlap prevention, the system would start many concurrent executions. The assertion that <code>executions &lt;= 3</code> verifies that the guard is working. Note the use of <code>Interlocked.Increment</code>. A bare <code>executions++</code> would itself be a race condition, and the test would be unreliable for the exact reason it&#39;s trying to test.</p>
 <h3>Parallel Clone Independence</h3>
 <p>This test confirms that deep cloning under concurrent access produces truly independent copies:</p>
-<pre><code class="language-csharp">[TestMethod]
-public void ConcurrentDeepClone_ProducesIndependentCopies()
-{
-    var original = new ComplexObject { Id = 1, Name = &quot;Parent&quot; };
-    ConcurrentBag&lt;ComplexObject&gt; results = [];
-
-    Parallel.For(0, 100, _ =&gt;
-    {
-        var clone = original.DeepClone();
-        results.Add(clone);
-    });
-
-    Assert.AreEqual(100, results.Count);
-    foreach (var clone in results)
-    {
-        clone.Id = 999;  // Mutate clone
-    }
-    Assert.AreEqual(1, original.Id);  // Original unchanged
-}
-</code></pre>
-<p><code>ConcurrentBag&lt;T&gt;</code> is the appropriate collection here because it&#39;s optimized for scenarios where threads both add and consume items, and it handles concurrent additions without external locking. The test mutates every clone and then verifies the original is untouched, confirming true value independence.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> ConcurrentDeepClone_ProducesIndependentCopies</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> original </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> ComplexObject</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Id </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> Name </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "Parent"</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    ConcurrentBag</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">ComplexObject</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> results </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">    Parallel</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">For</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">0</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 100</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> _ </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> clone </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> original</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">DeepClone</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">        results</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">clone</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">    Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AreEqual</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">100</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> results</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">    foreach</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> clone </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> results</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        clone</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Id </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 999</span><span style="color:#939AB7">;</span><span style="color:#939AB7;font-style:italic">  // Mutate clone</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#CAD3F5">    Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AreEqual</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> original</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Id</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">  // Original unchanged</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p><code>ConcurrentBag&lt;T&gt;</code> is the appropriate collection here because it&#39;s optimized for scenarios where threads both add and consume items, and it handles concurrent additions without external locking. The test mutates every clone and then verifies the original is untouched, confirming true value independence.</p>
 <h2>Summary of Patterns</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -659,9 +910,11 @@ public void ConcurrentDeepClone_ProducesIndependentCopies()
     </article>
   </main>
 
+
   <footer>
     <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
     <span class="copy">&copy; 2026 Matt Edmondson</span>
   </footer>
+
 </body>
 </html>

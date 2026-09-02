@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atomic Configuration Persistence for .NET Desktop Applications | Matt Edmondson</title>
+  <meta name="description" content="Persisting application config is the kind of work every project does, every project gets slightly wrong, and every project regrets having rolled its own. ktsu.AppDataStorage is the small library I built so I would never write that code again (safe writes, debounced saves, automatic backups, and a one-line API)." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/ktsu-appdatastorage-zero-friction-config-persistence/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Atomic Configuration Persistence for .NET Desktop Applications | Matt Edmondson" />
+  <meta property="og:description" content="Persisting application config is the kind of work every project does, every project gets slightly wrong, and every project regrets having rolled its own. ktsu.AppDataStorage is the small library I built so I would never write that code again (safe writes, debounced saves, automatic backups, and a one-line API)." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/ktsu-appdatastorage-zero-friction-config-persistence/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Atomic Configuration Persistence for .NET Desktop Applications</h1>
+      <div class="post-meta">
+        <time datetime="2025-11-10">November 10, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=config">config</a>
+        <a class="post-tag" href="/#tag=persistence">persistence</a>
+        <a class="post-tag" href="/#tag=ktsu">ktsu</a>
+        <a class="post-tag" href="/#tag=library-deep-dive">library-deep-dive</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/ktsu-appdatastorage-zero-friction-config-persistence.jpg" alt="" width="1200" height="675" />
+
+<p>Persisting application configuration is one of those tasks that every .NET project ends up doing, every project gets slightly wrong, and every project regrets having rolled its own. The first version is a one-line <code>File.WriteAllText</code> against a JSON-serialized settings object. The second version handles the case where the file doesn&#39;t exist yet. The third version handles the case where the file is corrupt. The fourth version debounces writes because the settings object was being saved on every property change. The fifth version atomic-writes via a temporary file because the third version&#39;s &quot;file is corrupt&quot; handler kept hitting cases where a write was interrupted mid-flight. Each version is reasonable. Added up across projects, the wasted effort is real.</p>
+<p><code>ktsu.AppDataStorage</code> is the small library I built so I would never have to write any of those versions again. It does the boring, safe persistence work (backups, debouncing, atomic writes, thread-safety, corrupt-file recovery) behind a one-line API that gets out of the way.</p>
+<h2>The Smallest Useful Example</h2>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">using</span><span style="color:#EED49F;font-style:italic"> ktsu</span><span style="color:#8BD5CA">.</span><span style="color:#EED49F;font-style:italic">AppDataStorage</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> MySettings</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> AppData</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">MySettings</span><span style="color:#91D7E3">></span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> Theme </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#A6DA95"> "light"</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> FontSize </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> 14</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> bool</span><span style="color:#CAD3F5"> AutoSave </span><span style="color:#939AB7">{</span><span style="color:#C6A0F6"> get</span><span style="color:#939AB7">;</span><span style="color:#C6A0F6"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Load existing data or create a new instance</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LoadOrCreate</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">Console</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WriteLine</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">settings</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Theme</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic">    // "light"</span></span></code></pre><p>That&#39;s the whole API for the common case. Inherit from <code>AppData&lt;T&gt;</code>. Call <code>LoadOrCreate()</code>. Done.</p>
+<p>The file lives in the user&#39;s application data folder, named after the type, serialized as JSON. The library handles the directory creation. The library handles the case where the file already exists. The library handles the case where the file exists but is corrupt (it falls back to the most recent backup).</p>
+<p>For the every-access case, the singleton form is even shorter:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Access the singleton from anywhere</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Get</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">settings</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FontSize </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 16</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">settings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">QueueSave</span><span style="color:#939AB7">();</span></span></code></pre><p><code>Get()</code> is lazy-initialized. The first call does the <code>LoadOrCreate</code>, and subsequent calls return the cached instance. <code>QueueSave()</code> debounces, so calling it ten times in two seconds produces exactly one disk write three seconds later, not ten.</p>
+<h2>The Safety Mechanisms</h2>
+<p>The reason the library exists, more than the API ergonomics, is the set of things it does behind the API.</p>
+<p><strong>Atomic writes.</strong> Every save goes to a temporary file first, then atomically replaces the original. A power loss or a crash mid-save can&#39;t corrupt the settings file, because the original is either still intact or the replacement has completed. The temp-file approach is well-understood and exactly what most people would write if they sat down to write this code themselves.</p>
+<p><strong>Automatic backups.</strong> Before overwriting an existing file, the library creates a backup. If the new write succeeds but turns out to have been wrong (a serialization bug that lost data, a schema change that wiped fields), the backup is there. Timestamped collision handling means backups don&#39;t get lost when several saves happen close together.</p>
+<p><strong>Corrupt-file recovery.</strong> On load, if the main file is missing or fails to deserialize, the library falls back to the most recent backup automatically. The application starts with the last known-good state instead of crashing or starting with defaults.</p>
+<p><strong>Debounced saves.</strong> <code>QueueSave()</code> registers an intent to save, and <code>SaveIfRequired()</code> (called from a tick or timer) actually flushes the queued save after a 3-second window. Settings UI tends to fire change events on every keystroke or slider movement, and writing to disk on every event is wasteful and feels sluggish. Debouncing turns 100 keystrokes into one disk write.</p>
+<p><strong>Dispose-on-exit.</strong> The library registers for process exit and flushes queued saves before the application terminates. Closing the application doesn&#39;t lose the last batch of settings changes just because the debounce window hadn&#39;t fired yet.</p>
+<p><strong>Thread-safe operations.</strong> All file operations are synchronized. On .NET 9+, the library uses the new <code>Lock</code> type, and on earlier versions, plain <code>object</code> locks. The same instance can be read and written from multiple threads without races.</p>
+<p>Each of these is the kind of thing that gets bolted onto hand-rolled config code after hitting the bug it prevents. The library has them out of the box.</p>
+<h2>What&#39;s in and What&#39;s Out</h2>
+<p>The library is opinionated about being small. A few things it deliberately doesn&#39;t do, with the reasoning:</p>
+<p><strong>It doesn&#39;t do schema migration.</strong> If the settings type changes shape and the existing on-disk file no longer matches, the library will fail to deserialize and fall back to the backup. It will not run a migration step automatically. Schema migration is project-specific in ways the library can&#39;t sensibly generalize, and getting it wrong silently is worse than failing loudly. The migration belongs in application code.</p>
+<p><strong>It doesn&#39;t do remote sync.</strong> The data lives in the local application data folder. Syncing across devices is a separate concern with its own design decisions (which device wins, when to sync, what to do on conflict) that don&#39;t belong in a library this small.</p>
+<p><strong>It doesn&#39;t do encrypted storage.</strong> For persisting secrets, this isn&#39;t the library. The data is JSON on disk, readable by anyone with access to the user&#39;s profile folder. For application settings, that&#39;s fine. For credentials or tokens, OS-level secure storage is the right tool.</p>
+<p><strong>It doesn&#39;t do partial saves.</strong> Writes are whole-file. There&#39;s no &quot;save just this property&quot; affordance. Partial saves are difficult to get right with consistent backup semantics, and the whole-file model is fast enough for the size of data a settings file actually contains.</p>
+<p>The flip side of being opinionated about smallness is that the library is easy to read end-to-end and easy to reason about. The code that does the saving is short. The behavior is predictable. Three years in, it still behaves the way the first page of the README says it does.</p>
+<h2>File System Abstraction</h2>
+<p>For testing, the library uses <code>System.IO.Abstractions</code> for all file operations. In practice that means a mock file system can be swapped in for unit tests, and settings-handling code becomes testable without touching the disk.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// In tests, inject a mock file system</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> mockFileSystem </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> MockFileSystem</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FileSystem </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> mockFileSystem</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Now LoadOrCreate operates against the mock, not real disk</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LoadOrCreate</span><span style="color:#939AB7">();</span></span></code></pre><p>This is easy to forget about until the third test that needs to manipulate config state, and at that point it&#39;s exactly the thing that should have been there from the start. Having it built in means the testing path is clear from day one.</p>
+<h2>Custom Storage Locations</h2>
+<p>The default behavior (write to the standard application data folder, named after the type) is right for most cases. When it isn&#39;t, there are overloads:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Custom subdirectory</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LoadOrCreate</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">subdirectory</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "MyCompany/MyApp"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Custom filename</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LoadOrCreate</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">filename</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "user-preferences.json"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Both</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> settings </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MySettings</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LoadOrCreate</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#CAD3F5">    subdirectory</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "MyCompany/MyApp"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">    filename</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "user-preferences.json"</span><span style="color:#939AB7">);</span></span></code></pre><p>This is useful when an application has multiple settings types that should live together, or when the file needs to match a specific name for compatibility with another tool.</p>
+<h2>Where It Doesn&#39;t Fit</h2>
+<p>A few cases where this library isn&#39;t the right choice.</p>
+<p><strong>Tiny applications with one or two config values.</strong> A single <code>appsettings.json</code> and a one-line read is fine. The library&#39;s machinery is overkill for ten lines of config.</p>
+<p><strong>Server applications with externalized config.</strong> When config lives in environment variables, a config service, or a sidecar, the library isn&#39;t doing anything that&#39;s needed. It&#39;s designed for desktop applications where the user&#39;s settings live alongside the user.</p>
+<p><strong>Performance-critical hot paths.</strong> The library is fast enough for settings, meaning saves measured in seconds and reads measured in milliseconds. Persisting state at frame rate calls for a different kind of solution.</p>
+<h2>Where It Fits</h2>
+<p>The library fits a desktop or workstation .NET application best: one or more <code>class</code>-shaped settings types, where saves happen on user actions and reads happen on startup and occasionally while running. Tools, utilities, editors, custom workflow apps, anything that needs to remember what the user was doing last time without the user thinking about it.</p>
+<p>The library is on NuGet:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">dotnet</span><span style="color:#A6DA95"> add</span><span style="color:#A6DA95"> package</span><span style="color:#A6DA95"> ktsu.AppDataStorage</span></span></code></pre><p>The one-line API is what makes the difference. The first time the thought is &quot;I need to persist a config object across application runs&quot; and the answer is <code>LoadOrCreate()</code> and <code>QueueSave()</code> rather than &quot;let me roll the persistence layer for this project too,&quot; the library has paid for itself.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

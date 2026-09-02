@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Layered Security Architecture for .NET Data Processing | Matt Edmondson</title>
+  <meta name="description" content="A layered security architecture for .NET data processing systems: input validation, JWT auth, role-based access, rate limiting, encryption, and security headers with working code." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-layered-security-architecture/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="A Layered Security Architecture for .NET Data Processing | Matt Edmondson" />
+  <meta property="og:description" content="A layered security architecture for .NET data processing systems: input validation, JWT auth, role-based access, rate limiting, encryption, and security headers with working code." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-layered-security-architecture/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>A Layered Security Architecture for .NET Data Processing</h1>
+      <div class="post-meta">
+        <time datetime="2025-10-08">October 8, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=security">security</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=design-patterns">design-patterns</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/dotnet-layered-security-architecture.jpg" alt="" width="1200" height="675" />
+
+<p>Production security isn&#39;t a single checkpoint at the front door. It&#39;s a series of independent layers, each designed to catch what the previous one missed. If authentication is compromised, authorization should still block unauthorized actions. If authorization fails, rate limiting should constrain the damage. If rate limiting is bypassed, encryption should protect the data at rest. No single layer is sufficient on its own, and no single layer&#39;s failure should be catastrophic.</p>
+<p>This is the approach I apply when building .NET data processing systems. This post walks through the six-layer security architecture I use, with working code for each layer and a discussion of the design decisions behind them.</p>
+<h2>The Six Layers</h2>
+<pre><code>Request -&gt; [1. Input Validation]
+        -&gt; [2. Authentication]
+        -&gt; [3. Authorization]
+        -&gt; [4. Rate Limiting]
+        -&gt; [5. Security Headers]
+        -&gt; [6. Response Security]
+        -&gt; Response</code></pre>
+<p>Each layer operates independently. Removing any one of them weakens the overall security but doesn&#39;t collapse the model. This independence is the defining characteristic of defense in depth. It turns security from a single point of failure into a series of obstacles that an attacker has to overcome one at a time.</p>
+<h2>Layer 1: Input Validation</h2>
+<p>Every piece of external input should be treated as hostile until proven otherwise. Validation belongs at the boundary of the system, not buried deep in the business logic where malformed data has already propagated through multiple layers:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> InputValidator</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> ValidationResult</span><span style="color:#8AADF4;font-style:italic"> Validate</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">DataInput</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> errors </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> List</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#C6A0F6">string</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">string</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsNullOrWhiteSpace</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UserId</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#CAD3F5">            errors</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"UserId is required"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">input</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Query</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">Length </span><span style="color:#8BD5CA">></span><span style="color:#F5A97F"> 10_000</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">            errors</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Query exceeds maximum length"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Reject known-dangerous patterns</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#8AADF4;font-style:italic">ContainsSqlInjectionPatterns</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Query</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#CAD3F5">            errors</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Query contains invalid characters"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#CAD3F5"> errors</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F"> 0</span></span>
+<span class="line"><span style="color:#8BD5CA">            ?</span><span style="color:#CAD3F5"> ValidationResult</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Success</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#8BD5CA">            :</span><span style="color:#CAD3F5"> ValidationResult</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Failure</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">errors</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> ContainsSqlInjectionPatterns</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">string</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">input </span><span style="color:#8BD5CA">is</span><span style="color:#ED8796"> null</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> return</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> patterns </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">[]</span><span style="color:#939AB7"> {</span><span style="color:#A6DA95"> "';"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "--"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "/*"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "*/"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "xp_"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "exec "</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#CAD3F5"> patterns</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Any</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">p </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#CAD3F5">            input</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Contains</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">p</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> StringComparison</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">OrdinalIgnoreCase</span><span style="color:#939AB7">));</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A common objection is that parameterized queries (which should always be used) already prevent SQL injection, making input validation redundant. This misses the point of defense in depth. Parameterized queries protect the database layer specifically. Input validation protects every downstream component from malformed data, including logging systems, message queues, third-party APIs, and any other consumer of user-provided input. Validating at the boundary is cheap insurance against input nobody planned for.</p>
+<h2>Layer 2: Authentication</h2>
+<p>For service-to-service communication, JWT tokens provide a stateless authentication mechanism with strict validation:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> JwtAuthenticationService</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> SecurityConfig</span><span style="color:#CAD3F5"> _config</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">AuthenticationResult</span><span style="color:#91D7E3">></span><span style="color:#8AADF4;font-style:italic"> AuthenticateAsync</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> token</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> handler </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> JwtSecurityTokenHandler</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> parameters </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> TokenValidationParameters</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidateIssuer </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidateAudience </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidateLifetime </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidateIssuerSigningKey </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidIssuer </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _config</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">JwtIssuer</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            ValidAudience </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _config</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">JwtAudience</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            IssuerSigningKey </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> SymmetricSecurityKey</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#CAD3F5">                Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FromBase64String</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">_config</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">JwtSecret</span><span style="color:#939AB7">)),</span></span>
+<span class="line"><span style="color:#CAD3F5">            ClockSkew </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> TimeSpan</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FromMinutes</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">5</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        try</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            var</span><span style="color:#CAD3F5"> principal </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> handler</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ValidateToken</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#CAD3F5">                token</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> parameters</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> validatedToken</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">            return</span><span style="color:#CAD3F5"> AuthenticationResult</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Success</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">principal</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        catch</span><span style="color:#939AB7"> (</span><span style="color:#EED49F;font-style:italic">SecurityTokenException</span><span style="color:#CAD3F5"> ex</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            return</span><span style="color:#CAD3F5"> AuthenticationResult</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Failure</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">ex</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Message</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Three decisions here:</p>
+<ul>
+<li><strong>All four validation flags are set to <code>true</code>.</strong> Tutorials frequently disable one or more of these for convenience during development, and that disabled flag sometimes persists into production. Each flag protects against a distinct attack vector: a forged issuer, a token intended for a different service, an expired token, or a token signed with the wrong key. Disabling any one of them creates a real vulnerability.</li>
+<li><strong><code>ClockSkew</code> is set to 5 minutes.</strong> This accommodates realistic server time drift without being so generous that expired tokens remain valid for an exploitable window. The default in many JWT libraries is also 5 minutes, but setting it explicitly documents the intent.</li>
+<li><strong>The catch block targets <code>SecurityTokenException</code> specifically</strong>, not a bare <code>Exception</code>. Authentication failures and system errors are fundamentally different: the first is expected and should produce a clean 401 response. The second is unexpected and may warrant alerting, logging, and a 500 response. Catching broadly conflates the two.</li>
+</ul>
+<h2>Layer 3: Authorization</h2>
+<p>Authentication establishes <em>who</em> the caller is. Authorization determines <em>what they&#39;re permitted to do</em>:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> SecurityPolicies</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> ConfigurePolicies</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">this</span><span style="color:#EED49F;font-style:italic"> IServiceCollection</span><span style="color:#CAD3F5"> services</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        services</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddAuthorization</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">options </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            options</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddPolicy</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"AdminOnly"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> policy </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#CAD3F5">                policy</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">RequireRole</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Administrator"</span><span style="color:#939AB7">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">            options</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddPolicy</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"DataProcessorAccess"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> policy </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#CAD3F5">                policy</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">RequireRole</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Administrator"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "DataProcessor"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "Operator"</span><span style="color:#939AB7">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">            options</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddPolicy</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"ReadOnlyAccess"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> policy </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#CAD3F5">                policy</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">RequireRole</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Administrator"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "DataProcessor"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#A6DA95">                    "Operator"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "Viewer"</span><span style="color:#939AB7">));</span></span>
+<span class="line"><span style="color:#939AB7">        });</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The policies form a hierarchy: <code>AdminOnly</code> is the most restrictive, <code>ReadOnlyAccess</code> the least. Each policy is cumulative, listing all roles that should have access. Applying them to endpoints is straightforward:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">Authorize</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Policy </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "DataProcessorAccess"</span><span style="color:#939AB7">)]</span></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">HttpPost</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"process"</span><span style="color:#939AB7">)]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">IActionResult</span><span style="color:#91D7E3">></span><span style="color:#8AADF4;font-style:italic"> ProcessData</span><span style="color:#939AB7">([</span><span style="color:#EED49F;font-style:italic">FromBody</span><span style="color:#939AB7">]</span><span style="color:#EED49F;font-style:italic"> DataInput</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // Only Administrator, DataProcessor, and Operator roles reach here</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Defining policies as named constants in a central location, rather than scattering role strings across individual controller actions, makes the access model auditable. When a security review asks &quot;who can access the data processing endpoint?&quot;, the answer is in one place.</p>
+<h2>Layer 4: Rate Limiting</h2>
+<p>Rate limiting constrains the volume of requests a single client can make within a time window. It serves two purposes: preventing brute-force attacks against authentication endpoints and limiting what compromised credentials can reach:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> RateLimitingMiddleware</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> IDistributedCache</span><span style="color:#CAD3F5"> _cache</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> _maxRequestsPerMinute</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> InvokeAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">HttpContext</span><span style="color:#CAD3F5"> context</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        string</span><span style="color:#CAD3F5"> ip </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Connection</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">RemoteIpAddress</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">ToString</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> ??</span><span style="color:#A6DA95"> "unknown"</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">        string</span><span style="color:#CAD3F5"> key </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> $"rate_limit:</span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">ip</span><span style="color:#939AB7">}</span><span style="color:#A6DA95">"</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // IDistributedCache stores byte[], so serialization is explicit</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> cached </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> await</span><span style="color:#CAD3F5"> _cache</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetAsync</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">key</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> requests </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> cached </span><span style="color:#8BD5CA">is</span><span style="color:#ED8796"> null</span></span>
+<span class="line"><span style="color:#8BD5CA">            ?</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> List</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DateTime</span><span style="color:#91D7E3">></span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#8BD5CA">            :</span><span style="color:#CAD3F5"> JsonSerializer</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Deserialize</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">List</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DateTime</span><span style="color:#91D7E3">>></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">cached</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> ??</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> now </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> DateTime</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UtcNow</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">        requests</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">RemoveAll</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">r </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> r </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> now</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddMinutes</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">-</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">));</span></span>
+<span class="line"><span style="color:#CAD3F5">        requests</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">now</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8BD5CA">        await</span><span style="color:#CAD3F5"> _cache</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">SetAsync</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">key</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> JsonSerializer</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">SerializeToUtf8Bytes</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">requests</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#8BD5CA">            new</span><span style="color:#EED49F;font-style:italic"> DistributedCacheEntryOptions</span></span>
+<span class="line"><span style="color:#939AB7">            {</span></span>
+<span class="line"><span style="color:#CAD3F5">                AbsoluteExpirationRelativeToNow </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> TimeSpan</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FromMinutes</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">2</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">            });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">requests</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> _maxRequestsPerMinute</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">StatusCode </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> StatusCodes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Status429TooManyRequests</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">            context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Retry-After"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "60"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">            return</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8BD5CA">        await</span><span style="color:#8AADF4;font-style:italic"> _next</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">context</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The sliding window approach (removing requests older than one minute, then counting the remainder) is conceptually simple and effective for moderate-throughput systems. The <code>Retry-After</code> header tells well-behaved clients how long to wait, reducing unnecessary retry storms.</p>
+<p>Two things about this sample are not visible in the code. <code>IDistributedCache</code> stores <code>byte[]</code> and nothing else, so anything richer than a string gets serialized at the call site. The interface has no generic <code>GetAsync&lt;T&gt;</code>, and code that appears to call one is relying on a local extension method. The read, modify and write sequence is also not atomic, so two simultaneous requests from the same address can each read the same list and undercount. Where that matters, use the atomic increment the cache backend offers directly (<code>INCR</code> on Redis) rather than a list.</p>
+<p>For high-throughput production systems, the built-in <code>System.Threading.RateLimiting</code> APIs introduced in .NET 7 offer more sophisticated strategies: fixed window, sliding window, token bucket, and concurrency limiters. These are designed for scenarios where the per-request overhead of maintaining timestamp lists becomes significant.</p>
+<h2>Layer 5: Security Headers</h2>
+<p>HTTP security headers instruct browsers and proxies to enforce security policies on behalf of the server. They cost effectively nothing to add and prevent entire categories of client-side attacks:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> SecurityHeadersMiddleware</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> InvokeAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">HttpContext</span><span style="color:#CAD3F5"> context</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> headers </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Headers</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Prevent XSS</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Content-Security-Policy"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#A6DA95">            "default-src 'self'; script-src 'self'"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Prevent clickjacking</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"X-Frame-Options"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "DENY"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Disable the legacy browser XSS filter (see the note below)</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"X-XSS-Protection"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "0"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Prevent MIME-type sniffing</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"X-Content-Type-Options"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "nosniff"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Enforce HTTPS</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Strict-Transport-Security"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#A6DA95">            "max-age=31536000; includeSubDomains"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Control referrer information</span></span>
+<span class="line"><span style="color:#CAD3F5">        headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Referrer-Policy"</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "strict-origin-when-cross-origin"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8BD5CA">        await</span><span style="color:#8AADF4;font-style:italic"> _next</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">context</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p><code>X-XSS-Protection</code> is the odd one out, and the value above is deliberate. No current browser has an XSS filter to enable: Chrome removed its XSS Auditor in 2019, Edge followed, and Firefox never shipped one. The header is non-standard and deprecated, and the filters it once switched on introduced vulnerabilities of their own, which is why the current guidance is to send <code>0</code> rather than <code>1; mode=block</code> wherever the header is sent at all. Content Security Policy is what does this job now. Keep the header only because a stale <code>1; mode=block</code> from an older middleware is worse than an explicit <code>0</code>.</p>
+<p>Register this middleware early in the pipeline so that it covers all responses, including error pages. An error response without security headers is still a response that a browser will render, and an attacker who can trigger a specific error page may be able to exploit the absence of CSP or X-Frame-Options on that response.</p>
+<h2>Layer 6: Data Encryption</h2>
+<p>Sensitive data (personally identifiable information, credentials, API keys) should be encrypted at rest. If a data breach occurs despite the preceding layers, encryption ensures that the exfiltrated data isn&#39;t directly usable:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> DataEncryptionService</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#C6A0F6"> byte</span><span style="color:#939AB7">[]</span><span style="color:#CAD3F5"> _key</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#EED49F;font-style:italic"> EncryptedData</span><span style="color:#8AADF4;font-style:italic"> Encrypt</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> plaintext</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> nonce </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> RandomNumberGenerator</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetBytes</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">AesGcm</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">NonceByteSizes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">MaxSize</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> plainBytes </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Encoding</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UTF8</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetBytes</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">plaintext</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> cipherBytes </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#C6A0F6"> byte</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">plainBytes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Length</span><span style="color:#939AB7">];</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> tag </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#C6A0F6"> byte</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">AesGcm</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">TagByteSizes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">MaxSize</span><span style="color:#939AB7">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        using</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> aes </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> AesGcm</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">_key</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> tag</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Length</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        aes</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Encrypt</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">nonce</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> plainBytes</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> cipherBytes</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> tag</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> EncryptedData</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            Data </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToBase64String</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">cipherBytes</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#CAD3F5">            Nonce </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToBase64String</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">nonce</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#CAD3F5">            Tag </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToBase64String</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">tag</span><span style="color:#939AB7">),</span></span>
+<span class="line"><span style="color:#CAD3F5">            Timestamp </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> DateTimeOffset</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UtcNow</span></span>
+<span class="line"><span style="color:#939AB7">        };</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Two properties make this safe, and the first one alone is not enough.</p>
+<p><strong>A fresh nonce per operation.</strong> Reusing a nonce with the same key is a well-documented weakness, and under GCM specifically it is catastrophic rather than merely leaky, because it exposes the authentication key as well as the plaintext relationship. The nonce is not secret and must be stored alongside the ciphertext so decryption can reconstruct the correct state.</p>
+<p><strong>Authentication.</strong> This is the part that a plain <code>Aes.Create()</code> implementation misses. <code>Aes.Create()</code> gives CBC with PKCS7 padding, which encrypts but does not authenticate: an attacker who can reach the stored ciphertext can modify it, and the way the padding fails on decryption is the classic padding oracle. For a threat model where the whole premise is that an attacker already has the data, confidentiality without integrity is the wrong half of the problem. <code>AesGcm</code> produces a tag that decryption verifies before returning anything, so tampered ciphertext throws instead of yielding plaintext.</p>
+<p>If a design is already committed to CBC, the equivalent is to compute an HMAC over the IV and ciphertext with a separate key, and verify it before decrypting.</p>
+<h2>Parameterized Queries: Always</h2>
+<p>This isn&#39;t a layer in the architecture. It&#39;s a baseline requirement. String concatenation to build SQL queries has been exploited continuously for decades, and preventable for just as long:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Always parameterized</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DataRecord</span><span style="color:#91D7E3">>></span><span style="color:#8AADF4;font-style:italic"> GetRecordsByUserAsync</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#C6A0F6">    string</span><span style="color:#CAD3F5"> userId</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> DateTime</span><span style="color:#CAD3F5"> fromDate</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    const</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> sql </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> """</span></span>
+<span class="line"><span style="color:#A6DA95">        SELECT Id, Content, CreatedAt, UserId</span></span>
+<span class="line"><span style="color:#A6DA95">        FROM DataRecords</span></span>
+<span class="line"><span style="color:#A6DA95">        WHERE UserId = @UserId</span></span>
+<span class="line"><span style="color:#A6DA95">        AND CreatedAt >= @FromDate</span></span>
+<span class="line"><span style="color:#A6DA95">        ORDER BY CreatedAt DESC</span></span>
+<span class="line"><span style="color:#A6DA95">        """</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    return</span><span style="color:#8BD5CA"> await</span><span style="color:#CAD3F5"> _connection</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">QueryAsync</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DataRecord</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">sql</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#8BD5CA">        new</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> UserId </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> userId</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> FromDate </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> fromDate </span><span style="color:#939AB7">});</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>With Dapper or Entity Framework, parameterized queries are the default path. The risk emerges in hand-written SQL, dynamic query construction, or stored procedure invocations where someone concatenates user input into the command text. Treat any string concatenation in a SQL context as a code review finding that must be resolved before merge.</p>
+<h2>Testing Security</h2>
+<p>Security measures that aren&#39;t tested are assumptions, not guarantees. Each layer should have dedicated tests that verify both the happy path and the failure modes:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> SqlInjection_IsRejectedByValidation</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> input </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> DataInput</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Query </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "'; DROP TABLE Users;--"</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> result </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _validator</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Validate</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsFalse</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">result</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">IsValid</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> ExpiredToken_IsRejected</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> expiredToken </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> GenerateToken</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">expiration</span><span style="color:#939AB7">:</span><span style="color:#CAD3F5"> DateTime</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UtcNow</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AddHours</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">-</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">));</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> result </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> await</span><span style="color:#CAD3F5"> _authService</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AuthenticateAsync</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">expiredToken</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">IsFalse</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">result</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">IsAuthenticated</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">TestMethod</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> RateLimit_Returns429_WhenExceeded</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    for</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> _maxRequests </span><span style="color:#8BD5CA">+</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> response </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> await</span><span style="color:#CAD3F5"> _client</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetAsync</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"/api/data"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">i </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> _maxRequests</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">            Assert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AreEqual</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">HttpStatusCode</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">TooManyRequests</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">StatusCode</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>These tests verify that injection patterns are caught at validation, that expired tokens are rejected by authentication, and that rate limits produce the correct HTTP response. Each test targets a single layer and validates a single failure mode, making failures diagnostic rather than ambiguous.</p>
+<h2>Summary</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Protects Against</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Input validation</td>
+<td>Injection, malformed data</td>
+<td>Low, validation code only</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>Unauthorized access</td>
+<td>Medium, JWT infrastructure</td>
+</tr>
+<tr>
+<td>Authorization</td>
+<td>Privilege escalation</td>
+<td>Low, policy configuration</td>
+</tr>
+<tr>
+<td>Rate limiting</td>
+<td>Brute force, denial of service</td>
+<td>Low, middleware + cache</td>
+</tr>
+<tr>
+<td>Security headers</td>
+<td>XSS, clickjacking, MIME sniffing</td>
+<td>Near zero, HTTP headers</td>
+</tr>
+<tr>
+<td>Data encryption</td>
+<td>Data breach exposure</td>
+<td>Medium, key management</td>
+</tr>
+</tbody></table></div>
+<p>The layers are independent and additive. I recommend starting with input validation and parameterized queries. They&#39;re effectively free and eliminate the most common vulnerability classes. Add authentication and authorization next, as they define the access model. Then layer on rate limiting, security headers, and encryption as the threat model demands.</p>
+<p>The goal is not to build an impenetrable system. No such thing exists. The goal is to ensure that no single failure, no single misconfiguration, and no single compromised component gives an attacker unimpeded access to the data. Each layer buys time, limits scope, and raises the cost of an attack.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://owasp.org/www-project-top-ten/">OWASP Top Ten</a></li>
+<li><a href="https://learn.microsoft.com/en-us/aspnet/core/security/">ASP.NET Core Security</a></li>
+<li><a href="https://learn.microsoft.com/en-us/aspnet/core/security/authentication/">JWT Authentication</a></li>
+<li><a href="https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit">Rate Limiting in .NET 7+</a></li>
+<li><a href="https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/">Data Protection APIs</a></li>
+</ul>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

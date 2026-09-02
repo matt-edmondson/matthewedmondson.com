@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Type-Safe Strings, Paths, and Physical Quantities in .NET | Matt Edmondson</title>
+  <meta name="description" content="Primitive obsession is the bug class where everything is a string or a double and the compiler can't help. ktsu.Semantics is the library I built to make domain types impossible to misuse. Email addresses, file paths, temperatures, and user IDs become first-class types with built-in validation and zero runtime cost over their primitives." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/ktsu-semantics-type-safe-strings-paths-quantities/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Type-Safe Strings, Paths, and Physical Quantities in .NET | Matt Edmondson" />
+  <meta property="og:description" content="Primitive obsession is the bug class where everything is a string or a double and the compiler can't help. ktsu.Semantics is the library I built to make domain types impossible to misuse. Email addresses, file paths, temperatures, and user IDs become first-class types with built-in validation and zero runtime cost over their primitives." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/ktsu-semantics-type-safe-strings-paths-quantities/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Type-Safe Strings, Paths, and Physical Quantities in .NET</h1>
+      <div class="post-meta">
+        <time datetime="2025-10-30">October 30, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=semantic-types">semantic-types</a>
+        <a class="post-tag" href="/#tag=primitive-obsession">primitive-obsession</a>
+        <a class="post-tag" href="/#tag=ktsu">ktsu</a>
+        <a class="post-tag" href="/#tag=library-deep-dive">library-deep-dive</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/ktsu-semantics-type-safe-strings-paths-quantities.jpg" alt="" width="1200" height="675" />
+
+<p>I&#39;ve written before about eliminating primitive obsession with semantic types. That&#39;s the bug class where everything in an application is a <code>string</code>, a <code>double</code>, or an <code>int</code>, and the compiler can do nothing to help tell a user ID apart from an email address apart from a ZIP code. That post made the case in the abstract. This one is about the library I actually use to do the thing.</p>
+<p><code>ktsu.Semantics</code> is the .NET library that grew out of a few earlier ktsu libraries (StrongPaths, SemanticQuantity, others) consolidated into one coherent system. It&#39;s the library I reach for first on any new .NET project where the domain has more than three or four conceptually distinct string and numeric values. The pitch is simple. Make domain types impossible to misuse, with zero runtime cost over their underlying primitives.</p>
+<p>This is what the library does, how it&#39;s structured, and where it pays off in a codebase.</p>
+<h2>The Core Idea</h2>
+<p>A semantic type wraps a primitive with a name and a contract. Where the primitive says &quot;this is a string,&quot; the semantic type says &quot;this is an email address, and these are the rules that make a value valid as one.&quot; Where the primitive lets any string slip through any function parameter that takes a string, the semantic type makes the compiler enforce that only an email address can be passed to a parameter that expects an email address.</p>
+<p>The simplest version looks like this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">using</span><span style="color:#EED49F;font-style:italic"> ktsu</span><span style="color:#8BD5CA">.</span><span style="color:#EED49F;font-style:italic">Semantics</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">IsEmail</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> EmailAddress</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">EmailAddress</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">HasLength</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">8</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 50</span><span style="color:#939AB7">),</span><span style="color:#EED49F;font-style:italic"> IsNotEmpty</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> sealed</span><span style="color:#C6A0F6"> record</span><span style="color:#EED49F;font-style:italic"> UserId</span><span style="color:#939AB7"> :</span><span style="color:#EED49F;font-style:italic"> SemanticString</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">UserId</span><span style="color:#91D7E3">></span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> }</span></span></code></pre><p>That&#39;s the entire type definition. The attributes specify the validation. The base class supplies the conversion, comparison, and storage machinery. The result is a type that can&#39;t exist with an invalid value, and that can&#39;t be confused with another semantic string type at compile time.</p>
+<p>The creation patterns matter. The library supports several, depending on how strict the calling code needs to be.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Throws if invalid — useful when you know the value is good</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> email </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> EmailAddress</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"user@example.com"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// From span, for performance-sensitive paths</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> userId </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> UserId</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Create</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"USER_12345"</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">AsSpan</span><span style="color:#939AB7">());</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Explicit cast — concise, throws if invalid</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> email </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">EmailAddress</span><span style="color:#939AB7">)</span><span style="color:#A6DA95">"user@example.com"</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Safe creation — no exceptions</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">EmailAddress</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">TryCreate</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"maybe@invalid"</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> out</span><span style="color:#EED49F;font-style:italic"> EmailAddress</span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> safeEmail</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // safeEmail is valid here</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>And the value of having the types defined this way shows up at the call site.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> SendWelcomeEmail</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">EmailAddress</span><span style="color:#CAD3F5"> to</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> UserId</span><span style="color:#CAD3F5"> userId</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#8BD5CA"> ..</span><span style="color:#CAD3F5">. </span><span style="color:#939AB7">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// This won't compile — type safety in action</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">SendWelcomeEmail</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">userId</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> email</span><span style="color:#939AB7">);</span><span style="color:#939AB7;font-style:italic"> // ❌ Compiler error</span></span></code></pre><p>That compiler error is the bug that didn&#39;t make it into production. Multiply by every parameter, every function, every codebase, and the cumulative effect is meaningful.</p>
+<h2>What&#39;s in the Library</h2>
+<blockquote>
+<p><strong>Update (September 2026):</strong> The counts below were current when this was written and the
+library has since roughly doubled. <code>domains.json</code> now lists sixteen physical domains rather
+than the nine folders it had then, and the generator emits 212 quantity types across 167
+distinct concepts. Four more packages have shipped as well: <code>Semantics.Color</code>,
+<code>Semantics.Music</code>, <code>Semantics.Strings.Identifiers</code>, and <code>double</code>, <code>float</code> and <code>decimal</code>
+storage aliases for the quantities. The shape of the argument is unchanged.</p>
+</blockquote>
+<p>The <code>Semantics</code> package is broader than strings now. There are four pieces.</p>
+<p><strong><code>Semantics.Strings</code></strong> provides the foundational semantic-string types with the validation attribute system. Around fifty built-in validation attributes cover the common cases: format validators (email, URL, UUID, hex), length and range constraints, character class checks, regex, and combinators. A project can add its own attributes for project-specific validation.</p>
+<p><strong><code>Semantics.Paths</code></strong> provides specialized path types built on top of the semantic-string foundation. <code>FilePath</code>, <code>DirectoryPath</code>, <code>AbsolutePath</code>, <code>RelativePath</code>, with polymorphic interfaces so functions that accept &quot;any path&quot; can do that without being string-typed. The library handles cross-platform path normalization, query operations (does this exist, is this a child of that), and the kinds of file-system operations that are otherwise awkwardly bolted onto raw strings.</p>
+<p><strong><code>Semantics.Quantities</code></strong> is the physics quantity system. Around eighty quantities across eight scientific domains (mechanics, thermodynamics, electromagnetism, etc.), with dimensional analysis and centralized physical constants. The point is that a <code>Temperature</code> is not a <code>double</code>, a <code>Velocity</code> is not a <code>double</code>, and <code>Distance / Time = Velocity</code> is a thing the type system enforces. This is useful for any domain that does real physical calculation, less useful for typical CRUD-shaped applications.</p>
+<p><strong><code>Semantics.SourceGenerators</code></strong> produces some of the boilerplate (mostly the conversion operators and the validation pipeline) at compile time rather than at runtime. The reason for them is performance. Semantic types are designed to have zero or near-zero runtime cost over their underlying primitives, and the source generators are how that&#39;s achieved without sacrificing the API ergonomics.</p>
+<h2>The Alternatives</h2>
+<p>There are other approaches to type-safe domain modeling in .NET. The two main alternatives are records and value object frameworks.</p>
+<p><strong>Record types with primary constructors.</strong> <code>public record EmailAddress(string Value);</code> is a one-line approach that gives a distinct type and structural equality. What it doesn&#39;t give: validation at construction, conversion operators, span-based creation paths, integration with serialization/EF/ASP.NET model binding, or compile-time guarantees against the primitive sneaking back through. Records are fine for very small projects, and the library is fine for projects that have outgrown them.</p>
+<p><strong>Value object frameworks</strong> (Vogen, StronglyTypedId, Dunet). All capable, all somewhat different in their API ergonomics. <code>ktsu.Semantics</code> is opinionated toward a specific style (attribute-driven validation, polymorphic interfaces for related types, integrated path and quantity support) that I find more useful for the kind of code I write. The real version is that I built this library because the alternatives weren&#39;t quite shaped the way I wanted them. If one of them is shaped the right way for a given project, use that one. The cost of being wrong about which library is &quot;best&quot; here is small.</p>
+<p>The specific things <code>ktsu.Semantics</code> does that I haven&#39;t found combined elsewhere:</p>
+<ul>
+<li>Path types as first-class citizens, with the polymorphic interfaces that make &quot;any path&quot; a real concept.</li>
+<li>A built-in physics quantity system that integrates with the semantic-string approach using the same idioms.</li>
+<li>Span-based creation paths for performance-sensitive code.</li>
+<li>Source-generator-backed conversion machinery that keeps the runtime cost low.</li>
+</ul>
+<p>If any of those is in the hot path, the library will pay for itself. If none of them is, a smaller framework or hand-rolled records may be the better fit.</p>
+<h2>Three Places It Pays Off</h2>
+<p>Three places I&#39;ve consistently found the library pays for itself.</p>
+<p><strong>Configuration and external input.</strong> Any time a string crosses a system boundary (file paths from disk, identifiers from a database, fields from user input) wrapping it in a semantic type at the boundary turns &quot;did anyone validate this&quot; from a code-review question into a compiler-enforced property. The code that consumes it receives the validated type, not the raw string.</p>
+<p><strong>Cross-system identifiers.</strong> A codebase that handles user IDs, organization IDs, session IDs, and request IDs as four distinct types instead of four <code>string</code>s eliminates the entire class of bug where the wrong identifier gets passed to the wrong function. The bug feels theoretical until a team has shipped one, and then it feels obvious.</p>
+<p><strong>Domain calculations.</strong> Code that computes distances, velocities, durations, or temperatures (anything where a <code>double</code> could plausibly mean two different physical quantities) gets the protection of the quantity types, which make that unit confusion impossible. The classic Mars-orbiter unit-mismatch bug is the dramatic version. Less dramatic versions show up in any codebase that mixes seconds and milliseconds in the same function.</p>
+<h2>The Tradeoffs</h2>
+<p>Three tradeoffs.</p>
+<p><strong>The upfront type definition is more verbose than <code>string</code>.</strong> Yes. The savings are at the call sites, where the types prevent mistakes. The cost is paid once per type and recouped across thousands of uses.</p>
+<p><strong>The first project spends a small amount of time fighting JSON serialization and EF mappings.</strong> The library has integrations for common frameworks, and they work, but the first project takes a couple of hours of &quot;here is how the library wants to be wired in.&quot; After that, the approach is reusable.</p>
+<p><strong>Debugging gets slightly noisier.</strong> A semantic type wrapping a string shows up in the debugger as <code>EmailAddress { Value = &quot;user@example.com&quot; }</code> instead of just <code>&quot;user@example.com&quot;</code>. Most IDEs handle this fine, but it&#39;s a small ergonomic cost.</p>
+<h2>Installation and Starting Point</h2>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">dotnet</span><span style="color:#A6DA95"> add</span><span style="color:#A6DA95"> package</span><span style="color:#A6DA95"> ktsu.Semantics</span></span></code></pre><p>What I&#39;d recommend on a new project is to identify the three or four most-confused string types in the domain and convert them first. User IDs and account IDs that look identical to each other. File paths and URLs that get mixed up. Display names and slugs that come in through different inputs but flow through the same code paths. Convert those, ship the change, observe what happens.</p>
+<p>What usually happens is one or two compile errors that turn out to have been latent bugs, and a substantial reduction in the kind of code-review comment that says &quot;are we sure this is the right kind of string here.&quot; That signal is the library&#39;s real value. The verbose type definitions are the cost, the eliminated category of bug is the return.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

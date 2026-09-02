@@ -570,7 +570,7 @@
         <a class="post-tag" href="/#tag=memory-management">memory-management</a>
         <a class="post-tag" href="/#tag=design-patterns">design-patterns</a>
       </div>
-      <img class="post-hero" src="/assets-blog/dotnet-reducing-gc-pressure-arraypool-span.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/dotnet-reducing-gc-pressure-arraypool-span.png" alt="" width="1200" height="675" />
 
 <p>The .NET garbage collector is very capable, right up until a workload exposes its limits. In data-intensive applications, careless allocation patterns generate GC pauses that erode throughput predictability. The fix isn&#39;t to eliminate allocations entirely (that tends to produce brittle, unreadable code), but to eliminate the ones that serve no purpose.</p>
 <p>Over years of building production .NET systems that process thousands of records per second, I have settled on a set of memory management patterns that consistently deliver results: object pooling, <code>Span&lt;T&gt;</code>, <code>ArrayPool&lt;T&gt;</code>, Large Object Heap awareness, and continuous memory monitoring. This post walks through each of them with concrete code and the reasoning behind the choices.</p>

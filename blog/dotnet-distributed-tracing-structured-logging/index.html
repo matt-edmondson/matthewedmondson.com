@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distributed Tracing and Structured Logging in .NET | Matt Edmondson</title>
+  <meta name="description" content="A scientific approach to debugging .NET systems: correlation IDs for request tracing, structured logging, Activity-based distributed tracing, and practical patterns for finding bugs faster." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-distributed-tracing-structured-logging/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Distributed Tracing and Structured Logging in .NET | Matt Edmondson" />
+  <meta property="og:description" content="A scientific approach to debugging .NET systems: correlation IDs for request tracing, structured logging, Activity-based distributed tracing, and practical patterns for finding bugs faster." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-distributed-tracing-structured-logging/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Distributed Tracing and Structured Logging in .NET</h1>
+      <div class="post-meta">
+        <time datetime="2025-09-29">September 29, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Debugging</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=debugging">debugging</a>
+        <a class="post-tag" href="/#tag=distributed-systems">distributed-systems</a>
+        <a class="post-tag" href="/#tag=observability">observability</a>
+      </div>
+
+<p>The hardest bugs aren&#39;t the ones that crash the application. They&#39;re the ones that produce subtly wrong results, fail intermittently under specific conditions, or emerge only when multiple services interact under load. These bugs resist ad-hoc investigation. They demand a systematic approach.</p>
+<p>This post covers the methodology and tooling I rely on for debugging .NET applications in production: a structured process for narrowing down root causes, correlation IDs for tracing requests across service boundaries, structured logging that remains searchable at scale, and <code>Activity</code>-based distributed tracing.</p>
+<h2>The Scientific Method</h2>
+<p>Before reaching for any tool, apply a deliberate process. The most common debugging mistake is skipping straight from &quot;it&#39;s broken&quot; to modifying code. A structured approach prevents that:</p>
+<ol>
+<li><strong>Observe.</strong> What is the actual behavior? What was the expected behavior? When did the problem first appear?</li>
+<li><strong>Hypothesize.</strong> What could account for the difference? List at least three candidate causes.</li>
+<li><strong>Test.</strong> Design the smallest possible experiment that eliminates one hypothesis.</li>
+<li><strong>Analyze.</strong> Did the experiment confirm or reject the hypothesis?</li>
+<li><strong>Iterate.</strong> Continue narrowing until the root cause is reached.</li>
+</ol>
+<p>Listing multiple hypotheses at step two is what makes the method work. It guards against fixating on the first plausible explanation and missing the actual cause entirely. Step three is where most of the time goes, and the two sections after this one are about doing it well: checking the assumption a hypothesis rests on, and building a reproduction small enough to be trusted.</p>
+<h3>Reproduction Before Investigation</h3>
+<p>A bug that can&#39;t be reproduced is a bug that can&#39;t be fixed with confidence. Before spending time on investigation:</p>
+<ul>
+<li><strong>Document exact reproduction steps</strong> so others can trigger the failure independently.</li>
+<li><strong>Isolate variables.</strong> Does the problem occur in all environments? With all inputs? At all times of day?</li>
+<li><strong>Use <code>git bisect</code> for regressions.</strong> When the behavior was known to be correct at some prior point, bisecting the commit history is the fastest path to the offending change.</li>
+</ul>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">git</span><span style="color:#A6DA95"> bisect</span><span style="color:#A6DA95"> start</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">git</span><span style="color:#A6DA95"> bisect</span><span style="color:#A6DA95"> bad</span><span style="color:#939AB7;font-style:italic">                    # Current commit exhibits the bug</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">git</span><span style="color:#A6DA95"> bisect</span><span style="color:#A6DA95"> good</span><span style="color:#A6DA95"> v1.2.0</span><span style="color:#939AB7;font-style:italic">            # This release was known-good</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic"># Git checks out a midpoint -- test it and mark as good or bad</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic"># Repeat until the offending commit is isolated</span></span></code></pre><h3>Verifying the Assumption, Not the Code</h3>
+<p>Most hypotheses at step two are not really about the code under investigation. They rest on an assumption about what
+something else does: a library, the runtime, a build tool, an API being called. Test the assumption at
+its source before designing an experiment around it, because an experiment built on a wrong
+assumption produces a confident wrong answer.</p>
+<p>Three tiers, in descending order of authority.</p>
+<ol>
+<li><strong>The vendor&#39;s source</strong>, where it is available. It describes what actually happens.</li>
+<li><strong>The vendor&#39;s documentation.</strong> It describes what is promised, which is a different thing and is
+sometimes silent exactly where the question lands.</li>
+<li><strong>Everything else</strong>, including search results, forum answers, and memory of how the thing
+worked last time.</li>
+</ol>
+<p>That third tier is not merely weaker. It is actively misleading on hard problems, because the
+questions with easy answers are the ones that get answered often, and the residue is confident folk
+knowledge about the cases nobody checked. I have lost a full day to this: the advice returned by
+every search pointed at my non-standard SDK and package configuration, which was working correctly
+in dozens of other repositories at the same time, while the actual cause was project identity
+collisions in build server memory.</p>
+<p>Reading the source answers questions that no amount of experimenting will. When I wanted to know
+whether <code>Except</code> delegates membership to the collection it was handed, benchmarks could only ever
+show me timings. <code>ExceptIterator</code> constructing a fresh <code>HashSet</code> from its second argument, with no
+type check anywhere, is the answer itself. The same applies to the formatting rule that would not
+fire: <code>TokenBasedFormattingRule.AdjustNewLinesAfterSemicolonToken</code> contains both the sorting check
+and a comment explaining that the check is deliberate. Nothing in the documentation mentioned it,
+and nothing could have been inferred from the outside.</p>
+<p>Documentation is worth most when it contradicts the hypothesis. Searching the official docs for evidence that
+NuGet cached anything against project GUIDs returned the opposite, and being wrong in a checkable way
+is what pushed the investigation somewhere better instead of confirming a comfortable theory. A
+source that only ever agrees is not being consulted.</p>
+<h3>Clean-Room Reproduction</h3>
+<p>Once an assumption is in question, reproduce it in a project that contains nothing else. A new
+solution, the smallest possible file, and none of the code that was failing.</p>
+<p>This buys two things. It removes every variable that was not deliberately put back, which is what
+makes the result mean something. And it converts a bug report into something the maintainer can act
+on, which is the difference between an issue that gets a fix and one that gets closed.</p>
+<p>The clean room for the formatting rule is two files of four using directives each, identical except
+that one pair is in alphabetical order. That is the entire reproduction. It fits in an issue body,
+it needs no project of mine, and it makes the behavior undeniable in a way that a description of my
+codebase never would.</p>
+<p>The negative result is as useful as the positive one. When the minimal case does not reproduce, the
+difference between it and the failing system is the bug, and adding things back one at a time
+converges on it quickly. Testing restore at the project level and then at the solution level, rather
+than only at the level that was failing, is the same move at a smaller scale.</p>
+<p>Two cautions. A reproduction that only runs on one machine is not clean, so state the SDK version,
+the tool versions, and the operating system alongside it. And some defects are invisible to a
+single-project clean room by their nature, because they live in state shared between things. When a
+minimal case has to contain two solutions before the failure appears, that requirement is not an
+obstacle to the reproduction. It is the finding.</p>
+<h2>Correlation IDs: Tracing Requests Across Service Boundaries</h2>
+<p>In a distributed system, a single user action may traverse five or more services. Without a shared identifier threading through all of them, correlating log entries across service boundaries becomes an exercise in archaeology.</p>
+<p>A correlation ID is a unique string, typically a GUID, that accompanies a request through every service it touches:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> CorrelationMiddleware</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    private</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> RequestDelegate</span><span style="color:#CAD3F5"> _next</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#8AADF4;font-style:italic"> CorrelationMiddleware</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">RequestDelegate</span><span style="color:#CAD3F5"> next</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> =></span><span style="color:#CAD3F5"> _next </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> next</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> InvokeAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">HttpContext</span><span style="color:#CAD3F5"> context</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Honor the caller's correlation ID, or generate a new one</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> correlationId </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Request</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Headers</span><span style="color:#939AB7">[</span><span style="color:#A6DA95">"X-Correlation-ID"</span><span style="color:#939AB7">]</span></span>
+<span class="line"><span style="color:#8BD5CA">            .</span><span style="color:#8AADF4;font-style:italic">FirstOrDefault</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> ??</span><span style="color:#CAD3F5"> Guid</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">NewGuid</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToString</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Make it available throughout the request pipeline</span></span>
+<span class="line"><span style="color:#CAD3F5">        context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Items</span><span style="color:#939AB7">[</span><span style="color:#A6DA95">"CorrelationId"</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> =</span><span style="color:#CAD3F5"> correlationId</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Attach it to every log entry emitted during this request</span></span>
+<span class="line"><span style="color:#C6A0F6">        using</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">LogContext</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">PushProperty</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"CorrelationId"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> correlationId</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">            // Echo it back so the caller can reference it in their own logs</span></span>
+<span class="line"><span style="color:#CAD3F5">            context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Headers</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Append</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"X-Correlation-ID"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> correlationId</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8BD5CA">            await</span><span style="color:#8AADF4;font-style:italic"> _next</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">context</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>When service A calls service B, it passes the correlation ID in the request header. Service B&#39;s middleware picks it up and attaches it to its own log context. The result is that a single query retrieves the complete request path across every service involved:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Application Insights (KQL)</span></span>
+<span class="line"><span style="color:#CAD3F5">traces</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">where</span><span style="color:#CAD3F5"> timestamp > </span><span style="color:#8AADF4;font-style:italic">ago</span><span style="color:#CAD3F5">(</span><span style="color:#F5A97F">30m</span><span style="color:#CAD3F5">)</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">where</span><span style="color:#CAD3F5"> customDimensions.CorrelationId == </span><span style="color:#A6DA95">"abc-123-def-456"</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">order</span><span style="color:#C6A0F6"> by</span><span style="color:#CAD3F5"> timestamp </span><span style="color:#C6A0F6">asc</span></span></code></pre><p>Adding this costs almost nothing, a few lines of middleware per service. It pays for itself the first time an incident crosses a service boundary and the investigation collapses from grepping several log stores into one query.</p>
+<h2>Structured Logging: Named Properties, Not String Interpolation</h2>
+<p>The difference between logs that can be searched and logs that can&#39;t is structure. String interpolation produces human-readable text that&#39;s effectively opaque to query engines:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Unstructured -- human-readable but unsearchable</span></span>
+<span class="line"><span style="color:#CAD3F5">_logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogInformation</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">$"User </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">userId</span><span style="color:#939AB7">}</span><span style="color:#A6DA95"> processed </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">count</span><span style="color:#939AB7">}</span><span style="color:#A6DA95"> records in </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">elapsed</span><span style="color:#939AB7">}</span><span style="color:#A6DA95">ms"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// Structured -- every field is independently queryable</span></span>
+<span class="line"><span style="color:#CAD3F5">_logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogInformation</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">    "User {UserId} processed {RecordCount} records in {ElapsedMs}ms"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">    userId</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> count</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> elapsed</span><span style="color:#939AB7">);</span></span></code></pre><p>The structured version supports queries for all requests by a specific user, all requests that processed more than 1,000 records, or all requests slower than 500ms, without resorting to regex pattern matching against free text.</p>
+<h3>Context, Not Just Events</h3>
+<p>When an exception occurs, the stack trace shows where the failure happened. The surrounding context shows why:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">try</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#8BD5CA">    await</span><span style="color:#8AADF4;font-style:italic"> ProcessDataAsync</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">data</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"><span style="color:#C6A0F6">catch</span><span style="color:#939AB7"> (</span><span style="color:#EED49F;font-style:italic">Exception</span><span style="color:#CAD3F5"> ex</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogError</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">ex</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#A6DA95">        "Failed to process data. Context: {@Context}"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#8BD5CA">        new</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            DataId </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> data</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">Id</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            DataType </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> data</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">GetType</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Name</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            RecordCount </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> data</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">Records</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">Count</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">            Timestamp </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> DateTime</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">UtcNow</span></span>
+<span class="line"><span style="color:#939AB7">        });</span></span>
+<span class="line"><span style="color:#C6A0F6">    throw</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The <code>@</code> prefix instructs Serilog (and compatible logging frameworks) to serialize the entire object rather than calling <code>.ToString()</code>. This captures the full state at the point of failure, which is often the difference between a quick diagnosis and hours of guesswork.</p>
+<h2>Activity-Based Distributed Tracing</h2>
+<p>.NET&#39;s <code>System.Diagnostics.Activity</code> API provides built-in distributed tracing that integrates directly with OpenTelemetry. Each activity represents a unit of work and automatically records its parent, forming a tree of spans that visualization tools like Jaeger or Azure Monitor can render as a timeline:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">private</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> readonly</span><span style="color:#EED49F;font-style:italic"> ActivitySource</span><span style="color:#CAD3F5"> _activitySource </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"DataPipeline"</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">ProcessingResult</span><span style="color:#91D7E3">></span><span style="color:#8AADF4;font-style:italic"> ProcessAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">DataInput</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    using</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> activity </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _activitySource</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">StartActivity</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"ProcessData"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    activity</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">SetTag</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"input.type"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> input</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetType</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Name</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    activity</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">SetTag</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"input.size"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> input</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Data</span><span style="color:#8BD5CA">?.</span><span style="color:#CAD3F5">Length</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToString</span><span style="color:#939AB7">());</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> stages </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">string</span><span style="color:#CAD3F5"> Name</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> Func</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">Task</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> Action</span><span style="color:#939AB7">)[]</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7">        (</span><span style="color:#A6DA95">"Validate"</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> ()</span><span style="color:#8BD5CA"> =></span><span style="color:#8AADF4;font-style:italic"> ValidateInput</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">)),</span></span>
+<span class="line"><span style="color:#939AB7">        (</span><span style="color:#A6DA95">"Transform"</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> ()</span><span style="color:#8BD5CA"> =></span><span style="color:#8AADF4;font-style:italic"> TransformData</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">)),</span></span>
+<span class="line"><span style="color:#939AB7">        (</span><span style="color:#A6DA95">"Persist"</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> ()</span><span style="color:#8BD5CA"> =></span><span style="color:#8AADF4;font-style:italic"> PersistData</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">    };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    foreach</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">var</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">name</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> action</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> in</span><span style="color:#CAD3F5"> stages</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        using</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> stageActivity </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _activitySource</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">StartActivity</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">$"Stage.</span><span style="color:#939AB7">{</span><span style="color:#CAD3F5">name</span><span style="color:#939AB7">}</span><span style="color:#A6DA95">"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">        try</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogDebug</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Starting stage: {Stage}"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8BD5CA">            await</span><span style="color:#8AADF4;font-style:italic"> action</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">            _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogDebug</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Completed stage: {Stage}"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        catch</span><span style="color:#939AB7"> (</span><span style="color:#EED49F;font-style:italic">Exception</span><span style="color:#CAD3F5"> ex</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            stageActivity</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">SetStatus</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">ActivityStatusCode</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Error</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> ex</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Message</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">            _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogError</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">ex</span><span style="color:#939AB7">,</span><span style="color:#A6DA95"> "Failed at stage: {Stage}"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> name</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">            throw</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    return</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> ProcessingResult</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Success </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Activities propagate automatically through <code>async/await</code>, <code>HttpClient</code> calls, and message queues. Each child activity records a reference to its parent, so the complete chain of operations is reconstructable from the trace data without any manual plumbing.</p>
+<h2>Timing Without Noise</h2>
+<p>For performance debugging, wrap suspect operations with <code>Stopwatch</code> and log the results structurally. Placing the logging in a <code>finally</code> block ensures that timing is captured even when the operation fails, which is often precisely when the timing matters most:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> DiagnosticMiddleware</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> InvokeAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">HttpContext</span><span style="color:#CAD3F5"> context</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        using</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> scope </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">BeginScope</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">            "Request {RequestId}"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">TraceIdentifier</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> stopwatch </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Stopwatch</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">StartNew</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">        try</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#8BD5CA">            await</span><span style="color:#8AADF4;font-style:italic"> _next</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">context</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        finally</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            stopwatch</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Stop</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">            _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogInformation</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">                "Request {Method} {Path} completed in {Duration}ms with {StatusCode}"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">                context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Request</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Method</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">                context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Request</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Path</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">                stopwatch</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">ElapsedMilliseconds</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">                context</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Response</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">StatusCode</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>This middleware produces a structured log entry for every request, including its method, path, duration, and status code. Over time, these entries form a dataset that can be queried to identify performance trends, outliers, and regressions.</p>
+<h2>Debugging Concurrent Operations</h2>
+<p>Concurrency bugs require additional instrumentation because their behavior depends on timing and ordering that may not be captured by standard logging. Using <code>SemaphoreSlim</code> for controlled parallelism combined with per-item tracing shows what each concurrent operation is doing:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> async</span><span style="color:#EED49F;font-style:italic"> Task</span><span style="color:#8AADF4;font-style:italic"> ProcessConcurrentlyAsync</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">DataItem</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> items</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> semaphore </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> SemaphoreSlim</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Environment</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">ProcessorCount</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> tasks </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> items</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Select</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">async</span><span style="color:#CAD3F5"> item </span><span style="color:#8BD5CA">=></span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#8BD5CA">        await</span><span style="color:#CAD3F5"> semaphore</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WaitAsync</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">        try</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            using</span><span style="color:#C6A0F6"> var</span><span style="color:#CAD3F5"> activity </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> _activitySource</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">StartActivity</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"ProcessItem"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">            activity</span><span style="color:#8BD5CA">?.</span><span style="color:#8AADF4;font-style:italic">SetTag</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"item.id"</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> item</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Id</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">            var</span><span style="color:#CAD3F5"> sw </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Stopwatch</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">StartNew</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#8BD5CA">            await</span><span style="color:#8AADF4;font-style:italic"> ProcessItemAsync</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">item</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">            _logger</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">LogDebug</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#A6DA95">                "Processed item {ItemId} in {Duration}ms"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#CAD3F5">                item</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Id</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> sw</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">ElapsedMilliseconds</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#C6A0F6">        finally</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            semaphore</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Release</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#8BD5CA">    await</span><span style="color:#CAD3F5"> Task</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">WhenAll</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">tasks</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Bounding parallelism to <code>Environment.ProcessorCount</code> prevents thread pool starvation. The per-item <code>Activity</code> creates individual spans that correlate with any later service calls each item triggers, making it possible to trace a single item&#39;s journey through the entire system.</p>
+<h2>Querying the Instrumentation</h2>
+<p>Structured logging and distributed tracing are only valuable if the data they produce can be queried. Here are the query patterns I use most frequently.</p>
+<h3>Errors in the Last Hour</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">query</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">        "</span><span style="color:#8AADF4">bool</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">            "</span><span style="color:#8AADF4">must</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> [</span></span>
+<span class="line"><span style="color:#939AB7">                {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">term</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">level</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "ERROR"</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> },</span></span>
+<span class="line"><span style="color:#939AB7">                {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">range</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">@timestamp</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">gte</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "now-1h"</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">            ]</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><h3>A Single Request Across Services</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">traces</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">where</span><span style="color:#CAD3F5"> customDimensions.CorrelationId == </span><span style="color:#A6DA95">"abc-123"</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">project</span><span style="color:#CAD3F5"> timestamp, message, ServiceName = </span><span style="color:#8AADF4;font-style:italic">tostring</span><span style="color:#CAD3F5">(customDimensions.ServiceName)</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">order</span><span style="color:#C6A0F6"> by</span><span style="color:#CAD3F5"> timestamp </span><span style="color:#C6A0F6">asc</span></span></code></pre><h3>Slow Operations over Time</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">traces</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">extend</span><span style="color:#CAD3F5"> Stage = </span><span style="color:#8AADF4;font-style:italic">tostring</span><span style="color:#CAD3F5">(customDimensions.Stage),</span></span>
+<span class="line"><span style="color:#CAD3F5">         ElapsedMs = </span><span style="color:#8AADF4;font-style:italic">todouble</span><span style="color:#CAD3F5">(customDimensions.ElapsedMs)</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">where</span><span style="color:#CAD3F5"> ElapsedMs > </span><span style="color:#F5A97F">500</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">summarize</span><span style="color:#8AADF4;font-style:italic"> count()</span><span style="color:#C6A0F6"> by</span><span style="color:#8AADF4;font-style:italic"> bin</span><span style="color:#CAD3F5">(timestamp, </span><span style="color:#F5A97F">5m</span><span style="color:#CAD3F5">), Stage</span></span>
+<span class="line"><span style="color:#CAD3F5">| </span><span style="color:#C6A0F6">render</span><span style="color:#8AADF4;font-style:italic"> timechart</span></span></code></pre><p>The casts are not decoration. Application Insights stores every <code>customDimensions</code> value as a string, so comparing one to a number matches nothing: <code>where customDimensions.ElapsedMs &gt; 500</code> silently returns an empty result rather than the slow operations it looks like it asks for. Grouping is stricter still and fails loudly, with <em>&quot;Summarize group key is of a &#39;dynamic&#39; type&quot;</em> and a demand for an explicit cast. Equality against a string literal is the one case that works untouched, which is why the correlation ID filters above need nothing.</p>
+<p>These queries become second nature during incident response, and having them documented in a runbook saves valuable time when every minute matters.</p>
+<h2>The Debugging Toolkit at a Glance</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Correlation IDs</td>
+<td>Trace requests across service boundaries</td>
+</tr>
+<tr>
+<td>Structured logging</td>
+<td>Produce searchable, queryable log entries</td>
+</tr>
+<tr>
+<td><code>System.Diagnostics.Activity</code></td>
+<td>Distributed tracing with OpenTelemetry integration</td>
+</tr>
+<tr>
+<td><code>Stopwatch</code></td>
+<td>Precise performance measurement</td>
+</tr>
+<tr>
+<td><code>git bisect</code></td>
+<td>Isolate the commit that introduced a regression</td>
+</tr>
+<tr>
+<td>Vendor source and docs</td>
+<td>Verify the assumption a hypothesis rests on</td>
+</tr>
+<tr>
+<td>A clean-room reproduction</td>
+<td>Remove every variable not deliberately added</td>
+</tr>
+<tr>
+<td>Application Insights / Jaeger</td>
+<td>Visualize distributed traces</td>
+</tr>
+<tr>
+<td>PerfView / dotTrace</td>
+<td>CPU and memory profiling</td>
+</tr>
+</tbody></table></div>
+<p>If only two things from this post are worth adopting, make them correlation IDs and structured logging. They cost almost nothing to add, they require no changes to the application&#39;s business logic, and they make every future debugging session materially faster.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity">System.Diagnostics.Activity</a></li>
+<li><a href="https://opentelemetry.io/docs/languages/dotnet/">OpenTelemetry .NET</a></li>
+<li><a href="https://serilog.net/">Serilog Structured Logging</a></li>
+<li><a href="https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview">Application Insights</a></li>
+<li><a href="https://git-scm.com/docs/git-bisect">git bisect</a></li>
+</ul>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build Infrastructure for 79 .NET Repositories with a Custom MSBuild SDK | Matt Edmondson</title>
+  <meta name="description" content="How a custom MSBuild SDK, topological dependency sorting, automated versioning, and cross-repo synchronization keep 79+ independent .NET libraries building and publishing consistently." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/dotnet-build-infrastructure-79-repositories/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Build Infrastructure for 79 .NET Repositories with a Custom MSBuild SDK | Matt Edmondson" />
+  <meta property="og:description" content="How a custom MSBuild SDK, topological dependency sorting, automated versioning, and cross-repo synchronization keep 79+ independent .NET libraries building and publishing consistently." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/dotnet-build-infrastructure-79-repositories/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Build Infrastructure for 79 .NET Repositories with a Custom MSBuild SDK</h1>
+      <div class="post-meta">
+        <time datetime="2025-10-20">October 20, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=msbuild">msbuild</a>
+        <a class="post-tag" href="/#tag=nuget">nuget</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=devops">devops</a>
+      </div>
+
+<p>My ktsu.dev ecosystem is over 79 independent .NET libraries and applications. Each one lives in its own repository with its own solution, CI pipeline, and NuGet package. Keeping all of them consistent, buildable, and correctly versioned is a real infrastructure problem, and at this scale the build system is where most of the actual engineering ends up.</p>
+<p>This post covers the three pillars I built to hold it together: a custom MSBuild SDK that standardizes build configuration across every project, a dependency-aware build orchestrator that works out the correct build order, and an automated versioning system driven entirely by git history.</p>
+<h2>Configuration at 79x Scale</h2>
+<p>Without shared infrastructure, every project would need its own independently maintained copy of:</p>
+<ul>
+<li><code>.csproj</code> configuration (target frameworks, package metadata, analyzer settings)</li>
+<li>CI/CD workflow definitions (build, test, pack, publish)</li>
+<li>Version calculation logic</li>
+<li>License, changelog, and metadata generation</li>
+</ul>
+<p>At 79+ projects, copy-pasting this configuration isn&#39;t just tedious, it falls apart. A single change, like adding .NET 10 as a target framework, would mean 79 separate pull requests. Configuration drift between projects becomes inevitable, and debugging a build failure in one project means I first have to work out whether its configuration has drifted from the others.</p>
+<h2>Pillar 1: A Custom MSBuild SDK</h2>
+<p>My answer to configuration sprawl is a custom MSBuild SDK (<code>ktsu.Sdk</code>) that every project imports with a single line:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">Project</span><span style="color:#EED49F"> Sdk</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"ktsu.Sdk"</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">  &#x3C;!-- No target frameworks, no metadata, no analyzer config needed. --></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">Project</span><span style="color:#8BD5CA">></span></span></code></pre><p>That one import gives a project everything it needs to build, test, and publish correctly. Here is what the SDK handles.</p>
+<h3>Automatic Multi-Targeting</h3>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- Sdk/Sdk.props --></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">TargetFrameworks</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">net10.0;net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.0;netstandard2.1</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">TargetFrameworks</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span></code></pre><p>Every library automatically targets all supported frameworks. Test projects override this to build against only the latest version, since there&#39;s no point running tests against every historical target:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- Test projects are detected automatically and narrowed to a single target --></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#EED49F"> Condition</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"'$(IsTestProject)' == 'true'"</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">TargetFramework</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">net10.0</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">TargetFramework</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span></code></pre><h3>Package Metadata from Markdown</h3>
+<p>Rather than embedding package metadata in XML inside each <code>.csproj</code>, the SDK reads it from plain markdown files at the solution root:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- Sdk/Sdk.props — reads VERSION.md, DESCRIPTION.md, AUTHORS.md, TAGS.md --></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">Version</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">$([System.IO.File]::ReadAllText('$(SolutionDir)VERSION.md').Trim())</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">Version</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">Description</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">$([System.IO.File]::ReadAllText('$(SolutionDir)DESCRIPTION.md').Trim())</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">Description</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">Authors</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">$([System.IO.File]::ReadAllText('$(SolutionDir)AUTHORS.md').Trim())</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">Authors</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">PackageTags</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">$([System.IO.File]::ReadAllText('$(SolutionDir)TAGS.md').Trim())</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">PackageTags</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span></code></pre><p>This makes <code>VERSION.md</code>, <code>DESCRIPTION.md</code>, <code>AUTHORS.md</code>, and <code>TAGS.md</code> the single source of truth for package metadata. Updating a package description means editing a markdown file, with no XML involved and no risk of breaking the project file.</p>
+<h3>Sub-SDKs for Different Application Types</h3>
+<p>Libraries use the base <code>ktsu.Sdk</code>. GUI applications import <code>ktsu.Sdk.App</code>, which handles platform-specific output type selection:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- Sdk.App/Sdk.props --></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">OutputType</span><span style="color:#EED49F"> Condition</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"$([MSBuild]::IsOSPlatform('Windows'))"</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">WinExe</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">OutputType</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">  &#x3C;</span><span style="color:#8AADF4">OutputType</span><span style="color:#EED49F"> Condition</span><span style="color:#CAD3F5">=</span><span style="color:#A6DA95">"!$([MSBuild]::IsOSPlatform('Windows'))"</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">Exe</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">OutputType</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">PropertyGroup</span><span style="color:#8BD5CA">></span></span></code></pre><p>Console applications use <code>ktsu.Sdk.ConsoleApp</code>. Each sub-SDK handles the platform and project-type differences so that individual project files never have to worry about these details.</p>
+<h2>Pillar 2: Dependency-Aware Build Ordering</h2>
+<p>With 79+ projects that depend on each other through NuGet references, build order matters. If library A depends on library B, then B has to be built and published to NuGet before A can resolve its dependency during restore. Getting this order wrong produces cryptic restore failures.</p>
+<p>The <code>CrossRepoActions</code> tool handles this with a topological sort over the dependency graph:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">internal</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> Collection</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">Solution</span><span style="color:#91D7E3">></span><span style="color:#8AADF4;font-style:italic"> SortSolutionsByDependencies</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    ICollection</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">Solution</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> solutions</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> unsatisfied </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> solutions</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToCollection</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> sorted </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> Collection</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">Solution</span><span style="color:#91D7E3">></span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    while</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">unsatisfied</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">!=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // Collect all packages produced by solutions that have not yet been built</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> unsatisfiedPackages </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> unsatisfied</span></span>
+<span class="line"><span style="color:#8BD5CA">            .</span><span style="color:#8AADF4;font-style:italic">SelectMany</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">s </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> s</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Packages</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">            .</span><span style="color:#8AADF4;font-style:italic">ToCollection</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // A solution is "satisfied" when none of its dependencies are produced</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // by any remaining unbuilt solution</span></span>
+<span class="line"><span style="color:#C6A0F6">        var</span><span style="color:#CAD3F5"> satisfied </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> unsatisfied</span></span>
+<span class="line"><span style="color:#8BD5CA">            .</span><span style="color:#8AADF4;font-style:italic">Where</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">s </span><span style="color:#8BD5CA">=></span><span style="color:#8BD5CA"> !</span><span style="color:#CAD3F5">s</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Dependencies</span></span>
+<span class="line"><span style="color:#8BD5CA">                .</span><span style="color:#8AADF4;font-style:italic">IntersectBy</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">unsatisfiedPackages</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Select</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">p </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> p</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Name</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> p </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> p</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Name</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">                .</span><span style="color:#8AADF4;font-style:italic">Any</span><span style="color:#939AB7">())</span></span>
+<span class="line"><span style="color:#8BD5CA">            .</span><span style="color:#8AADF4;font-style:italic">ToCollection</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">        foreach</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> solution </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> satisfied</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            unsatisfied</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Remove</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">solution</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">            sorted</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">solution</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    return</span><span style="color:#CAD3F5"> sorted</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The algorithm works in layers:</p>
+<ol>
+<li>Identify all solutions whose dependencies are already available (either published previously or not produced by any project in the set).</li>
+<li>Those solutions can build in parallel because their dependencies are satisfied.</li>
+<li>Remove them from the unbuilt set.</li>
+<li>Repeat until every solution has been built.</li>
+</ol>
+<p>The result is a layered build order. Foundational packages like <code>Abstractions</code> build first because they have no internal dependencies, followed by common implementations, then consumer libraries, and finally applications. This ordering is computed automatically from the actual dependency graph, so it adapts as projects add or remove dependencies.</p>
+<h2>Pillar 3: Git-Driven Versioning</h2>
+<p>Versions are calculated automatically from git history by <code>make-version.ps1</code>. There&#39;s no manual version bumping, no version file to edit, and no risk of forgetting to increment. The rules are:</p>
+<ol>
+<li><p><strong>Find the last git tag</strong> matching <code>vX.Y.Z</code> or <code>vX.Y.Z-pre.N</code>.</p>
+</li>
+<li><p><strong>Scan all commits since that tag</strong> for version markers:</p>
+<ul>
+<li><code>[major]</code> in a commit message triggers a major version bump</li>
+<li><code>[minor]</code> triggers a minor bump</li>
+<li><code>[patch]</code> triggers a patch bump</li>
+<li><code>[pre]</code> bumps the pre-release number</li>
+</ul>
+</li>
+<li><p><strong>If no markers are found</strong>, the script infers from which files changed. It works by
+exclusion rather than by naming the interesting extensions:</p>
+<ul>
+<li>Any changed file that isn&#39;t hidden, <code>.md</code>, <code>.txt</code>, <code>.sln</code>, <code>.*proj</code>, <code>.url</code>,
+<code>Directory.Build.*</code>, <code>.github/workflows/*</code> or <code>.ps1</code> implies a minor bump</li>
+<li>Only files on that exclusion list changed implies a patch bump</li>
+<li>No substantive changes results in a pre-release bump</li>
+</ul>
+<p>Working by exclusion means the list never has to be updated for a new source
+language, and it means a changed <code>.json</code> or <code>.png</code> counts as a minor. That is the
+right default for a library, where an embedded resource can be part of the surface.</p>
+</li>
+</ol>
+<h3>Version Markers in Practice</h3>
+<pre><code>[major] Rename IProvider to IBaseProvider (breaking change)
+[minor] Add async overloads to HashProvider
+[patch] Fix null reference in FileSystemProvider
+[pre] Experimental compression algorithm support</code></pre>
+<p>This convention keeps versioning decisions close to the code change that motivates them. A developer making a breaking API change just includes <code>[major]</code> in their commit message, and the pipeline handles the rest.</p>
+<h3>The Complete Release Pipeline</h3>
+<pre><code>Push to main
+  -&gt; make-version.ps1 calculates version from git history
+  -&gt; make-changelog.ps1 generates CHANGELOG.md from commit messages
+  -&gt; make-license.ps1 ensures LICENSE.md is current
+  -&gt; commit-metadata.ps1 commits the generated files
+  -&gt; dotnet build -&gt; dotnet test -&gt; dotnet pack
+  -&gt; Publish to NuGet
+  -&gt; Create GitHub release with version tag</code></pre>
+<p>After the initial push, the whole pipeline runs without intervention. No manual version bumping, no changelog editing, no release creation. Every step is deterministic and reproducible from the git history alone.</p>
+<h2>Cross-Repository Synchronization</h2>
+<p>With 79+ repositories, CI workflows and build scripts have to stay in sync. The <code>SyncFileContents</code> tool handles this by propagating template files from the SDK repository to all dependent repositories:</p>
+<ul>
+<li><code>.github/workflows/project.yml</code>, the standard build/test/publish workflow</li>
+<li><code>.github/workflows/dependabot-merge.yml</code>, automatic merge for dependency update PRs</li>
+<li>Common scripts (<code>make-version.ps1</code>, <code>make-changelog.ps1</code>, and others)</li>
+</ul>
+<p>When a template file changes in the SDK repository, <code>SyncFileContents</code> propagates the update to all 79+ repos. This is what turns &quot;add .NET 10 targeting&quot; from 79 pull requests into a single change.</p>
+<h2>The ProjectDirector Tool</h2>
+<p>Day to day, the thing that makes the ecosystem manageable is <code>ProjectDirector</code>, a Dear ImGui desktop application that treats many repositories as one surface.</p>
+<p>It scans a development directory for local clones and lists them beside the remotes it can see through GitHub and Azure DevOps, so the first question it answers is which repositories exist and which are actually checked out on this machine. From there it does three things:</p>
+<ul>
+<li><strong>Bulk fetch and pull</strong> across every repository, with per-repository status and timing rather than one spinner for the whole run.</li>
+<li><strong>Cross-repository file diff</strong>, which takes a single file path and shows line by line how its contents differ across every repository that has that file.</li>
+<li><strong>File propagation</strong>, which takes one repository&#39;s version of that file and copies it out to the others.</li>
+</ul>
+<p>The last two are the pair that earns the tool, and they are the answer to the drift the SDK cannot reach. The SDK centralizes what inheritance can centralize. What is left over is the set of files that have to exist separately in every repository and be identical in every repository, and that is a diff-and-propagate problem rather than an inheritance one.</p>
+<p>It drives the git command line directly rather than going through a library, which is deliberate. Shelling out means Git LFS, the platform credential helper, and whatever is in the local git config keep working exactly as they do in a terminal. The cost is parsing output instead of reading objects.</p>
+<p>What it does not do matters too, because a tool with a repository list in it attracts assumptions. There is no build status and no pull request status. There is no dependency graph. It does not trigger builds and it does not update package versions. It is a fleet manager for repositories, and the building and versioning of that fleet live in the SDK and in the build tool instead.</p>
+<h2>What I&#39;ve Learned</h2>
+<p><strong>What works well:</strong></p>
+<ul>
+<li>The custom SDK eliminates configuration drift entirely. Every project builds with identical settings unless it explicitly opts out.</li>
+<li>Git-based versioning produces deterministic, reproducible versions. Given the same git history, the same version is always computed.</li>
+<li>Topological build ordering handles arbitrarily complex dependency chains without manual intervention.</li>
+<li>Markdown-based metadata is easy to read, easy to edit, and impossible to accidentally malform in a way that breaks the project file.</li>
+</ul>
+<p><strong>What I still find difficult:</strong></p>
+<ul>
+<li>MSBuild&#39;s incremental build caching can be aggressive. Changes to the SDK itself sometimes require <code>--no-incremental</code> builds to take effect.</li>
+<li>Circular dependencies would break the topological sort, so they must be structurally prevented through careful API design.</li>
+<li>Multi-targeting across eight frameworks means build times are significant, particularly for CI runs.</li>
+<li>NuGet package propagation introduces latency. A change in a foundational package like <code>Abstractions</code> can trigger a cascade through 20+ dependent packages, each requiring its own build-test-publish cycle.</li>
+</ul>
+<p><strong>The main thing I&#39;ve taken from this:</strong> at this scale, the build system is the product. The individual libraries are straightforward. The hard part is keeping 79+ of them consistent, correctly versioned, and building in the right order. Every hour I put into build infrastructure comes back across every later change to every project in the ecosystem.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk">Custom MSBuild SDKs</a></li>
+<li><a href="https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management">Central Package Management</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Topological_sorting">Topological Sorting</a></li>
+<li><a href="https://semver.org/">Semantic Versioning</a></li>
+<li><a href="https://docs.github.com/en/actions">GitHub Actions</a></li>
+</ul>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

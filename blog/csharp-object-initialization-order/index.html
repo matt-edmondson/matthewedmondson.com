@@ -567,7 +567,7 @@
         <a class="post-tag" href="/#tag=object-initializers">object-initializers</a>
         <a class="post-tag" href="/#tag=constructors">constructors</a>
       </div>
-      <img class="post-hero" src="/assets-blog/csharp-object-initialization-order.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/csharp-object-initialization-order.png" alt="" width="1200" height="675" />
 
 <p>Object initializers are one of those C# features that look entirely intuitive on the surface. Declare a new object, set some properties in curly braces, and move on. But beneath that clean syntax lies a specific execution order that, if misunderstood, can produce subtle and frustrating bugs. The rule is simple: the default constructor runs to completion before any property assignments from the object initializer take effect.</p>
 <p>I&#39;ve seen this catch experienced developers off guard more than once. This post covers exactly what that means, why it matters, and how to design a type so the initialization order works for it rather than against it.</p>
@@ -727,12 +727,12 @@ IL_0013: callvirt instance void Person::set_Age(int32)</code></pre>
 <p>These transformations are easy to explore directly with tools like <a href="https://sharplab.io/">SharpLab</a> or <a href="https://dotnetfiddle.net/">.NET Fiddle</a>.</p>
 <h2>Conclusion</h2>
 <p>The execution order of object initializers in C# is deterministic and well-defined: the constructor runs first, and property assignments follow. This isn&#39;t a quirk or an edge case. It&#39;s a fundamental aspect of how the language compiles initializer syntax. Understanding this ordering is essential for writing constructors that behave predictably and for choosing initialization patterns that keep an object in a consistent state from the moment it is created.</p>
-<p>For the authoritative specification, see the <a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">Microsoft documentation on Object and Collection Initializers</a>.</p>
+<p>For the authoritative specification, see the <a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">Microsoft documentation on Object and Collection Initializers</a>.</p>
 <h2>References</h2>
 <ul>
-<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#object-initializers">C# Language Specification</a></li>
-<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">C# Object Initializers Documentation</a></li>
-<li><a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers#collection-initializers">C# Collection Initializers Documentation</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/expressions#object-initializers">C# Language Specification</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers">C# Object Initializers Documentation</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers#collection-initializers">C# Collection Initializers Documentation</a></li>
 <li><a href="https://refactoring.guru/design-patterns/factory-method">Factory Method Pattern</a></li>
 <li><a href="https://refactoring.guru/design-patterns/builder">Builder Pattern</a></li>
 <li><a href="https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Binder/Binder_Expressions.cs">Roslyn Compiler Source</a></li>

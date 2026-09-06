@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set Semantics and Deferred Execution in LINQ Except | Matt Edmondson</title>
+  <meta name="description" content="A close look at how LINQ's Except works, why it never delegates to the collection's Contains, and how that changes when to materialize a query and which container to use." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/csharp-linq-except-builds-its-own-set/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Set Semantics and Deferred Execution in LINQ Except | Matt Edmondson" />
+  <meta property="og:description" content="A close look at how LINQ's Except works, why it never delegates to the collection's Contains, and how that changes when to materialize a query and which container to use." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/csharp-linq-except-builds-its-own-set/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 2.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Set Semantics and Deferred Execution in LINQ Except</h1>
+      <div class="post-meta">
+        <time datetime="2025-11-23">November 23, 2025</time>
+        <span class="category-tag">Development</span>
+        <span class="category-tag">C#</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=linq">linq</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/csharp-linq-except-builds-its-own-set.jpg" alt="" width="1200" height="675" />
+
+<p>I spent part of a code review last week staring at a LINQ pipeline and asking a question that sounded simple. The pipeline builds an ordered list of work items by peeling off buckets with <code>Except</code>, and several of those buckets were materialized with <code>ToArray</code>. The question was whether they should be <code>HashSet</code> instead, since they feed straight into <code>Except</code> calls and the entire point of a set is a fast membership test.</p>
+<p>The answer turned out to be no, and the reason is a piece of LINQ behavior that a lot of C# developers carry the wrong mental model of. <code>Except</code> doesn&#39;t call <code>Contains</code> on the collection it&#39;s handed. It builds its own set every time it runs, no matter what type the caller passes. Once that clicked, the materialization decisions fell out cleanly, and so did a separate point about when to materialize a query at all.</p>
+<h2>A Pipeline Where Order Matters</h2>
+<p>Here&#39;s the code, stripped down. A source sequence gets sorted into priority order, then buckets are peeled off and excluded from each other so they don&#39;t overlap, then everything is concatenated back into one ordered sequence.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Already in priority order: earlier means higher priority.</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> sortedItems </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> source</span></span>
+<span class="line"><span style="color:#8BD5CA">    .</span><span style="color:#8AADF4;font-style:italic">Where</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">IsRelevant</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">    .</span><span style="color:#8AADF4;font-style:italic">OrderBy</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">=></span><span style="color:#CAD3F5"> x</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">QueueTime</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">    .</span><span style="color:#8AADF4;font-style:italic">ToArray</span><span style="color:#939AB7">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> topPriority </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> sortedItems</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Where</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">IsUrgent</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToArray</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> everythingElse </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> sortedItems</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Except</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">topPriority</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> ordering </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> topPriority</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Concat</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">everythingElse</span><span style="color:#939AB7">);</span></span></code></pre><p>The position of an item in the sequence carries meaning, because earlier means it gets scheduled sooner. And <code>Except</code> is doing set subtraction to keep <code>everythingElse</code> from re-including the items already in <code>topPriority</code>. Both of those facts matter for the container question later.</p>
+<h2>Deferred Execution and the Single-Enumeration Trap</h2>
+<p>A LINQ query is a recipe, not a result. <code>Where</code>, <code>Select</code>, <code>Except</code>, and friends return lazy iterators that do nothing until something enumerates them. Calling <code>.ToArray()</code> or <code>.ToList()</code> runs the recipe once and keeps the result. Left lazy, the recipe runs again on every enumeration, re-reading the source each time.</p>
+<p>The original code left a couple of these queries lazy with a comment along the lines of &quot;not materialized because it is only enumerated once&quot;. That reasoning holds right up until someone adds a second consumer and the whole <code>Where</code> and <code>Except</code> chain silently runs a second time. Worse, if the source is a concurrent collection that is being mutated on another thread, the second enumeration can observe a different set of items than the first, and the result is internally inconsistent in a way no single read would ever produce.</p>
+<p>My opinion is that materializing a query is usually a correctness decision rather than a performance one. The array is a snapshot. It freezes the source at one moment and removes the &quot;must only ever enumerate this once&quot; rule that the next reader has no way of seeing. That framing matters for the rest of this post, because it&#39;s the opposite of the framing the original comments used.</p>
+<h2>The HashSet Question</h2>
+<p>So, back to the buckets. They feed <code>Except</code>. Surely the right container is a <code>HashSet</code>. <code>Except</code> needs to test membership, and <code>HashSet.Contains</code> is O(1) while <code>array.Contains</code> is O(n). Materialize the buckets to sets and the subtraction gets faster. That was the intuition, and it&#39;s wrong, and the wrong version is reasonable enough to be worth pulling apart slowly.</p>
+<h2>What Except Actually Does</h2>
+<p>Here is the iterator, close to how it appears in the .NET source. Older framework versions used an internal <code>Set&lt;T&gt;</code> type, modern .NET uses <code>HashSet&lt;T&gt;</code> directly, but the algorithm is the same.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">private</span><span style="color:#C6A0F6"> static</span><span style="color:#EED49F;font-style:italic"> IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#8AADF4;font-style:italic"> ExceptIterator</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> first</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> second</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    IEqualityComparer</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#939AB7">?</span><span style="color:#CAD3F5"> comparer</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    var</span><span style="color:#CAD3F5"> set </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> HashSet</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">comparer</span><span style="color:#939AB7">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    foreach</span><span style="color:#939AB7"> (</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#CAD3F5"> element </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> second</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        set</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">element</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">    foreach</span><span style="color:#939AB7"> (</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#CAD3F5"> element </span><span style="color:#C6A0F6">in</span><span style="color:#CAD3F5"> first</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">set</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Add</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">element</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#C6A0F6">            yield</span><span style="color:#C6A0F6"> return</span><span style="color:#CAD3F5"> element</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Read the first line of the body. It constructs a brand new <code>HashSet</code> and then copies every element of <code>second</code> into it. It never asks <code>second</code> whether it already is a set. Pass it a <code>HashSet</code> and that set gets enumerated, element by element, into a fresh one. The caller now pays for two sets instead of one. The optimization people reach for makes things slightly worse.</p>
+<h2>Three Reasons for the Fresh Set</h2>
+<p>This is not laziness in the BCL. There are three concrete reasons <code>Except</code> can&#39;t reuse the set it&#39;s given, and any one of them is enough.</p>
+<p>First, the static type of the argument is <code>IEnumerable&lt;T&gt;</code>. The method has no compile-time knowledge that a set was passed, and it deliberately doesn&#39;t do a runtime <code>is HashSet&lt;T&gt;</code> check. Even if it did, the next reason would defeat it.</p>
+<p>Second, the comparer almost never matches. <code>Except</code> has to answer membership questions using its own equality, either the <code>IEqualityComparer&lt;T&gt;</code> the caller passed or <code>EqualityComparer&lt;T&gt;.Default</code>. The <code>HashSet</code> handed in was built with its own comparer, an independent choice. Pass a case-insensitive <code>HashSet&lt;string&gt;</code> into an <code>Except</code> call that uses ordinal equality and the set&#39;s buckets are organized under the wrong hashing, so its <code>Contains</code> would give the wrong answer. The only way <code>Except</code> can guarantee its own comparer is used is to build the lookup itself. That&#39;s also why <code>Except</code> has a comparer overload at all.</p>
+<p>Third, the single set has to deduplicate the first sequence too. Look again at the second loop. <code>set.Add(element)</code> returns <code>false</code> both for elements that came from <code>second</code> (already excluded) and for elements already emitted from <code>first</code> (already seen). That&#39;s what gives <code>Except</code> its distinct-output guarantee. A caller-supplied set couldn&#39;t do this job without <code>Except</code> mutating it, adding every yielded element into the caller&#39;s collection as a side effect, which would be an unacceptable thing to do to an argument.</p>
+<h2>The Asymmetry Between Contains and Except</h2>
+<p>Here is the asymmetry that makes the wrong mental model so easy to hold. <code>Enumerable.Contains</code> really does delegate.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> static</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> Contains</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">this</span><span style="color:#EED49F;font-style:italic"> IEnumerable</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> source</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> TSource</span><span style="color:#CAD3F5"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">source </span><span style="color:#8BD5CA">is</span><span style="color:#EED49F;font-style:italic"> ICollection</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">TSource</span><span style="color:#91D7E3">></span><span style="color:#CAD3F5"> collection</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#CAD3F5"> collection</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Contains</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">value</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // ... fallback linear scan</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p><code>Contains</code> checks for <code>ICollection&lt;T&gt;</code> and calls the collection&#39;s own <code>Contains</code>. Pass a <code>HashSet</code> and the O(1) lookup is genuine. That&#39;s exactly the optimization people expect <code>Except</code> to have. But the set operators, <code>Except</code>, <code>Intersect</code>, <code>Union</code>, and <code>Distinct</code>, all roll their own internal set and never delegate. So the intuition is correct for <code>Contains</code> and wrong for <code>Except</code>, and the two methods live a few lines apart in the same <code>Enumerable</code> class. No wonder the model leaks across.</p>
+<h2>Choosing Arrays Over Sets</h2>
+<p>Once <code>Except</code> is known to ignore the container type, the choice for those buckets is easy.</p>
+<p>For a bucket used only as the second argument to <code>Except</code>, a <code>HashSet</code> buys nothing, because <code>Except</code> rebuilds its own set from it on every enumeration. An array is fine.</p>
+<p>For a bucket that is also concatenated into the ordered output, a <code>HashSet</code> is actively wrong. <code>HashSet&lt;T&gt;</code> doesn&#39;t guarantee enumeration order. It happens to enumerate in insertion order while no removals occur, but Microsoft documents the order as unspecified and not to be relied on. The whole purpose of the pipeline is the priority ordering, so trading a documented, stable order for an implementation detail would be a real bug. An array preserves order, so an array it is.</p>
+<p>There was exactly one spot where a real set would have helped, a <code>Contains</code> call inside a loop over one of the buckets, which on an array is O(n) per iteration and O(n squared) over the loop. But that same bucket had to keep its order for the concatenation, so I would have needed both an ordered array and a parallel set for the lookups. For a bucket holding a handful of items, that&#39;s not worth the second container.</p>
+<h2>The Law of Small Numbers</h2>
+<p>The original comments justified leaving queries lazy to avoid an allocation, and justified reaching for a set on <code>Except</code> performance. Both of those are performance rationales, and every collection in this pipeline holds a handful of items. At that size the performance difference between an array and a set, or between one allocation and none, is nothing anyone could measure.</p>
+<p>The law of small numbers, in the Tversky and Kahneman sense, is about people over-trusting conclusions drawn from tiny samples. I&#39;m borrowing it loosely for code. Micro-optimizing allocations and lookups on tiny collections is reasoning hard about a cost that doesn&#39;t exist at this scale, while quietly ignoring the cost that does, which is correctness and the next person to read the method.</p>
+<p>So the priority inverts. Materialize to snapshot a mutable source and to delete the unwritten &quot;only enumerate this once&quot; rule, not to save an allocation. Pick the container for correctness, which here means preserving order, not for an <code>Except</code> speedup the framework doesn&#39;t actually provide. The saved allocation is meaningless at ten items. The accidental re-enumeration over a concurrent collection is a bug that doesn&#39;t care how small the collection is.</p>
+<h2>Practical Takeaways</h2>
+<ul>
+<li><code>Except</code>, <code>Intersect</code>, <code>Union</code>, and <code>Distinct</code> build their own <code>HashSet</code> from the argument on every enumeration. Passing a set instead of an array saves nothing and can cost a second allocation.</li>
+<li><code>Contains</code> is the exception. It delegates to <code>ICollection&lt;T&gt;.Contains</code>, so a <code>HashSet</code> there is genuinely O(1).</li>
+<li>Materialize a lazy query to snapshot a mutable source and to prevent accidental re-enumeration, not to chase allocations on small collections.</li>
+<li>When position in a sequence carries meaning, materialize to an array or list. <code>HashSet</code> enumeration order is unspecified.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>The fact is small and specific. <code>Except</code> ignores the concrete type of its argument and builds a fresh set every time, for reasons that are sound once they&#39;re clear, and it sits right next to <code>Contains</code>, which does the opposite. The broader point is the one I keep coming back to in reviews. On small collections, the question is almost never &quot;is this fast enough&quot;. It&#39;s &quot;is this correct, and will the next reader understand why&quot;. Materialize for that, and choose the container for that.</p>
+<p>All of this can be confirmed in a few minutes with <a href="https://sharplab.io/">SharpLab</a>, which shows the iterator and the IL, or by reading the source linked below.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Linq/src/System/Linq/Except.cs">Enumerable.Except source (dotnet/runtime)</a></li>
+<li><a href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Linq/src/System/Linq/Contains.cs">Enumerable.Contains source (dotnet/runtime)</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.except">Enumerable.Except documentation</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1"><code>HashSet&lt;T&gt;</code> documentation, on enumeration order</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation">Deferred execution in LINQ</a></li>
+<li><a href="https://sharplab.io/">SharpLab</a>, an interactive C# compiler and IL explorer</li>
+</ul>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

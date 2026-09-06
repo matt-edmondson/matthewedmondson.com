@@ -637,7 +637,7 @@ codebase never would.</p>
 <p>The negative result is as useful as the positive one. When the minimal case does not reproduce, the
 difference between it and the failing system is the bug, and adding things back one at a time
 converges on it quickly. Testing restore at the project level and then at the solution level, rather
-than only at the level that was failing, is the same move at a smaller scale.</p>
+than only at the level that was failing, is the same narrowing at a smaller scale.</p>
 <p>Two cautions. A reproduction that only runs on one machine is not clean, so state the SDK version,
 the tool versions, and the operating system alongside it. And some defects are invisible to a
 single-project clean room by their nature, because they live in state shared between things. When a

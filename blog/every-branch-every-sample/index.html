@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Every Branch, Every Sample | Matt Edmondson</title>
+  <meta name="description" content="In Synthr every module computes its full effect on every sample, even when it's switched off, and the bypass is a multiply by zero. That looks wasteful, and on average it is. In a real-time audio callback the average isn't the number that matters." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/every-branch-every-sample/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Every Branch, Every Sample | Matt Edmondson" />
+  <meta property="og:description" content="In Synthr every module computes its full effect on every sample, even when it's switched off, and the bypass is a multiply by zero. That looks wasteful, and on average it is. In a real-time audio callback the average isn't the number that matters." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/every-branch-every-sample/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Every Branch, Every Sample</h1>
+      <div class="post-meta">
+        <time datetime="2026-10-02">October 2, 2026</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=audio">audio</a>
+        <a class="post-tag" href="/#tag=dsp">dsp</a>
+        <a class="post-tag" href="/#tag=real-time">real-time</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/every-branch-every-sample.jpg" alt="" width="1200" height="675" />
+
+<p>Every effect module in Synthr ends with the same two lines:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> -=</span><span style="color:#CAD3F5"> output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">!</span><span style="color:#CAD3F5">active</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">!</span><span style="color:#CAD3F5">active</span><span style="color:#939AB7">);</span></span></code></pre><p>That&#39;s the bypass switch. There&#39;s no <code>if (!active) return input;</code> at the top of the function. The module computes its full effect, on every sample, whether it&#39;s switched on or not, and then multiplies the result away when it isn&#39;t wanted. When the module is off, the first line subtracts the whole processed signal and the second adds the dry input back. When it&#39;s on, both lines add and subtract zero.</p>
+<p>The filter, the bit crusher, the reverb, the distortion, the compressor, the limiter, and the envelope filter all do this. So does the envelope. I&#39;ve written synthesizers this way since the first version in 2013, and the reason is that a real-time audio callback cares about a different number than most code does.</p>
+<h2>The Number That Matters</h2>
+<p>Audio code has a hard deadline. At 48 kHz with a typical ASIO buffer, the callback has a few milliseconds to fill the next buffer, and missing it is an audible click rather than a slightly slow frame. I covered that deadline in <a href="/blog/a-synthesizer-in-a-garbage-collected-language/">a previous post about Synthr&#39;s audio thread</a>.</p>
+<p>What follows from it is that the average cost of the callback is close to irrelevant. A callback that usually takes one millisecond and occasionally takes six clicks every time it takes six. The only figure that decides whether the instrument works is the worst case.</p>
+<p>Skipping disabled modules with an early return makes the average faster. It does nothing at all for the worst case, because the worst case is the patch with everything turned on. What it does do is make the cost of the callback depend on knob positions, and that&#39;s the real problem.</p>
+<h2>Constant Cost and the CPU Meter</h2>
+<p>With branches, a patch with the reverb, the delay, and the compressor bypassed runs cheaply. It also tells the player nothing about what happens when they switch the reverb on in the middle of a song. If that tips the callback over budget, they find out live, as a crackle, at the moment they&#39;re least able to do anything about it.</p>
+<p>With every module always computing, the cost of a patch is fixed the moment the module is placed in the rack. Turning a module on or off changes what the player hears and nothing about how long the callback takes. Whatever the CPU meter reads while a patch is idling is what it reads at the peak of the performance. If the patch fits in the buffer now, it fits in the buffer when every switch is flipped, because flipping switches doesn&#39;t change the work.</p>
+<p>That changes how the instrument gets tuned. The buffer size can be chosen once, against a cost that holds still, rather than against a guess about which combination of effects someone might enable later.</p>
+<p>It&#39;s the same reason game engines like a frame budget that holds still. A frame that&#39;s fast most of the time and slow when a particular effect fires is harder to ship than one that&#39;s slightly slower and identical every frame. Audio is that, with a deadline that won&#39;t drop a frame to cope.</p>
+<h2>Nothing for the Predictor to Guess</h2>
+<p>The second reason is about what the CPU does with an <code>if</code>.</p>
+<p>A modern core doesn&#39;t wait to find out which way a branch goes. It predicts, and starts executing the predicted side speculatively, often dozens of instructions ahead. When the guess is right the branch costs almost nothing. When it&#39;s wrong the core throws away everything it did on the wrong path and starts again from the branch, which costs somewhere in the region of fifteen to twenty cycles on current desktop parts.</p>
+<p>A branch on <code>active</code> is well predicted, because the switch doesn&#39;t change between samples. The branches that hurt are the ones that depend on the signal. Synthr&#39;s bit crusher holds a sample for a number of steps and then takes a new one. Written the obvious way, that&#39;s an <code>if</code> that&#39;s false most of the time and true on a regular count, and the counter that drives it wraps with another <code>if</code>. Synthr writes it with nothing to predict:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">savedSample</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> -=</span><span style="color:#CAD3F5"> savedSample</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">S </span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">savedSample</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">S </span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">// ...</span></span>
+<span class="line"><span style="color:#8BD5CA">++</span><span style="color:#CAD3F5">S</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">S </span><span style="color:#8BD5CA">-=</span><span style="color:#CAD3F5"> S </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToInt32</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">S </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> downsample</span><span style="color:#939AB7">);</span></span></code></pre><p>The comparison produces a zero or a one, the one multiplies the new sample in, and the counter resets itself by subtracting its own value. The core runs straight through, and every sample takes the same path as the one before it.</p>
+<p>Straight-line code also helps speculation rather than fighting it. With no branch to resolve, the core can see further ahead and overlap more work. Computing both sides of a choice sounds like twice the effort, but much of that second side runs in execution units that would otherwise sit idle waiting on the first side&#39;s results. The extra arithmetic is often cheaper than it looks, and a mispredicted branch is often more expensive.</p>
+<h2>A Habit Since 2013</h2>
+<p>The first Synthr was an iOS app written in Objective-C++ against CoreAudio, and the same idea runs through it at a smaller scale. The oscillator&#39;s enable switch is a multiply:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">inline</span><span style="color:#C6A0F6"> float</span><span style="color:#8AADF4;font-style:italic"> Get</span><span style="color:#939AB7">()</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">    return</span><span style="color:#8AADF4;font-style:italic"> lerp</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_fMin</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5">m_fMax</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5">WaveForm</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">Get</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_Shape</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> m_fT</span><span style="color:#939AB7">))</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">m_bEnabled</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>And the envelope advances from attack to decay to sustain without an <code>if</code> anywhere in its update. Each state is an index into a table of member function pointers, and the state moves on by adding the result of a comparison to itself:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">inline</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> UpdateAttack</span><span style="color:#939AB7">()</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    m_fAttackTimer </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> m_fT</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    m_state </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">State</span><span style="color:#939AB7">)(</span><span style="color:#CAD3F5">m_state </span><span style="color:#8BD5CA">+</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">m_fAttackTimer</span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5">m_fAttackTime</span><span style="color:#939AB7">));</span><span style="color:#939AB7;font-style:italic"> // increment the state if the timer elapses</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The C# version in Synthr 3 kept the table. Its bypass needs two masks, because a bypassed envelope shouldn&#39;t output silence. It should output full level while the key is held and zero once it&#39;s released, so the sound passes straight through:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> g </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> getFunctions</span><span style="color:#939AB7">[(</span><span style="color:#C6A0F6">int</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">state</span><span style="color:#939AB7">](</span><span style="color:#ED8796">this</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">g </span><span style="color:#8BD5CA">-=</span><span style="color:#CAD3F5"> g </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">!</span><span style="color:#CAD3F5">active</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">g </span><span style="color:#8BD5CA">+=</span><span style="color:#F5A97F"> 1</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">!</span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> state </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> State</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Release</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">return</span><span style="color:#CAD3F5"> g</span><span style="color:#939AB7">;</span></span></code></pre><p>One mask removes the envelope&#39;s shape and the other replaces it with a gate.</p>
+<h2>State That Keeps Running</h2>
+<p>There&#39;s an audio reason for all of this too, separate from the CPU.</p>
+<p>Filters, delays, and reverbs have memory. The low-pass filter keeps four history values per channel, and the delay keeps a ring buffer of the last few hundred milliseconds. If a bypassed module returns early, that memory freezes at whatever it held when the module was switched off. Switch it back on a minute later and the first thing it outputs is a minute-old filter state or a minute-old echo, which is a click or a ghost.</p>
+<p>Because Synthr&#39;s modules keep computing while bypassed, their state stays current. The filter&#39;s histories track the live signal the whole time. The delay&#39;s buffer keeps filling:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> echo </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> buffer</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Front</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> newSample </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +</span><span style="color:#CAD3F5"> echo </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> feedback</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">buffer</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">PushBack</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">newSample</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> =</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +</span><span style="color:#CAD3F5"> echo </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> level </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Convert</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">ToSingle</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">active</span><span style="color:#939AB7">);</span></span></code></pre><p>Only the last line knows about <code>active</code>. Turning the delay on brings in the echo of what was played half a second ago, which is what a player expects from a hardware pedal, rather than the echo of whatever was playing when they last turned it off.</p>
+<h2>From a Switch to a Knob</h2>
+<p>A multiply by zero or one is a crossfade where the weight only takes two values. Once the code is shaped that way, letting the weight take every value in between costs nothing, and a switch becomes a knob.</p>
+<p>Every Synthr effect has a dry/wet control that&#39;s exactly this, the same two lines as the bypass with <code>wetness</code> in place of the boolean:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *=</span><span style="color:#CAD3F5"> wetness</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#939AB7"> (</span><span style="color:#F5A97F">1</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5"> wetness</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">];</span></span></code></pre><p>The distortion goes further. It has a hard clipper and a soft exponential curve, and rather than choosing between them it computes both and blends them on a hard to soft knob:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#CAD3F5"> softness </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Math</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sign</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">])</span><span style="color:#8BD5CA"> *</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)(</span><span style="color:#F5A97F">1</span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">Math</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Pow</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Math</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">E</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">Math</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Abs</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">gain</span><span style="color:#939AB7">)));</span></span>
+<span class="line"><span style="color:#CAD3F5">output</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> +=</span><span style="color:#939AB7"> (</span><span style="color:#F5A97F">1</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5"> softness</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> Math</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sign</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">])</span><span style="color:#8BD5CA"> *</span><span style="color:#8AADF4;font-style:italic"> AggressiveMin</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> Math</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Abs</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">c</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> gain</span><span style="color:#939AB7">));</span></span></code></pre><p>A branch would have given two distortion types. Computing both gave a continuous range between them that can be automated or modulated mid-note without a discontinuity. That&#39;s a better instrument, and it came out of the same habit.</p>
+<h2>Limits</h2>
+<p>Multiplying by zero doesn&#39;t remove everything. Zero times infinity is NaN, and NaN times zero is still NaN. If a bypassed path divides by a parameter that&#39;s currently zero, or a filter goes unstable, the mask won&#39;t hide it, and the NaN reaches the output. Branchy code would never have run that path at all. Every path has to be safe to compute with every parameter value, including the ones the player can&#39;t currently hear.</p>
+<p><code>Convert.ToSingle(bool)</code> is a conditional inside. Whether the JIT turns it into a conditional move or an actual branch is up to the JIT, and the C# source doesn&#39;t control that. The C++ version, where a <code>bool</code> converts to <code>0.0f</code> or <code>1.0f</code> directly, is on firmer ground. The C# version gets the constant cost regardless, and the branch-free machine code only where the JIT cooperates.</p>
+<p>Not every part of Synthr follows the rule. The oscillator chooses between its two waveforms with an <code>if</code> on the phase, and calls the waveform through a delegate. That branch flips twice per cycle, on a regular schedule a predictor handles reasonably, but it&#39;s a branch on the signal in the inner loop of every voice, and I&#39;d mask it now.</p>
+<p>And the work is real. A bypassed reverb still costs a full reverb. On a laptop that&#39;s battery and heat spent on sound nobody hears. A plugin running fifty instances in a DAW session would reasonably want to skip bypassed processing to save CPU for everything else. For a live instrument, where a crackle on stage costs more than a warm laptop, my opinion is that a cost that never moves beats a cost that&#39;s lower on average. For a mixing plugin I&#39;d likely decide the other way, and at least make the skip happen once per buffer rather than once per sample.</p>
+<h2>What Stays and What Changes</h2>
+<p>For anything that runs against a deadline, I keep all of it. Compute the whole effect, keep the state current, and let the switch be a multiply. The instrument costs the same with every knob in every position, the core has nothing to mispredict, and every switch is one small change away from being a knob.</p>
+<p>If I were starting it again, I&#39;d make the masks explicit types rather than repeated <code>Convert.ToSingle</code> calls, so the intent is in the name and the conversion is guaranteed to be branch-free. I&#39;d also add a NaN check on the output in debug builds, because a NaN from a bypassed path is the bug this technique introduces.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

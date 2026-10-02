@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Two Anchors and a Touch Rect: Relative UI Layout | Matt Edmondson</title>
+  <meta name="description" content="A layout system where every element declares which point on its parent it attaches to and which point on itself does the attaching, resolves against the aspect ratio at query time, and keeps the region it draws separate from the region it can be touched." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/two-anchors-and-a-touch-rect-relative-ui-layout/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Two Anchors and a Touch Rect: Relative UI Layout | Matt Edmondson" />
+  <meta property="og:description" content="A layout system where every element declares which point on its parent it attaches to and which point on itself does the attaching, resolves against the aspect ratio at query time, and keeps the region it draws separate from the region it can be touched." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/two-anchors-and-a-touch-rect-relative-ui-layout/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,60 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Two Anchors and a Touch Rect: Relative UI Layout</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-03">December 3, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=ui">ui</a>
+        <a class="post-tag" href="/#tag=mobile">mobile</a>
+        <a class="post-tag" href="/#tag=layout">layout</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>Nothing exposes a hardcoded layout like a second screen size. A UI positioned in pixels works perfectly on the machine it was authored on and is wrong everywhere else, and the wrongness isn&#39;t uniform: some elements drift off the edge, some overlap, and some look fine until the device rotates.</p>
+<p>The engine I wrote for mobile solved this with three ideas that fit together. Two anchors per element, geometry resolved at query time rather than stored, and a strict separation between the region an element draws into and the region it can be touched in.</p>
+<p>This is the third post pulling one system out of my custom engines. Of everything in that codebase this is the design I&#39;d port unchanged.</p>
+<h2>Two Anchors, Not One</h2>
+<p>Every component carries two anchor values:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">cmAnchor m_eAnchorParent</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">cmAnchor m_eAnchorSelf</span><span style="color:#939AB7">;</span></span></code></pre><p>Each is one of nine points: the four corners, the four edge midpoints, and the center.</p>
+<p>The parent anchor answers where on the parent this element attaches. The self anchor answers which point on this element does the attaching. A position offset is then applied from that meeting point.</p>
+<p>One anchor isn&#39;t enough, and the reason is the part people skip. Say an element should sit in the bottom-right corner of its parent. With a single anchor naming the parent&#39;s bottom-right corner, the element&#39;s own top-left lands there, so the element hangs off the outside of the corner. Getting it inside means offsetting by the element&#39;s own size, which means the layout now depends on a size that may change when the text inside it changes.</p>
+<p>With two anchors, the element declares that its bottom-right attaches to the parent&#39;s bottom-right, and it sits correctly regardless of how big it is or becomes. The size drops out of the calculation entirely.</p>
+<p>This is the same model as Unity&#39;s anchor-and-pivot and as the anchor attributes in Apple&#39;s layout system, arrived at independently. The two-anchor model is what the problem produces when someone follows it far enough.</p>
+<h2>Resolve at Query Time</h2>
+<p>The second decision is that a component doesn&#39;t store a rectangle. It computes one when asked, against the aspect it&#39;s being asked about:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> const</span><span style="color:#EED49F;font-style:italic"> cmRect</span><span style="color:#8AADF4;font-style:italic"> GetDrawRect</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vAspect</span><span style="color:#8BD5CA"> =</span><span style="color:#8AADF4;font-style:italic"> Vector3</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1.0f</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#939AB7">))</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span></code></pre><p>Aspect ratio is a parameter, not a global read during initialization.</p>
+<p>That looks like a small signature detail and it&#39;s the thing that makes the system actually work. A stored rectangle is a cached value with an invalidation problem: rotate the device, change the resolution, resize the window, and every cached rectangle in the tree is silently wrong. Something has to walk the tree and recompute, and whatever triggers that walk will eventually be forgotten for some code path.</p>
+<p>Computing on demand has no invalidation problem because there&#39;s nothing cached to invalidate. The cost is recomputing layout for elements that didn&#39;t change, which for a UI of a few dozen components is not measurable, and which can be added back later as a cache with a dirty flag if it ever is.</p>
+<p>The general shape: prefer deriving a value from its inputs over storing it, until storing it is demonstrably necessary. A derived value can&#39;t go stale.</p>
+<h2>Touch Rect and Draw Rect Are Different</h2>
+<p>The third idea is the one I&#39;d argue hardest for, and it&#39;s two methods that could have been one:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> const</span><span style="color:#EED49F;font-style:italic"> cmRect</span><span style="color:#8AADF4;font-style:italic"> GetTouchRect</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vAspect</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> const</span><span style="color:#EED49F;font-style:italic"> cmRect</span><span style="color:#8AADF4;font-style:italic"> GetDrawRect</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vAspect</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span></code></pre><p>Where a control is drawn and where it responds to input are separate questions with separate right answers.</p>
+<p>On a touch screen, a finger contact is roughly a centimeter across and the person can&#39;t see under it. A button drawn at a visually correct size is frequently too small to hit reliably, and the fix isn&#39;t to draw it larger, because the design wants it that size. The fix is a hit region larger than the art.</p>
+<p>Once the two are separable, other things become expressible. A close button in a corner can extend its touch region into the corner past its visible bounds. A thin slider can have a tall grab region. A decorative element can have no touch region at all rather than silently swallowing input.</p>
+<p>Collapsing these into one rectangle, which is the obvious first implementation, forces every one of those cases to be solved by lying about the visual bounds. I&#39;d take this pair to any UI system I built.</p>
+<h2>Events Go Up, Hit Tests Go Down</h2>
+<p>The tree is walked in two directions for two purposes.</p>
+<p>Hit testing goes down. <code>GetChildAtPoint</code> descends to find the deepest component containing a point, so the most specific control gets the input.</p>
+<p>Events go up. The base implementation of each input handler forwards to the parent:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> OnMouseDown</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vPos</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">m_pParent</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> m_pParent</span><span style="color:#939AB7">-></span><span style="color:#8AADF4;font-style:italic">OnSoftTouch</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">vPos</span><span style="color:#939AB7">);</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A component that doesn&#39;t handle a touch passes it to its parent as a soft event. That&#39;s how a panel learns that something inside it was touched without every child needing to know the panel exists, and it&#39;s why a scrolling container can start a drag that began on a button.</p>
+<p>The naming carries the distinction. <code>OnMouseDown</code> is the direct event, <code>OnSoftTouch</code> is the propagated one, so a component can tell whether it was the target or an ancestor of the target. That&#39;s a real distinction that many UI systems blur, and blurring it is how a container ends up stealing input from its children.</p>
+<h2>What It Doesn&#39;t Do</h2>
+<p>Two absences.</p>
+<p>There&#39;s no layout container. Nothing stacks children in a row, distributes them evenly, or sizes itself to its contents. Every element is positioned individually against its parent, which is fine for a game UI of fixed screens and becomes tedious for anything list-shaped or driven by variable content. A stack container that positions children sequentially would have been a small addition and would have removed a lot of repetition.</p>
+<p>And there&#39;s no separate measure and arrange pass. Real layout systems ask each element how big it wants to be, then tell it how big it actually is, because those differ when content doesn&#39;t fit. Here an element&#39;s size is set by whoever created it. Text that grows past its box overflows rather than triggering a relayout.</p>
+<p>Both absences come from the same source. This is a layout system for screens designed by a person who knows what&#39;s on them, not for content of unknown size. That was true of the game it was written for, and it would stop being true immediately for anything data-driven.</p>
+<h2>What Transfers</h2>
+<p>Two anchors rather than one, so that position doesn&#39;t depend on size. Resolve geometry from its inputs at query time rather than caching it, so it can&#39;t go stale. Keep the region that draws separate from the region that responds, because they answer different questions and only one of them is about how it looks.</p>
+<p>None of that is specific to games, and all three survive the move to any other UI toolkit worth using.</p>
 
     </article>
   </main>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Four Engines, Fifteen Years (Part 2 of 5) | Matt Edmondson</title>
+  <meta name="description" content="The second engine answered the first one's problem by splitting into twenty-four projects with an enforced dependency graph. Average file size fell from 475 lines to 73. It also introduced sixteen manager singletons, which turned out to be global state with a nicer name." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-engines-fifteen-years-twenty-four-projects-decomposing-an-engine/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Four Engines, Fifteen Years (Part 2 of 5) | Matt Edmondson" />
+  <meta property="og:description" content="The second engine answered the first one's problem by splitting into twenty-four projects with an enforced dependency graph. Average file size fell from 475 lines to 73. It also introduced sixteen manager singletons, which turned out to be global state with a nicer name." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-engines-fifteen-years-twenty-four-projects-decomposing-an-engine/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <p class="series-part">Part 2 of 5</p>
+      <h1>Four Engines, Fifteen Years</h1>
+      <p class="post-subtitle">Twenty-Four Projects: Decomposing an Engine</p>
+      <div class="post-meta">
+        <time datetime="2025-11-26">November 26, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=opengl">opengl</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=tooling">tooling</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/four-engines-fifteen-years-twenty-four-projects-decomposing-an-engine.jpg" alt="" width="1200" height="675" />
+<p>The previous post in this series ended with the problem: an engine whose 603 globals meant nothing could be reused, tested, or safely changed in isolation. Manic Engine, which followed it around 2012, was the answer to that problem, and it answered it hard.</p>
+<p>One program became twenty-four projects. Average file size fell from 475 lines to 73. About 40% more code, spread across more than nine times as many files.</p>
+<p>It also introduced sixteen manager singletons, which I&#39;d do differently, and a particle system I&#39;d still defend.</p>
+<h2>The Dependency Graph Is the Design</h2>
+<p>The projects aren&#39;t a flat pile. They form a graph with a direction, and the direction is the actual architecture:</p>
+<pre><code>Game projects (DungeonCrawler, PixelPets, RTS)
+  └── ManicEngine
+        ├── ManicGL → ManicAssets → ManicFoundation
+        │             ManicMath   → ManicFoundation
+        ├── ManicParticleSystem
+        ├── ManicGUI
+        ├── ManicNet   → ManicFoundation
+        ├── ManicDB    → ManicFoundation
+        ├── ManicInput → ManicFoundation
+        └── ManicAL    → ManicFoundation</code></pre>
+<p><code>ManicFoundation</code> sits at the bottom and depends on nothing. Everything else depends downward. Games sit at the top and depend on <code>ManicEngine</code>, which composes the rest.</p>
+<p>The important property isn&#39;t the diagram, it&#39;s that the linker enforces it. In the previous engine, the module boundaries were filename prefixes, which meant they were a convention and conventions decay. Here, <code>ManicMath</code> cannot call into <code>ManicGL</code>, because <code>ManicMath</code> doesn&#39;t link against it and the build fails if anyone tries.</p>
+<p>That&#39;s the whole lesson of this engine compressed into one sentence. A boundary that the build system enforces is a boundary. A boundary that exists in the naming is a wish.</p>
+<h2>The Graph Arrived in Three Moves</h2>
+<p>The dependency graph above is the finished shape. It arrived in stages.</p>
+<p>The project starts on 2011-11-08 with two directories, <code>ManicEngine</code> and <code>ManicGame</code>. One
+library and one game, which is the previous engine&#39;s shape with better names.</p>
+<p>The first split is a single commit on 2012-01-05, eight weeks later. <code>ManicAssets</code>,
+<code>ManicFoundation</code>, <code>ManicGL</code> and <code>ManicMath</code> all appear at once, and 90 files move into them
+out of <code>ManicEngine</code>. Thirty-eight of those files change by not one character, and most of the
+rest change by an include path. The commit reports 116 files and 1,169 added lines, and nearly
+all of those added lines are new Visual Studio project files. No code was rewritten. The
+decomposition was a move.</p>
+<p>Then the same thing happens again. On 2012-12-11, eleven months later, 56 files move out of
+<code>ManicGL</code> into two new libraries, 42 of them into <code>ManicGUI</code> and 14 into
+<code>ManicParticleSystem</code>.</p>
+<p>So the twenty-four projects accreted over seventeen months, and the two structural events in
+that span are one operation performed twice. A library is doing several jobs, the files move,
+and the linker starts enforcing what the filenames had been claiming all along.</p>
+<p>The tools predate the libraries they edit. The GUI editor exists from 2011-11-30 and the particle editor from 2011-12-15, but <code>ManicGUI</code> and <code>ManicParticleSystem</code> are the last two libraries to appear, a year later. Each editor spent that year working on content whose code was still inside a general graphics library.</p>
+<h2>What Decomposition Actually Bought</h2>
+<p>The file size number is the visible effect: 29,030 lines across 397 files, averaging 73 lines each, against the previous engine&#39;s 475. Both counts exclude blank lines, comments and third-party code. By the same rule the previous engine is 20,421 lines across 43 files, so the code grew by about 40% while the number of files grew more than ninefold.</p>
+<p>Files got smaller because they had to. A library that only sees the layer below it can&#39;t reach for arbitrary state, so functions grew parameters, and functions with parameters have natural places to split. The size drop is a consequence of the boundaries rather than a separate act of tidying.</p>
+<p>The reuse arrived too, and it&#39;s the thing the previous engine completely failed at. Four separate game projects sit on top of this engine in the same solution, plus a client and a server for a networked prototype. That was the goal, and it worked.</p>
+<p>The less obvious benefit is that a graph makes the missing pieces visible. When every subsystem is a library with a declared position, a new subsystem has to be placed somewhere, and placing it forces the question of what it&#39;s allowed to depend on. That question has no natural home in a single-project codebase.</p>
+<h2>The Streamer Gets an Owner</h2>
+<p>The previous post described a texture streamer whose state lived in twenty globals, and called those globals the frame of a coroutine that had nowhere to live. <code>ManicMeshManager</code> is what happened to that design once there was somewhere.</p>
+<p>The class declares its states as methods:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> idle</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> seek</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> header</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> read</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> upload</span><span style="color:#939AB7">();</span></span></code></pre><p>and drives them from one dispatch:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">      (</span><span style="color:#CAD3F5">state </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> IDLE</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic">   idle</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">state </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> SEEK</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic">   seek</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">state </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> HEADER</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic"> header</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">state </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> READ</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic">   read</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">state </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> UPLOAD</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic"> upload</span><span style="color:#939AB7">();</span></span></code></pre><p><code>offset</code>, <code>size</code>, <code>bytesRead</code>, and <code>meshData</code> are private members. The worklist is a <code>queue&lt;string&gt;</code> with a companion <code>map&lt;string,bool&gt;</code> acting as a membership index, so the same asset can&#39;t be queued twice without a linear scan to find out.</p>
+<p>Nothing about the algorithm changed. It&#39;s the same incremental seek, header parse, read, and upload, advanced a bounded amount per frame. What changed is that the states have names, the fields belong to something, and a second streaming operation is now a second object rather than an impossibility.</p>
+<p>That&#39;s the same design one engine apart, with and without an owner. The earlier version wasn&#39;t worse, it had no container available to express it. The moment a class existed, the implicit states became five named methods, and the tangle of <code>if (streamingTextureSeeking)</code> branches became a dispatch anyone can read.</p>
+<p>The best-fit atlas allocator made the same journey. It&#39;s still recognizably the code from the previous engine, still tracking the smallest wasted area with an early return on an exact fit, but now it&#39;s <code>ManicTextureAtlas::findEmptyChunk</code> operating on its own <code>chunks</code> member, and it has gained a one-pixel border to stop neighboring textures bleeding into each other.</p>
+<h2>Where the Real Engineering Went</h2>
+<p>Decomposition is the structural story, and it isn&#39;t where the interesting code is. As with the previous engine, the sophistication concentrated wherever something actually hurt, and here that was particles.</p>
+<p><code>ManicParticleStateTransition</code> holds a start state and an end state, each carrying a color, a size, and a value. The obvious implementation interpolates between them per particle, per frame. With a few thousand particles that&#39;s four color lerps and a size lerp every frame for every one of them, and all of them are computing the same curve.</p>
+<p>So it precomputes the curve into a table instead:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">lookupSize </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> transitionTime </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> interval</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">lookupTable </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6;font-weight:bold"> new</span><span style="color:#CAD3F5"> ManicParticleState</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">lookupSize</span><span style="color:#939AB7">];</span></span>
+<span class="line"><span style="color:#C6A0F6">for</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> lookupSize</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> interpOffset </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">i </span><span style="color:#8BD5CA">/</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">lookupSize</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    lookupTable</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> linearInterpolation</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">start</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> end</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> interpOffset</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // ...and g, b, a, size</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A particle&#39;s per-frame cost then becomes an integer index and a clamp:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> index </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> offset </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> lookupSize</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">index </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> min</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">index</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> lookupSize </span><span style="color:#8BD5CA">-</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">return</span><span style="color:#8BD5CA"> &#x26;</span><span style="color:#CAD3F5">lookupTable</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">index</span><span style="color:#939AB7">];</span></span></code></pre><p>Parts of it are better than they need to be.</p>
+<p>The interval is fixed at a sixtieth of a second and deliberately decoupled from the frame rate, with a comment saying so. The table&#39;s resolution doesn&#39;t change because a machine is running at 30 or 144 frames per second, so a particle effect looks the same everywhere rather than subtly different per machine.</p>
+<p>The table invalidates itself. The transition keeps backup copies of its inputs and compares them on update, rebuilding only when the start state, end state, or lifetime actually changed. That exists because of the editor: a designer dragging a color in the particle tool changes the start state, and the transition notices on the next frame and rebuilds. Live editing with automatic cache invalidation, in a hobby engine, in 2012.</p>
+<p>And the particles themselves never allocate. <code>ManicParticleBuffer</code> is a ring over a preallocated array. <code>push()</code> hands back a pointer into it, advances, wraps, and when the ring is full it pops the oldest to make room:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">out </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> buffer </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> end</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">end </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> bufferLength</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> end </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">end </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> start</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic"> pop</span><span style="color:#939AB7">();</span></span></code></pre><p>That can&#39;t fail and can&#39;t fragment. Running out of particles degrades by dropping the oldest one rather than by allocating or refusing, which is the correct failure for something visual.</p>
+<p>Put together, the particle system is a shared precomputed curve, an allocation-free pool, and an invalidation scheme that exists to make a tool feel immediate. That&#39;s a coherent design with a stated rationale, and I&#39;d still be pleased with it.</p>
+<p>It&#39;s also the code I submitted as my portfolio when I applied to EA in 2013, and I got the job and worked there for a decade. Of everything in twenty-four projects it&#39;s the right choice, because the reasoning is visible from the outside. The lookup table explains why it exists, the dirty check explains what it&#39;s for, and the ring buffer explains what happens when it runs out. A reviewer can see the thinking without being walked through it.</p>
+<p>The renderer has its own quiet competence. <code>ManicFrustum</code> does point, sphere, and cube culling tests, and the mesh manager holds its draw submissions in a <code>priority_queue</code> with a custom comparator rather than a flat list, so what reaches the GPU is ordered rather than whatever order the scene happened to iterate in.</p>
+<p>Two other things in the tree belong here for a different reason. <code>ManicNet</code> implements reliable delivery over UDP, with sequence numbers that handle wrap-around, a 32-bit ack bitfield, round-trip-time estimation, and sent and acked bandwidth measured over a sliding second. And the dungeon game links Valve&#39;s MIT-licensed Event Tracing for Windows helpers, so frames, input, and scoped work all emit markers that Windows Performance Analyzer can read.</p>
+<p>Neither of those is original work. The reliability layer follows a well-known published design closely enough that the naming still shows it, and the tracing code carries Valve&#39;s copyright header. What they show is different: knowing that reliable UDP is a solved problem with a correct answer, and profiling a game with a real system-wide tracer rather than with print statements. Adopting the right existing solution is its own skill, and it&#39;s more useful than the instinct to write everything.</p>
+<h2>The Manager Singleton Trap</h2>
+<p>Sixteen classes in this engine end in <code>Manager</code>. Camera, font, texture, material, mesh, shader, model, framebuffer, particle, GUI, input, socket, connection, sound, asset, and mesh instance.</p>
+<p>Each one owns a category of resource and is reachable from anywhere. Which means the state that used to live in <code>globals.h</code> now lives behind sixteen accessors, and the property that made globals painful is intact.</p>
+<p>What improved is real, and it isn&#39;t everything. The state is grouped by concern, so a texture question has one place to go. The lifetime is explicit, because a manager gets initialized and torn down in a known order. And the library boundaries mean a manager can only be reached by code above it in the graph, so the reachability is bounded in a way a global&#39;s never was.</p>
+<p>But &quot;who can modify this and when&quot; is still unanswerable locally, and constructing a subsystem for a test still means standing up the managers it consults. There&#39;s no test project in this engine either, and the managers are a large part of why.</p>
+<p>Manager singletons were a real improvement over globals and a stopping point I mistook for a destination. They fix the organization problem and leave the ownership problem alone, and because they fix something visible, they hide the thing they don&#39;t fix.</p>
+<h2>Tools as First-Class Projects</h2>
+<p>Five of the twenty-four projects are editors: an animation editor, a GUI editor, a material editor, a particle editor, and a dungeon designer. There&#39;s also an asset packager.</p>
+<p>I&#39;d repeat this part of Manic Engine without hesitation. In the previous engine, content was defined in code or in files hand-edited by whoever made them. Here, each content type got a tool, and the tools live in the same solution as the engine, built by the same build.</p>
+<p>That placement matters more than it sounds. A tool in the same solution shares the engine&#39;s types directly, so a particle system edited in the editor is the same struct the runtime consumes, with no export format in between to drift. When the engine&#39;s particle definition changes, the editor fails to compile, which is exactly when a person should find out.</p>
+<p>The cost is that the solution takes longer to build and a tool can break the build for the game. My opinion is that&#39;s a good trade at this scale, and the alternative, tools maintained separately against a serialized format, is how content pipelines rot.</p>
+<h2>Platform Layer as a Translation Boundary</h2>
+<p>The engine sits on SDL2 for windowing, context creation, input, and gamepads. What&#39;s interesting is that it doesn&#39;t expose SDL upward.</p>
+<p><code>ManicWindow</code> owns the window and GL context, and translates SDL events into the engine&#39;s own message codes. Games never see a platform event. They see the engine&#39;s <code>KEY_DOWN</code> and mouse callbacks, and the GUI system consumes those same codes.</p>
+<p>The key codes and gamepad constants keep the numeric values that Win32 and XInput originally used, but the engine defines them itself and fills them from SDL. That&#39;s a small decision with a specific payoff: existing key bindings stayed valid across a platform layer swap, because the numbers didn&#39;t move even though the source of them did.</p>
+<p>That&#39;s what a good platform abstraction looks like, and it&#39;s the first one in this series that qualifies. Not a wrapper that renames the platform&#39;s concepts, but a translation into concepts the engine already had, so the platform can be replaced without the layers above noticing.</p>
+<h2>What This Engine Got Wrong</h2>
+<p>It&#39;s 32-bit only, on the Win32 platform toolset. That was a defensible default in 2012 and became a constraint that outlived its reason, which is what happens to every default nobody revisits.</p>
+<p>Global <code>using namespace std;</code> throughout the codebase. It causes exactly the collision anyone would predict, and the repository has documented workarounds for it, including needing a specific define before including a Windows socket header because <code>std::byte</code> clashes with a Windows type. A decision made for typing convenience in the first week produced a note in the build documentation a decade later.</p>
+<p>And there are no tests, which by this point had become a choice rather than a limitation. The library boundaries existed. The managers were what made testing impractical, and I didn&#39;t see it at the time because the decomposition felt like the hard part had been done.</p>
+<h2>Where It Left Me</h2>
+<p>Manic Engine is the one where the structural instincts arrived: enforce boundaries with the build, give every content type a tool, translate the platform rather than exposing it. Those all survive into what I write now.</p>
+<p>What it didn&#39;t solve was ownership. State was organized, and it was still reachable from anywhere by anything above it. The next engine attacked that directly, and it did it by moving most of the game out of C++ entirely.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

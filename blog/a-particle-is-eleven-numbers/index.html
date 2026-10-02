@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Particle Is Eleven Numbers | Matt Edmondson</title>
+  <meta name="description" content="The particle system I sent to EA as a portfolio piece in 2013. Eleven values per particle, two of them random seeds that stand in for everything varied, a shared interpolation curve baked into a lookup table, five force types with three application modes, and a ring buffer that never allocates." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/a-particle-is-eleven-numbers/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="A Particle Is Eleven Numbers | Matt Edmondson" />
+  <meta property="og:description" content="The particle system I sent to EA as a portfolio piece in 2013. Eleven values per particle, two of them random seeds that stand in for everything varied, a shared interpolation curve baked into a lookup table, five force types with three application modes, and a ring buffer that never allocates." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/a-particle-is-eleven-numbers/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>A Particle Is Eleven Numbers</h1>
+      <div class="post-meta">
+        <time datetime="2025-12-06">December 6, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=particles">particles</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
+        <a class="post-tag" href="/#tag=data-oriented">data-oriented</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/a-particle-is-eleven-numbers.jpg" alt="" width="1200" height="675" />
+
+<p>Particle systems are a good test of whether someone can design for volume. Everything in one is cheap individually and there are tens of thousands of them, so every per-particle byte and every per-particle branch is multiplied by a number large enough to matter.</p>
+<p>The system in my second engine is the code I submitted as a portfolio piece when I applied to EA in 2013. Going back through it, the decisions that make it work are all about pushing per-particle cost outward: into the emitter, into a precomputed table, into a seed.</p>
+<p>This is the sixth post taking one system at a time out of my custom engines.</p>
+<h2>What a Particle Stores</h2>
+<p>The whole per-particle state:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">class</span><span style="color:#EED49F;font-style:italic"> ManicParticle</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#939AB7">:</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    Vector3</span><span style="color:#CAD3F5"> position</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    Vector3</span><span style="color:#CAD3F5"> moveVector</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> age</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> sizeVariance</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    int</span><span style="color:#CAD3F5"> seed1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    int</span><span style="color:#CAD3F5"> seed2</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> rotation</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">};</span></span></code></pre><p>Position, velocity, age, a size variance, two seeds, and a rotation. No color. No current size. No lifetime. No reference to the emitter that spawned it.</p>
+<p>The absences are the design. Color and size aren&#39;t stored because they&#39;re derivable from age. Lifetime isn&#39;t stored because it belongs to the emitter and is the same for every particle it spawns. Anything shared lives once on the emitter rather than ten thousand times on the particles.</p>
+<h2>Two Seeds Instead of Every Varied Value</h2>
+<p>The seeds are the part I&#39;d point at as the neatest idea in here.</p>
+<p>A particle system needs variation. Particles that behave identically look like a machine. The obvious way to get it is to roll random numbers at spawn time and store the results, which means a stored field for every property that varies.</p>
+<p>Storing two seeds instead means any number of varied properties can be derived from them on demand, at the cost of two integers. Variation becomes a function of the seed rather than a set of remembered rolls.</p>
+<p>That has a second benefit beyond memory. Because the seed is stored rather than the outcome, the same particle produces the same variation every time it&#39;s evaluated, so an effect is reproducible. A stored-outcome system that reseeds anywhere in its update loop drifts between runs, which makes an effect impossible to tune with confidence and impossible to reproduce in a bug report.</p>
+<p>It&#39;s the same principle as resolving UI geometry at query time rather than caching it. Store the input, derive the output, and the derived value can never be stale or inconsistent.</p>
+<h2>The Curve Is Computed Once</h2>
+<p>Every particle in an emitter shares the same appearance curve: start color to end color, start size to end size, over the particle&#39;s life. The straightforward implementation interpolates that per particle per frame, which for ten thousand particles is four color interpolations and a size interpolation each, all computing points on the same curve.</p>
+<p>So the curve is baked once into a table:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">lookupSize </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> transitionTime </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> interval</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">lookupTable </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6;font-weight:bold"> new</span><span style="color:#CAD3F5"> ManicParticleState</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">lookupSize</span><span style="color:#939AB7">];</span></span>
+<span class="line"><span style="color:#C6A0F6">for</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> lookupSize</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> t </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">i </span><span style="color:#8BD5CA">/</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">lookupSize</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    lookupTable</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> linearInterpolation</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">start</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> end</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">color</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">r</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> t</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // g, b, a, size</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A particle&#39;s per-frame appearance cost becomes an index and a clamp:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> index </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> offset </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> lookupSize</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">index </span><span style="color:#8BD5CA">=</span><span style="color:#8AADF4;font-style:italic"> min</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">index</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> lookupSize </span><span style="color:#8BD5CA">-</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">return</span><span style="color:#8BD5CA"> &#x26;</span><span style="color:#CAD3F5">lookupTable</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">index</span><span style="color:#939AB7">];</span></span></code></pre><p>The interval is fixed at a sixtieth of a second, and the code says explicitly that this is so the interpolation rate stays independent of the frame rate. The table has the same resolution whether the game runs at 30 or 144 frames per second, so an effect looks the same on every machine rather than subtly smoother on a fast one.</p>
+<p>The tradeoff is quantization. A particle&#39;s appearance steps through discrete table entries rather than varying continuously, and at a sixtieth of a second per step nobody has ever noticed. Trading exactness nobody can perceive for a cost multiplied by ten thousand is the correct trade, and knowing which quantity is which is most of the skill.</p>
+<h2>Rebuilding When the Inputs Change</h2>
+<p>A baked table is a cache, and a cache needs invalidation. This one keeps backup copies of its own inputs and compares:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">start </span><span style="color:#8BD5CA">!=</span><span style="color:#CAD3F5"> startbk </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> end </span><span style="color:#8BD5CA">!=</span><span style="color:#CAD3F5"> endbk </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> life </span><span style="color:#8BD5CA">!=</span><span style="color:#CAD3F5"> lifebk</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#CAD3F5">    startbk </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> start</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> endbk </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> end</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> lifebk </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> life</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // rebuild</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>That exists because of the editor. A designer dragging a color changes the start state, and the transition notices on its next update and rebuilds. No mutation site has to signal anything, no dirty flag can be forgotten, and the editor gets live feedback without any coupling between the tool and the cache.</p>
+<p>Comparing against a known-good copy is a pattern I later used again in generated code, where deep equality answers whether an edited object has changed. It costs the memory of one extra copy and removes the entire class of bug where something changed and nothing noticed.</p>
+<h2>Forces as an Orthogonal Set</h2>
+<p>The force system is small and covers more than its size suggests:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">enum</span><span style="color:#EED49F;font-style:italic"> ForceType</span><span style="color:#939AB7"> {</span><span style="color:#8BD5CA"> ForceDirectional</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> ForceRadialDeflector</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#8BD5CA">                 ForceRadialAttractor</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> ForceNoise</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> ForceDampener</span><span style="color:#939AB7"> };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">enum</span><span style="color:#EED49F;font-style:italic"> ApplyType</span><span style="color:#939AB7"> {</span><span style="color:#8BD5CA"> ApplyAccelerate</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> ApplyInitial</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> ApplyConstant</span><span style="color:#939AB7"> };</span></span></code></pre><p>Five kinds of force, three ways to apply each. Directional is gravity or wind. Radial attracts or repels from a point. Noise adds turbulence. The dampener removes energy.</p>
+<p>The application mode is the part that multiplies the value. The same directional force applied as acceleration is gravity, applied as an initial impulse is a launch velocity, and applied as a constant is a conveyor. One force type, three completely different behaviors, chosen by an enum rather than by three separate implementations.</p>
+<p>That&#39;s what to aim for in any authored system. A small set of primitives times a small set of modifiers covers far more of the space than an equivalent number of specific features, and every combination works because the two axes are independent. The failure mode it avoids is a system that grows a new force type every time a designer wants something slightly different.</p>
+<h2>The Buffer Never Allocates</h2>
+<p>Particles live in a ring over a preallocated array:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">out </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> buffer </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> end</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">end </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> bufferLength</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> end </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">end </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> start</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic"> pop</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">return</span><span style="color:#CAD3F5"> out</span><span style="color:#939AB7">;</span></span></code></pre><p><code>push()</code> hands back a pointer into the array, advances, wraps, and when the ring is full it drops the oldest particle to make room.</p>
+<p>It never allocates during simulation, so there&#39;s no allocator contention and no fragmentation in the hottest loop in the engine. It can&#39;t fail, because there&#39;s always a slot once the oldest is evicted. And the memory is contiguous, so iterating particles walks linearly through memory, which is what the hardware prefers.</p>
+<p>The eviction policy is the right one for the domain. Running out of particles by dropping the oldest degrades an effect gracefully, because the oldest particles are the most faded and least noticeable. The alternatives, refusing to spawn or allocating more, produce a visible gap or a frame spike.</p>
+<h2>What I&#39;d Change</h2>
+<p>Particles are an array of structs, and this is the system where an array of arrays would pay. Updating position touches <code>position</code> and <code>moveVector</code> and never looks at <code>rotation</code>, <code>age</code>, or the seeds, but the whole 40-odd byte struct is pulled into cache regardless. Splitting into parallel arrays would let a position update stream only the data it uses. In 2012 I&#39;d never heard the term data-oriented design. The ring buffer got the contiguity half of the idea by accident and the layout half not at all.</p>
+<p>I&#39;d also give the lookup table an explicit resolution rather than deriving its size from a lifetime and a fixed interval. A long-lived effect currently gets a large table it doesn&#39;t need, since the curve doesn&#39;t get more interesting just because the particles live longer.</p>
+<p>And I&#39;d make the emitter own the transition rather than the other way around. Two emitters sharing one appearance curve currently duplicate the table, which is the same per-instance-versus-shared question the design answers correctly everywhere else.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

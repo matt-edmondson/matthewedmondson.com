@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inside a 1,300-Line Scripting Language | Matt Edmondson</title>
+  <meta name="description" content="A close read of my engine's scripting system: a line-based interpreter over a third-party expression parser, a binding layer where C++20 concepts derive what's scriptable from a variant, execution state small enough to be a vector of tuples, and suspension implemented as the absence of an action." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/inside-a-1300-line-scripting-language/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Inside a 1,300-Line Scripting Language | Matt Edmondson" />
+  <meta property="og:description" content="A close read of my engine's scripting system: a line-based interpreter over a third-party expression parser, a binding layer where C++20 concepts derive what's scriptable from a variant, execution state small enough to be a vector of tuples, and suspension implemented as the absence of an action." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/inside-a-1300-line-scripting-language/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Inside a 1,300-Line Scripting Language</h1>
+      <div class="post-meta">
+        <time datetime="2025-12-13">December 13, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=scripting">scripting</a>
+        <a class="post-tag" href="/#tag=interpreter">interpreter</a>
+        <a class="post-tag" href="/#tag=language-design">language-design</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/inside-a-1300-line-scripting-language.png" alt="" width="1200" height="675" />
+
+<p>An earlier post in this series covered why my engine has its own scripting language and what wait states buy. This one goes through the implementation, because most of what makes it work is in how little of it there is.</p>
+<p>The whole system is 1,320 lines across ten files.</p>
+<h2>It Doesn&#39;t Have a Parser</h2>
+<p>The engine vendors <strong>cparse</strong>, a shunting-yard implementation, and the language is built on top of it.</p>
+<p>That changes the accounting substantially. Expression parsing is the part of a language most likely to be subtly wrong and most tedious to get right: operator precedence, associativity, unary versus binary minus, parenthesization. Handing that to an existing library means the bespoke part is only the statement layer.</p>
+<p>What I wrote is a line-oriented statement interpreter that evaluates each line&#39;s expression through an existing parser. That&#39;s a much smaller and much more defensible undertaking than writing a full language from scratch, and it&#39;s most of the reason the whole thing fits in 1,300 lines.</p>
+<p>The dependency is kept behind a pointer, so cparse doesn&#39;t appear in any engine header:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">unique_ptr</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#EED49F">cparse</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">TokenMap</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> m_Internal</span><span style="color:#939AB7">;</span></span></code></pre><h2>It Wasn&#39;t Meant to Be a Language</h2>
+<p>The commit history has this arriving sideways. On 2021-09-14 the engine gains &quot;a cparse based expression system&quot;, and the commit says what it was for: &quot;use it for things in guis&quot;. The goal was evaluating small expressions inside GUI definition files, so a label could compute its own text and a panel could size itself against a value.</p>
+<p>Nine days later it was a language. Variables on 2021-09-15. Scoped functions on 2021-09-17, alongside a commit moving script programs out of the game and into the engine. Error handling, exception handling and argument binding for reference and rvalue parameters across 2021-09-18. The <code>yield</code> keyword on 2021-09-19, which is the entire wait state mechanism and the subject of the earlier post. Compiled expressions and local scopes on 2021-09-20, and program contexts that carry their own time deltas &quot;so that they can be executed independently of frames&quot;.</p>
+<p>cparse took the part of a language that has to be exactly right and has no shortcuts. Everything added afterwards was a statement layer, a scope chain and a binding layer, and each of those is a few days of work when the expression grammar underneath is somebody else&#39;s finished problem. Picking the dependency first is what made the nine days possible, and it is the same judgment as the reliable UDP layer two engines earlier.</p>
+<p>One artifact of that week is a name. A commit on 2021-09-17 calls the language <code>ranchscript</code>, and it appears nowhere else in 585 commits and nowhere in the source. Dungeoneer was going to be a monster ranching and homesteading roguelite, and the language took its name from that.</p>
+<p>The intent is still sitting in the data. The map the main menu loads is <code>ranch.json</code>, and it holds a house, four torches and a player spawn rather than a dungeon. There is a <code>monster.schema.json</code> that generates a <code>Monster</code> class with a size and a type. What there isn&#39;t anywhere in the game code is taming, feeding or breeding. The ranch is a place the player starts rather than a thing they run, and the language is still carrying the name of the game that was planned rather than the one that got built.</p>
+<h2>Execution State Is a Vector of Tuples</h2>
+<p>The entire state of a suspended program:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">typedef</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">tuple</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">string</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">              BlockStackFrame</span><span style="color:#939AB7">;</span><span style="color:#939AB7;font-style:italic">   // keyword, start line</span></span>
+<span class="line"><span style="color:#C6A0F6">typedef</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">vector</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">BlockStackFrame</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">              BlockStack</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">typedef</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">tuple</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">string</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> BlockStack</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">  FunctionStackFrame</span><span style="color:#939AB7">;</span><span style="color:#939AB7;font-style:italic"> // name, PC, blocks</span></span>
+<span class="line"><span style="color:#C6A0F6">typedef</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">vector</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">FunctionStackFrame</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">           FunctionStack</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">FunctionStack m_FunctionStack</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> m_waitTimer</span><span style="color:#939AB7">{</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> m_waitTime</span><span style="color:#939AB7">{</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7"> };</span></span></code></pre><p>A stack of function frames, each holding a name, a program counter, and a stack of open blocks. Two floats for timing.</p>
+<p>There&#39;s no C++ stack involved, no fiber, no coroutine frame, no saved registers. Execution position is data, which is what makes suspension conceptually free. Nothing needs to be captured when a script pauses, because the position was never anywhere else.</p>
+<p>This is the payoff of the line-based design. Control flow works by moving the program counter: a <code>while</code> pushes a block frame recording where it started and jumps back on block end, an <code>if</code> whose condition fails jumps past its block, a function call pushes a frame at counter zero. Each of those is an integer assignment.</p>
+<h2>One Program, Many Contexts</h2>
+<p>Parsed programs are cached and shared:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">static</span><span style="color:#CAD3F5"> cmVectorMap</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">string</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> Program</span><span style="color:#8BD5CA">*></span><span style="color:#CAD3F5"> m_programs</span><span style="color:#939AB7">;</span></span></code></pre><p>A <code>ProgramContext</code> holds a pointer to the shared program plus its own tiny execution state. So a hundred bees running <code>bee.script</code> parse it once and carry a hundred small stacks.</p>
+<p>That split matters more than it looks. The immutable, expensive thing is shared. The mutable, per-instance thing is a few dozen bytes. Getting that boundary wrong, by giving each entity its own parsed program, would make script memory scale with entity count times script size instead of with entity count.</p>
+<p>Contexts also have a persistence mode:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">enum</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> Persistence</span><span style="color:#939AB7"> {</span><span style="color:#8BD5CA"> Persistent</span><span style="color:#939AB7">,</span><span style="color:#8BD5CA"> Volatile</span><span style="color:#939AB7"> };</span></span></code></pre><p>A volatile context owns its binding scope and deletes it on destruction. A persistent one doesn&#39;t. That&#39;s the difference between a one-shot script and an entity behavior that lives as long as the entity.</p>
+<h2>One Source of Truth for What&#39;s Scriptable</h2>
+<p>The type system is a variant:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">using</span><span style="color:#EED49F;font-style:italic"> Value</span><span style="color:#8BD5CA"> =</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">variant</span><span style="color:#939AB7">&#x3C;</span><span style="color:#C6A0F6">bool</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> intptr_t</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> float</span><span style="color:#939AB7">,</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">string</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> cmColor</span><span style="color:#939AB7">>;</span></span></code></pre><p>and what&#39;s scriptable is derived from it with a concept:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">template</span><span style="color:#939AB7"> &#x3C;</span><span style="color:#C6A0F6">typename</span><span style="color:#EED49F;font-style:italic"> T</span><span style="color:#939AB7">></span></span>
+<span class="line"><span style="color:#C6A0F6">concept</span><span style="color:#CAD3F5"> expression_arg </span><span style="color:#8BD5CA">=</span><span style="color:#EED49F"> detail</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">get_value_index</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">T</span><span style="color:#939AB7">>()</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">variant_size_v</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">Value</span><span style="color:#8BD5CA">></span><span style="color:#939AB7">;</span></span></code></pre><p><code>get_value_index&lt;T&gt;()</code> returns T&#39;s index in the variant. A type that isn&#39;t a member returns an index past the end, so the concept fails.</p>
+<p>That&#39;s one source of truth. Add a type to <code>Value</code> and it immediately becomes usable as a script function argument and return type everywhere, with no separate registration table to update and no way for the two to disagree.</p>
+<p>Registration then only accepts functions whose whole signature satisfies it:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">template</span><span style="color:#939AB7"> &#x3C;</span><span style="color:#C6A0F6">expression_return_value</span><span style="color:#EED49F;font-style:italic"> Return</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> expression_arg</span><span style="color:#939AB7">...</span><span style="color:#EED49F;font-style:italic"> Args</span><span style="color:#939AB7">></span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> RegisterFunction</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F"> std</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">string_view</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> name</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> FunctionPtr</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">Return</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> Args...</span><span style="color:#939AB7">></span><span style="color:#EE99A0;font-style:italic"> function</span><span style="color:#939AB7">)</span></span></code></pre><p>Binding a function taking an unsupported type is a compile error at the registration site rather than a runtime failure in a dungeon.</p>
+<p>The marshalling is generated per signature. <code>package_args</code> extracts each argument from the variant by an index computed at compile time from the C++ parameter type:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">std</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">forward_as_tuple</span><span style="color:#939AB7">(</span></span>
+<span class="line"><span style="color:#EED49F">    std</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">forward</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">Args</span><span style="color:#939AB7">>(</span><span style="color:#CAD3F5">std</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">get</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">get_value_index</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">Args</span><span style="color:#939AB7">></span><span style="color:#CAD3F5">()</span><span style="color:#939AB7">>(</span><span style="color:#CAD3F5">values</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">]))</span><span style="color:#CAD3F5">...</span><span style="color:#939AB7">);</span></span></code></pre><p>No runtime type dispatch, no string comparison of type names, no manual unpacking per binding. Writing a new script function is writing a normal C++ function and one registration line.</p>
+<p>Scopes are constructed through tag types that force the parent to be explicit:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">struct</span><span style="color:#EED49F;font-style:italic"> Parent</span><span style="color:#939AB7"> {</span><span style="color:#C6A0F6"> explicit</span><span style="color:#8AADF4;font-style:italic"> Parent</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">BindingScope</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> parent</span><span style="color:#939AB7">);</span><span style="color:#CAD3F5"> BindingScope</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> p</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> };</span></span>
+<span class="line"><span style="color:#C6A0F6">struct</span><span style="color:#EED49F;font-style:italic"> Global</span><span style="color:#939AB7"> :</span><span style="color:#C6A0F6"> public</span><span style="color:#EED49F;font-style:italic"> Parent</span><span style="color:#939AB7"> {</span><span style="color:#8AADF4;font-style:italic"> Global</span><span style="color:#939AB7">()</span><span style="color:#CAD3F5"> : </span><span style="color:#8AADF4;font-style:italic">Parent</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#8AADF4;font-style:italic">GetGlobalScope</span><span style="color:#939AB7">())</span><span style="color:#939AB7"> {}</span><span style="color:#939AB7"> };</span></span></code></pre><p>The default constructor is private, so a scope can&#39;t be created without saying what it inherits from. That&#39;s a small thing that prevents a whole category of &quot;why can&#39;t this script see that function.&quot;</p>
+<h2>Suspension Is the Absence of an Action</h2>
+<p>The wait handling is where the line-based design pays off, and there is almost nothing to it.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">program</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">IsWaitStatement</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">keyword</span><span style="color:#939AB7">))</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">m_waitTime </span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        m_waitTime </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> line</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">compiledExpression</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">EvaluateFloat</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">m_scope</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        m_waitTimer </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">        continueRunning </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        m_waitTimer </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> gP</span><span style="color:#939AB7">-></span><span style="color:#8AADF4;font-style:italic">GetDeltaTimeSecs</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">m_waitTimer </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> m_waitTime</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> m_waitTime </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#8AADF4;font-style:italic"> AdvanceProgramCounter</span><span style="color:#939AB7">();</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">        else</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> continueRunning </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>There&#39;s no suspend call and no resume call. Suspending is declining to advance the program counter and then dropping out of the loop. Next frame the interpreter is re-entered, finds itself on the same line, accumulates another frame&#39;s worth of time, and eventually advances.</p>
+<p><code>WaitUntil</code> is the same shape with a condition instead of a timer: advance if it&#39;s true, give up the frame if it isn&#39;t. And <code>yield</code> is the degenerate case, advance and stop, which is a wait of exactly one frame.</p>
+<p>Three behaviors, one mechanism. All of them are &quot;leave the counter alone and return,&quot; which only works because the counter is a field rather than a position in the C++ call stack. A tree-walking interpreter would have to unwind and rebuild its recursion to do the same thing, and that&#39;s the reason this design is worth choosing for behavior scripting even though it&#39;s the less fashionable one.</p>
+<p>The loop control needs care. Every path that suspends has to actually stop running, and every path that completes has to keep going so the next statement runs in the same frame rather than a frame later. Those two requirements pull in opposite directions and each branch has to answer both, which is a small amount of code carrying more weight than its size suggests.</p>
+<h2>What I&#39;d Change</h2>
+<p>Cap the statements executed per frame. A script with a tight loop and no wait in it currently runs to completion inside one frame, or forever if it never terminates. A budget turns a runaway script into a slow one rather than a hang, which is the same degrade-rather-than-stall property the asset streamer has.</p>
+<p>Make the wait absolute rather than accumulated. Storing a target time and comparing against the clock is one variable instead of two, can&#39;t drift, and doesn&#39;t depend on being called exactly once per frame. Summing deltas works and quietly assumes a caller that never double-steps.</p>
+<p>And add tests. There are none, and the ones that matter here are small: a script with a wait should span more than one frame, a script that returns should pop its frame, and a <code>while</code> should re-enter its block. The execution state is a plain vector of tuples, so assertions about it are easy to write. Any behavior expressed as data is testable without a window, and this engine never took advantage of that.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

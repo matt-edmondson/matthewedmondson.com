@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>A Synthesizer in a Garbage-Collected Language | Matt Edmondson</title>
+  <meta name="description" content="A modular synth written in C#, where the audio callback takes a lock, allocates on the heap, and dispatches to the thread pool. Every one of those comes from a correct instinct expressed with the nearest available tool, in the one domain that punishes it hardest." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/a-synthesizer-in-a-garbage-collected-language/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="A Synthesizer in a Garbage-Collected Language | Matt Edmondson" />
+  <meta property="og:description" content="A modular synth written in C#, where the audio callback takes a lock, allocates on the heap, and dispatches to the thread pool. Every one of those comes from a correct instinct expressed with the nearest available tool, in the one domain that punishes it hardest." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/a-synthesizer-in-a-garbage-collected-language/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,74 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>A Synthesizer in a Garbage-Collected Language</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-10">December 10, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">C#</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=audio">audio</a>
+        <a class="post-tag" href="/#tag=dsp">dsp</a>
+        <a class="post-tag" href="/#tag=real-time">real-time</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/a-synthesizer-in-a-garbage-collected-language.png" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>Synthr is a modular software synthesizer I wrote in C#. Seventeen modules, ASIO output, MIDI input, a Dear ImGui interface, and both a standalone application and a VST plugin. Around six and a half thousand lines.</p>
+<p>It works. It also does, inside its audio callback, three things that every piece of real-time audio guidance says never to do.</p>
+<p>Both halves of that are the post.</p>
+<h2>The Deadline Is Not Negotiable</h2>
+<p>Audio runs at 48 kHz here. The driver hands over a buffer, and the callback has until that buffer finishes playing to fill the next one. At a typical ASIO buffer size that&#39;s somewhere between three and ten milliseconds, every time, forever.</p>
+<p>Missing it isn&#39;t a dropped frame. There&#39;s no equivalent of a stutter that most people won&#39;t notice. The hardware plays whatever is in the buffer, and if the buffer isn&#39;t ready it plays silence or the previous contents, which is an audible click. One late callback in a thousand is a click every few seconds.</p>
+<p>That deadline is what makes audio the strictest environment in ordinary software, and it&#39;s why the rules around it are so absolute.</p>
+<h2>What the Callback Actually Does</h2>
+<p>The chain is short. The driver calls a sample provider, which calls into polyphony:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> int</span><span style="color:#8AADF4;font-style:italic"> Read</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">[]</span><span style="color:#CAD3F5"> buffer</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> offset</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> sampleCount</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    lock</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">instrument</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">polyphony</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">noteLock</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        instrument</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">polyphony</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">FillBufferASIO</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">buffer</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> offset</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> sampleCount</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span></code></pre><p>That&#39;s the first one. A mutex, taken on the audio thread. If the interface thread or the MIDI handler holds that lock when the callback fires, the audio thread waits for them, and the audio thread cannot afford to wait for anything.</p>
+<p>Inside, the second:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">parallelBuffer</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Length </span><span style="color:#8BD5CA">!=</span><span style="color:#CAD3F5"> voices</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> sampleCount</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    parallelBuffer </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#C6A0F6"> float</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">voices</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> sampleCount</span><span style="color:#939AB7">];</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A heap allocation on the audio thread. It&#39;s guarded, so it only happens when the voice count changes, which is exactly when somebody plays a chord. An allocation can trigger a collection, and a collection can pause the thread that allocated.</p>
+<p>And the third:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#EED49F;font-style:italic">ParallelLoopResult</span><span style="color:#CAD3F5"> result </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Parallel</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">For</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">0</span><span style="color:#939AB7">,</span><span style="color:#8AADF4;font-style:italic"> AggressiveMax</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">threads</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> voices</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Count</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=></span><span style="color:#939AB7"> {</span><span style="color:#8BD5CA"> ..</span><span style="color:#CAD3F5">. </span><span style="color:#939AB7">});</span></span></code></pre><p>Dispatching to the thread pool from inside a real-time callback. The pool is a general-purpose scheduler with no knowledge of the deadline, shared with everything else in the process, and <code>Parallel.For</code> blocks until all its work completes.</p>
+<p>There&#39;s no GC configuration anywhere in the project. No server garbage collector, no low-latency mode, nothing. It runs on the defaults.</p>
+<h2>Every One Came From a Correct Instinct</h2>
+<p>That list reads like a catalogue of mistakes, and each item is a right idea reaching for the nearest tool.</p>
+<p><strong>The lock exists because the problem is real.</strong> Note state is written by the MIDI thread and read by the audio thread. That is genuine shared mutable state across threads and it does need protecting. Noticing that, rather than discovering it later as an intermittent crash, is the harder half.</p>
+<p>The answer real-time audio uses instead is a single-producer single-consumer queue of note events, written by MIDI and drained by audio, where neither side ever blocks. The audio thread reads what&#39;s there and moves on. Same problem, same correctness, no waiting.</p>
+<p><strong>The allocation exists because the buffer genuinely has to resize.</strong> A buffer sized to voices times samples is the right shape, and the guard shows the author knew allocating every callback would be worse. The missing step is preallocating for the maximum voice count at startup, so the buffer is large enough for any chord anyone can play and the resize never happens.</p>
+<p><strong>The parallel dispatch exists because voices are genuinely independent.</strong> Sixteen voices are sixteen separate computations with no shared state, which is exactly what parallelizes well, and noticing that is correct. The answer is a small pool of threads created once, pinned, and signalled, rather than a scheduler that decides when to run and shares its workers with the file system.</p>
+<p>Three right diagnoses, three wrong instruments. That&#39;s a pattern I keep finding in my own old code, and here it&#39;s concentrated in the fifty lines where it matters most.</p>
+<h2>The Rules I Later Wrote Down</h2>
+<p>Years after this, I spent a while reading a large engine codebase and wrote up what transferred. The organizing idea was that code should be sorted into tiers with different rules, and the strictest tier had this list: zero managed allocation, no LINQ, no closures, no async, no locks.</p>
+<p>The case study I used for that tier was real-time audio, with its hard deadline at 48 kHz.</p>
+<p>Synthr is why I knew to write that. Those rules aren&#39;t received wisdom I copied from an article, they&#39;re the list of things I&#39;d already done wrong in the one place they can&#39;t be got away with. That&#39;s a more useful way to hold a rule than having read it, and a considerably slower way to acquire one.</p>
+<h2>What Is Actually Good Here</h2>
+<p>The audio path is the weakest part of a design that&#39;s otherwise nicely put together.</p>
+<p>A module is one class holding its DSP, its own interface panel, and its own serialization:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> class</span><span style="color:#EED49F;font-style:italic"> Module</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7">    [</span><span style="color:#EED49F;font-style:italic">JsonIgnore</span><span style="color:#939AB7">]</span><span style="color:#C6A0F6"> public</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> height </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    [</span><span style="color:#EED49F;font-style:italic">JsonIgnore</span><span style="color:#939AB7">]</span><span style="color:#C6A0F6"> public</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> width </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    public</span><span style="color:#C6A0F6"> bool</span><span style="color:#CAD3F5"> active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    protected</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> name </span><span style="color:#8BD5CA">=</span><span style="color:#A6DA95"> "Module"</span><span style="color:#939AB7">;</span></span></code></pre><p>Width and height in grid units, laid out automatically into a rack. Fields without <code>[JsonIgnore]</code> are saved, so a patch file is just the modules&#39; state and adding a parameter makes it persistent for free. Adding a module means writing one class, and it arrives with a panel, a saved state, and a place on the grid.</p>
+<p>Routing is by name rather than by wire. A <code>Bus</code> provides sixteen named channels, and modules write to and read from them:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> const</span><span style="color:#C6A0F6"> int</span><span style="color:#CAD3F5"> numChannels </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 16</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#939AB7">[]</span><span style="color:#CAD3F5"> channels </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#C6A0F6"> float</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">numChannels</span><span style="color:#939AB7">];</span></span></code></pre><p>That&#39;s a patch bay rather than a node graph, and for a rack-style synth it&#39;s the better choice. No module needs a reference to any other module, connections are two dropdowns rather than a cable-dragging interface, and a saved patch is a list of names instead of a serialized graph. The cost is that arbitrary topologies can&#39;t be expressed and feedback paths need care, which for this instrument is a cost worth paying.</p>
+<p>The module list is a real instrument: oscillators, three envelope types, an LFO, filters, delay, reverb, distortion, bit crusher, compressor, limiter, a sequencer, a drum machine, and a spectrum analyser. That&#39;s not a demo, it&#39;s something a person can make music with.</p>
+<h2>What I&#39;d Change</h2>
+<p>Replace the lock with a lock-free event queue. MIDI writes note events, the audio thread drains them at the top of the callback, neither blocks. This is the single change that matters most, and everything else is smaller.</p>
+<p>Preallocate the voice buffers for the maximum polyphony at startup and never resize them again.</p>
+<p>Replace <code>Parallel.For</code> with a fixed set of worker threads created once and woken by a signal, or process voices serially and measure whether the parallelism was ever needed. Sixteen voices of subtractive synthesis is well within what one modern core can do in three milliseconds, and the parallel version brings a scheduler into the deadline to buy something that may not have been necessary.</p>
+<p>And set the garbage collector&#39;s latency mode for the duration of playback, which is the cheapest possible mitigation and costs one line.</p>
+<p>None of that changes the architecture. The module model, the bus, and the serialization are all sound. It&#39;s fifty lines at the boundary between the interface and the audio hardware, which is the usual place for this kind of problem, because it&#39;s the one place where the rules are different from everywhere else in the program.</p>
 
     </article>
   </main>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moving Is a Lean Plus a Wiggle | Matt Edmondson</title>
+  <meta name="description" content="A fruit merging game where the character has no animation data. Everything it does is sine accumulators and one multiplier: a lean while moving, a decaying wobble on stopping whose frequency slows as it dies, and a juggle arc built from a quarter sine handed off to a quarter cosine." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/moving-is-a-lean-plus-a-wiggle/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Moving Is a Lean Plus a Wiggle | Matt Edmondson" />
+  <meta property="og:description" content="A fruit merging game where the character has no animation data. Everything it does is sine accumulators and one multiplier: a lean while moving, a decaying wobble on stopping whose frequency slows as it dies, and a juggle arc built from a quarter sine handed off to a quarter cosine." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/moving-is-a-lean-plus-a-wiggle/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Moving Is a Lean Plus a Wiggle</h1>
+      <div class="post-meta">
+        <time datetime="2026-01-01">January 1, 2026</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C#</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=godot">godot</a>
+        <a class="post-tag" href="/#tag=animation">animation</a>
+        <a class="post-tag" href="/#tag=game-feel">game-feel</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/moving-is-a-lean-plus-a-wiggle.png" alt="" width="1200" height="675" />
+
+<p>One of the Moshpit Games projects is a fruit merging game, the kind where dropped fruit combines into bigger fruit. The character at the top who carries and drops the fruit has no animation data at all. No skeleton, no keyframes, no animation player. It&#39;s a few sprites and about eighty lines of arithmetic, and it has more life in it than most rigged characters.</p>
+<p>Taking the whole approach apart shows that none of it needed an animator.</p>
+<h2>One Multiplier Is a Whole Effect</h2>
+<p>The character has a head and a hat, and this is the entire relationship between them:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">Head</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">RotationDegrees </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> headAngle</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> hatAngle </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> headAngle </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> HatWobbleMultiplier</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">Hat</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">RotationDegrees </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> hatAngle</span><span style="color:#939AB7">;</span></span></code></pre><p><code>HatWobbleMultiplier</code> is 0.9. The hat turns nine tenths as far as the head does.</p>
+<p>That one number is the difference between a hat that&#39;s part of the character and a hat that&#39;s sitting on the character. Rotating them together makes the hat read as painted on, because nothing in the world moves in perfect lockstep with the thing under it. Ninety percent means the hat is always slightly behind, always slightly wrong, and the eye reads that as a separate object with its own weight resting on a head.</p>
+<p>This is what animators call overlapping action, and it usually costs a second set of keyframes on a second bone. Here it&#39;s a multiply.</p>
+<h2>Moving Is a Lean Plus a Wiggle</h2>
+<p>While the character is moving there are two contributions:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> moveDir </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sign</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">input</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> fruitAngle </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> moveDir </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> FruitDangleAmplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> headAngle  </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> moveDir </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> HeadWobbleAmplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">moveDir </span><span style="color:#8BD5CA">!=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    SpeedWiggleAccumulator </span><span style="color:#8BD5CA">+=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">delta </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> SpeedWiggleFrequency</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> amplitude </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sin</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">SpeedWiggleAccumulator</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> SpeedWiggleAmplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    headAngle  </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> amplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    fruitAngle </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> amplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>A constant lean in the direction of travel, which is the pose, plus a fast small sine on top, which is the bounce of walking. Amplitude 2 degrees at frequency 32, so it&#39;s a rapid shudder rather than a swing.</p>
+<p>The lean amplitudes carry the effect. <code>HeadWobbleAmplitude</code> is negative twelve and <code>FruitDangleAmplitude</code> is positive sixteen. Moving right, the head tips back into the direction of travel and the carried fruit swings the opposite way, trailing behind. Two signs is all it takes to say that the head is being driven and the fruit is being dragged.</p>
+<p>The accumulator pattern is the part to copy. Rather than sampling a sine of total elapsed time, the code keeps its own phase and advances it by <code>delta * frequency</code>. That means frequency can change between frames without the wave jumping, because the phase is continuous by construction. Sampling <code>sin(time * frequency)</code> and then changing frequency teleports the wave to a different part of its cycle, which is a discontinuity people usually discover as a visible pop and fix by never changing frequency.</p>
+<h2>Stopping Is a Wobble That Slows Down</h2>
+<p>Releasing the stick is where the good part is:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">DangleTimer </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> FruitDangleTime</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> amplitude </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#8BD5CA"> -</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Min</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1.0f</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> DangleTimer </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> FruitDangleTime</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    fruitAngle </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sin</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">FruitDangleAccumulator</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> amplitude </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> FruitDangleAmplitude </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> LastMoveDir </span><span style="color:#8BD5CA">*</span><span style="color:#8BD5CA"> -</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    DangleTimer </span><span style="color:#8BD5CA">+=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">delta</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    FruitDangleAccumulator </span><span style="color:#8BD5CA">+=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">delta </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> FruitDangleFrequency </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> amplitude</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The amplitude decays linearly to zero over <code>FruitDangleTime</code>, which is the obvious part. The oscillation starts big and fades out.</p>
+<p>The swing begins in the direction opposite to travel, from <code>LastMoveDir * -1</code>. Something being carried keeps going when the carrier stops, so it swings forward first and then back. Getting that sign right is what makes it read as momentum rather than as a shiver.</p>
+<p>And the third one is the line I&#39;d point at. The accumulator advances by <code>delta * frequency * amplitude</code>, so the <em>frequency</em> is scaled by the decaying amplitude too. As the wobble dies, it also slows down.</p>
+<p>A real pendulum doesn&#39;t do that. Its period is set by its length, and a dying swing keeps the same rhythm at smaller and smaller amplitude. But a wobble that slows as it fades reads as friction, as something coming to rest, and it looks better than the correct behavior does. It also solves a practical problem: an oscillation that keeps its frequency while its amplitude approaches zero spends its last half second doing many tiny invisible cycles, which is wasted time in an animation the player is waiting on.</p>
+<p>The head and hat get the same treatment on separate timers, with <code>HatWobbleTime</code> at 0.75 seconds and <code>FruitDangleTime</code> at 4 seconds. The dangling fruit keeps swinging for five times as long as the head does, so the two motions fall out of sync almost immediately and never resolve into a single visible rhythm. Sharing one timer would make the whole character pulse.</p>
+<p>Both accumulators and both timers reset to zero whenever movement resumes:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">LastMoveDir </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> moveDir</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">DangleTimer </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">FruitDangleAccumulator </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">HatWobbleTimer </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">HatWobbleAccumulator </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span></code></pre><p>So a stop and start mid-wobble restarts cleanly rather than resuming a stale phase. It&#39;s a hard cut, and at these speeds nobody sees it, and the alternative is blending state that would double the complexity of the whole system.</p>
+<h2>The Juggle Is Two Quarter Waves</h2>
+<p>Dropping a fruit tosses the next one from the left hand to the right, and the arc is built without a physics body:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Dropping</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> t </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> AnimTimer </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> AnimDropTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> theta </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Pi </span><span style="color:#8BD5CA">*</span><span style="color:#F5A97F"> 0.5f</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> t</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> newPos </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> LeftSocket</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">GlobalPosition</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Lerp</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">midpoint</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> t</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">NextFruitRight</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">GlobalPosition </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> newPos </span><span style="color:#8BD5CA">with</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Y </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> newPos</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Y </span><span style="color:#8BD5CA">-</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Sin</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">theta</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> JuggleHeight</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> };</span></span></code></pre><pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">// Catching</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> t </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> AnimTimer </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> AnimDropTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> theta </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Pi </span><span style="color:#8BD5CA">*</span><span style="color:#F5A97F"> 0.5f</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> t</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">var</span><span style="color:#CAD3F5"> newPos </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> midpoint</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Lerp</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">RightSocket</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">GlobalPosition</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> t</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">NextFruitRight</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">GlobalPosition </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> newPos </span><span style="color:#8BD5CA">with</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Y </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> newPos</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Y </span><span style="color:#8BD5CA">-</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">Mathf</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Cos</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">theta</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5"> JuggleHeight</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> };</span></span></code></pre><p>The first half moves left socket to midpoint with a height of <code>sin</code> over a quarter turn, so height goes from zero to full. The second half moves midpoint to right socket with <code>cos</code> over a quarter turn, so height goes from full back to zero.</p>
+<p>Sine and cosine over their first quarter are mirror images, and at the join both are at their flat part, where the slope is zero. So the two halves meet at the apex with matching height and matching gradient, and the toss has a smooth top instead of a corner. That&#39;s a continuous arc assembled from two independent phases, each of which can have its own duration.</p>
+<p>Which matters, because they do:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">Export</span><span style="color:#939AB7">]</span><span style="color:#C6A0F6"> public</span><span style="color:#C6A0F6"> float</span><span style="color:#CAD3F5"> AnimDropTime </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> get</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> 0.25f</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">Export</span><span style="color:#939AB7">]</span><span style="color:#C6A0F6"> public</span><span style="color:#C6A0F6"> float</span><span style="color:#CAD3F5"> AnimCatchTime </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> get</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> 0.25f</span><span style="color:#939AB7">;</span></span></code></pre><p>Two separate exports, so the throw and the catch can be timed differently. They&#39;re equal right now, and a slower catch than throw is the classic way to make a catch land heavily.</p>
+<p>There&#39;s a real bug in it. The catch phase computes its progress with <code>AnimTimer / AnimDropTime</code> and then checks completion against <code>AnimTimer &gt;= AnimCatchTime</code>. If somebody sets those to different values, the catch either finishes before its arc completes or overshoots past the socket. The parameter exists, is exported, and is wired up wrong, so it works only while the two numbers stay equal.</p>
+<p>The hands are two sprites each with a flip:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">LeftClosed</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Visible </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">RightClosed</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Visible </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">LeftOpen</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Visible </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">RightOpen</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Visible </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">LeftOpen</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FlipV </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">RightOpen</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FlipV </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span></code></pre><p>Open and closed variants, vertically flipped per phase to get four poses out of two drawings. A two frame hand animation driven by the state machine rather than a timeline.</p>
+<h2>The Fruit Are Alive Before They Are Dropped</h2>
+<p>The fruit themselves have idle behavior:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">LookTimer </span><span style="color:#8BD5CA">+=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">delta</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">LookTimer </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> LookTime</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    LookTimer </span><span style="color:#8BD5CA">-=</span><span style="color:#CAD3F5"> LookTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    Eyes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FlipH </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> RNG</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Randf</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#F5A97F"> 0.25f</span><span style="color:#8BD5CA"> ?</span><span style="color:#8BD5CA"> !</span><span style="color:#CAD3F5">Eyes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FlipH </span><span style="color:#8BD5CA">:</span><span style="color:#CAD3F5"> Eyes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">FlipH</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Once a second, a one in four chance of flipping which way the eyes face. Blinking is a separate timer with its own probability, its own duration, and a scale rather than a sprite swap:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">Eyes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Scale </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Eyes</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Scale </span><span style="color:#8BD5CA">with</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> Y </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> IsBlinking </span><span style="color:#8BD5CA">?</span><span style="color:#CAD3F5"> EyeScale </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> BlinkScale </span><span style="color:#8BD5CA">:</span><span style="color:#CAD3F5"> EyeScale </span><span style="color:#939AB7">};</span></span></code></pre><p>Squashing the eyes to a tenth of their height for 0.3 seconds. One scale value instead of a closed-eye sprite.</p>
+<p>Two independent random timers mean no two fruit in a pile are ever synchronized, so a screen of twenty fruit has twenty things blinking and glancing at different moments. Any shared clock would make them a chorus, which is the thing that immediately reads as fake.</p>
+<p>The merge has the guard that every game of this type needs:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">!</span><span style="color:#8AADF4;font-style:italic">IsQueuedForDeletion</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#8BD5CA"> !</span><span style="color:#CAD3F5">Freeze </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> body </span><span style="color:#8BD5CA">is</span><span style="color:#EED49F;font-style:italic"> Fruit</span><span style="color:#CAD3F5"> other</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">other</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">SceneFilePath </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> SceneFilePath </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#8BD5CA"> !</span><span style="color:#CAD3F5">other</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Freeze</span><span style="color:#939AB7">)</span></span></code></pre><p>Two touching fruit both receive a collision callback, so without the check both would spawn a replacement and the pile would double. Checking <code>IsQueuedForDeletion</code> on itself and <code>Freeze</code> on both sides is what stops one collision becoming two merges.</p>
+<p>Identity is compared by <code>SceneFilePath</code>, so two fruit are the same kind when they came from the same scene file. That removes a tier enum and the possibility of it disagreeing with the scene assignment, and it costs a string comparison on a rare event.</p>
+<p>The new fruit inherits amplified momentum:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">nextFruit</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">LinearVelocity </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">LinearVelocity </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> other</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">LinearVelocity</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#F5A97F"> 1.25f</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">nextFruit</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">AngularVelocity </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">AngularVelocity </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> other</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">AngularVelocity</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#F5A97F"> 1.25f</span><span style="color:#939AB7">;</span></span></code></pre><p>Summing the two velocities conserves momentum. Multiplying by 1.25 does not, and that&#39;s the point. The merge gives back more energy than went in, so the pile jumps and settles rather than absorbing the event silently, and a chain of merges builds rather than damping out.</p>
+<h2>What Transfers</h2>
+<p>Drive secondary motion from primary motion with a multiplier. One number under one produces overlapping action on any attached thing, and it costs no data.</p>
+<p>Keep a phase accumulator rather than sampling a function of total time. It&#39;s the same number of lines and it lets frequency vary without the wave jumping.</p>
+<p>Decay the frequency along with the amplitude. It&#39;s wrong and it looks better, and it stops an oscillation wasting its last moments on cycles nobody can see.</p>
+<p>Give every repeated element its own random timers. Shared timing is what makes a crowd of things look like one thing.</p>
+<p>And when an effect should feel good rather than be correct, put the number that breaks conservation somewhere obvious and give it a name. The 1.25 on a merge is a design decision, not a bug, and it&#39;s the reason merging feels like a reward.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

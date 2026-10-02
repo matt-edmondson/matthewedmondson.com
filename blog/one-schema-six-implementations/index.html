@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>One Schema, Six Implementations | Matt Edmondson</title>
+  <meta name="description" content="A JSON schema declaring a class and its typed members generates the C++ class, both directions of serialization, deep copy, deep equality, lifetime, and an editor panel. Thirty-five declarations produce nine thousand lines, and the editor for a new content type costs nothing." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/one-schema-six-implementations/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="One Schema, Six Implementations | Matt Edmondson" />
+  <meta property="og:description" content="A JSON schema declaring a class and its typed members generates the C++ class, both directions of serialization, deep copy, deep equality, lifetime, and an editor panel. Thirty-five declarations produce nine thousand lines, and the editor for a new content type costs nothing." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/one-schema-six-implementations/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,68 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>One Schema, Six Implementations</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-05">December 5, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=code-generation">code-generation</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=tooling">tooling</a>
+        <a class="post-tag" href="/#tag=data-driven">data-driven</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/one-schema-six-implementations.png" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>Adding a new kind of content to a game engine usually means writing the same six things. A class to hold it. Code to read it from disk. Code to write it back. A way to copy it. A way to compare two of them. And an editor panel so somebody other than a programmer can change it.</p>
+<p>None of those six are interesting. All of them are derivable from the same information: what fields does this thing have, and what type is each one.</p>
+<p>The current engine derives them. Thirty-five JSON files describing schemas and data produce 9,315 lines of C++ across 96 files, and adding a content type means editing JSON.</p>
+<p>This is the fifth post taking one system at a time out of my custom engines.</p>
+<h2>The Declaration</h2>
+<p>A schema names a class and lists typed members. There&#39;s nothing clever in the format, and that&#39;s deliberate:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">{</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Classes</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> [</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "AdventuringGear"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">Members</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> [</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "name"</span><span style="color:#939AB7">,</span><span style="color:#939AB7">   "</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "string"</span><span style="color:#939AB7"> },</span></span>
+<span class="line"><span style="color:#939AB7">                 {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "cost"</span><span style="color:#939AB7">,</span><span style="color:#939AB7">   "</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "int"</span><span style="color:#939AB7"> },</span></span>
+<span class="line"><span style="color:#939AB7">                 {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "weight"</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "float"</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> ]</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> ]</span><span style="color:#939AB7"> }</span></span></code></pre><p>A description field sits alongside each member, unused by the compiler and read by whoever opens the file next.</p>
+<p>The whole system rests on that being boring. A schema format with conditionals, inheritance, or expressions becomes a language, and a language needs a parser, error messages, and documentation. This one is a list of names and types, which is the smallest thing that can carry the information the six implementations need.</p>
+<h2>What Comes Out</h2>
+<p>The generated header is where the payoff is visible:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">class</span><span style="color:#EED49F;font-style:italic"> AdventuringGear</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#939AB7">:</span></span>
+<span class="line"><span style="color:#EED49F;font-style:italic">    AdventuringGear</span><span style="color:#C6A0F6">*</span><span style="color:#8AADF4;font-style:italic"> DeepCopy</span><span style="color:#939AB7">()</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    bool</span><span style="color:#8AADF4;font-style:italic"> DeepEquals</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">AdventuringGear</span><span style="color:#C6A0F6">*</span><span style="color:#EE99A0;font-style:italic"> other</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    void</span><span style="color:#8AADF4;font-style:italic"> Deserialize</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> jsonObj</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">    void</span><span style="color:#8AADF4;font-style:italic"> Serialize</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> jsonObj</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    static</span><span style="color:#EED49F;font-style:italic"> AdventuringGear</span><span style="color:#C6A0F6">*</span><span style="color:#8AADF4;font-style:italic"> Make</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    void</span><span style="color:#8AADF4;font-style:italic"> Destroy</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">    void</span><span style="color:#8AADF4;font-style:italic"> ImGui</span><span style="color:#939AB7">();</span></span></code></pre><p>Six operations from one declaration, and the last one is the one that changes how the project feels.</p>
+<p><code>ImGui()</code> draws an editor for the type. Not a generic property grid reflecting over something at runtime, an actual generated function that emits the right widget for each field, in declaration order, with the field&#39;s name as its label.</p>
+<p>Which means a new content type arrives with its editor already built. There&#39;s no step where someone decides whether this type is worth building a UI for, and no backlog of types that are only editable by hand-writing JSON because nobody got around to the tool. The tool is a consequence of the declaration.</p>
+<p>That&#39;s the thing I&#39;d carry into any data-heavy project. Generating the class saves typing. Generating the editor changes who can work on the content, and that&#39;s a different order of benefit.</p>
+<h2>Why Deep Equality Is There</h2>
+<p><code>DeepEquals</code> looks like the least useful of the six until it&#39;s connected to the editor.</p>
+<p>An editor needs to know whether the thing being edited has changed, to enable a save button, to prompt before discarding, to mark a document dirty, or to skip rebuilding a cache. The usual implementations are a dirty flag set by every mutation, which is one forgotten call away from silently wrong, or a hash, which is a dirty flag with extra steps and a collision story.</p>
+<p>Generated deep equality gives an exact answer by comparing against a copy of the original. No mutation site has to remember anything, because nothing is tracking mutations. The comparison is the check.</p>
+<p>This is the same mechanism I&#39;d used years earlier in a particle system, where a transition kept backup copies of its inputs and rebuilt its lookup table when they stopped matching. I didn&#39;t recognize it as a pattern at the time. Keeping a known-good copy and comparing against it is a general answer to &quot;has this changed,&quot; and it trades memory for the entire class of bugs where something changed and nothing noticed.</p>
+<h2>The Ratio Is the Argument</h2>
+<p>Thirty-five declarations, 9,315 lines of implementation.</p>
+<p>The number that matters isn&#39;t the volume, it&#39;s what can no longer happen. Those nine thousand lines can&#39;t disagree with the declaration, because they don&#39;t survive the next generation run. The serializer can&#39;t drift from the class. The editor can&#39;t show a field the class doesn&#39;t have. Deep copy can&#39;t miss a member added last week.</p>
+<p>Every one of those is a real bug I&#39;d written by hand before. Adding a field and forgetting to add it to the copy constructor produces an object that&#39;s subtly incomplete after a copy, and the symptom appears far from the cause. Generation removes the category rather than the instance.</p>
+<p>The generated directories carry a header saying not to edit them, which is the one place this approach reliably fails. Someone edits generated code to fix something urgent, the fix works, and the next generation run silently deletes it. The header is a convention where a read-only file attribute or a build-time check would be enforcement, and that gap is the same one I&#39;ve written about elsewhere in these engines.</p>
+<h2>Where Generation Stops</h2>
+<p>The boundary needs to be precise, because &quot;generate everything&quot; fails in its own way.</p>
+<p>What&#39;s generated is the mechanical consequence of a data shape: storage, transport, copying, comparison, and presentation. What isn&#39;t generated is behavior. No generated code decides what an item does when equipped, because that isn&#39;t derivable from a field list, and a schema format extended far enough to express it would have become the language I said the format shouldn&#39;t be.</p>
+<p>Behavior lives in scripts and in hand-written C++. The split is that the schema owns what the data is and the code owns what happens to it, and keeping that line clean is what stops the generator from growing into a bad programming language.</p>
+<p>The other limit is that generation is a build step, which means a code generator is now part of the build and a broken generator is a broken build. The configuration for it is a single JSON file naming the input and output directories and the projects to regenerate, which is about as much ceremony as the idea can carry before it costs more than it saves.</p>
+<h2>What Transfers</h2>
+<p>Find the six things being written by hand for every new type. In most codebases it&#39;s some subset of construct, copy, compare, serialize, deserialize, and edit.</p>
+<p>Derive them from one declaration, and keep the declaration format boring enough that it never needs a parser worth the name.</p>
+<p>Generate the editor, not just the class. That&#39;s the part that changes who can contribute.</p>
+<p>And enforce the do-not-edit rule with something stronger than a comment, because the one time someone edits generated code will be the time it matters.</p>
 
     </article>
   </main>

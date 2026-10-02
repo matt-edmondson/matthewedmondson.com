@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Caching Git LFS: Why the Bytes and the Locks Want Opposite Homes | Matt Edmondson</title>
+  <meta name="description" content="A caching proxy for the Git LFS HTTP API turns out to have two separate jobs with contradictory deployment requirements. Object bytes are bandwidth-bound and belong near the client. Lock listings are round-trip-bound and belong near the forge. One deployment can't be right for both." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/caching-git-lfs-why-the-bytes-and-the-locks-want-opposite-homes/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Caching Git LFS: Why the Bytes and the Locks Want Opposite Homes | Matt Edmondson" />
+  <meta property="og:description" content="A caching proxy for the Git LFS HTTP API turns out to have two separate jobs with contradictory deployment requirements. Object bytes are bandwidth-bound and belong near the client. Lock listings are round-trip-bound and belong near the forge. One deployment can't be right for both." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/caching-git-lfs-why-the-bytes-and-the-locks-want-opposite-homes/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,61 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Caching Git LFS: Why the Bytes and the Locks Want Opposite Homes</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-28">December 28, 2025</time>
+        <span class="category-tag">DevOps</span>
+        <span class="category-tag">Game Development</span>
+        <a class="post-tag" href="/#tag=git-lfs">git-lfs</a>
+        <a class="post-tag" href="/#tag=git">git</a>
+        <a class="post-tag" href="/#tag=caching">caching</a>
+        <a class="post-tag" href="/#tag=source-control">source-control</a>
+        <a class="post-tag" href="/#tag=build-infrastructure">build-infrastructure</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>A studio with its repositories in the cloud pays for the same bytes repeatedly. Continuous integration pods clone the same repository over and over. Artists on home connections pull the same assets their colleagues pulled an hour ago. Upstream bandwidth and clone latency dominate everything else about the experience, and none of it is work that needed doing twice.</p>
+<p><code>ktsu.GitLfsCache</code> sits between those clients and the forge. It relays every Batch API call upstream with the client&#39;s own credentials, rewrites the transfer URLs in the response to point back at itself, and serves object bytes from a local content-addressed store. A miss is fetched once and written on the way through.</p>
+<p>That much is an ordinary caching proxy. What I didn&#39;t anticipate is that the Git LFS API has a second job hiding in it, and that job wants to be deployed somewhere else entirely.</p>
+<h2>The Two Costs</h2>
+<p>Object transfer is bandwidth-bound. The cost is bytes, the fix is to put the bytes closer to whoever is receiving them, and the right placement is near the client.</p>
+<p>Locking is round-trip-bound. The LFS locking API is part of the same HTTP API, addressed as a suffix of whatever <code>lfs.url</code> points at, so a client already sends its lock traffic to the same place. But the cost there isn&#39;t bytes at all. It&#39;s the number of times a client has to talk to the forge and wait. The right placement for that is near the forge.</p>
+<p>These pull in opposite directions, and with repositories in the cloud and clients spread across an office and a lot of home connections, one deployment can&#39;t be right for both. That&#39;s the whole reason the service has a metadata-only mode, which I&#39;ll come back to.</p>
+<h2>Relaying Every Batch Call</h2>
+<p>The proxy never short-circuits a Batch call, even when it already holds every object being requested.</p>
+<p>Nobody should optimize this away, because the optimization is obvious and the failure it causes is silent. Batch is where the forge decides whether this client may read these objects. If the proxy answers from cache because it recognizes the object ids, then holding a cached object becomes a way to skip an access check, and the cache has quietly become an access control bypass.</p>
+<p>So upstream stays the sole authority on who may read what. Every Batch call reaches it. The proxy&#39;s contribution is what happens after the answer comes back: the transfer URLs get rewritten, and the bytes come from local disk instead of the internet.</p>
+<p>The same principle appears in the store. Content is digested while it streams and published only if it hashes to the object id it claims, so a truncated or tampered transfer can never become a cache hit. A cache that stores whatever arrives is a cache that serves whatever arrived.</p>
+<h2>The Token in the URL</h2>
+<p>Each rewritten transfer URL carries an opaque token holding the upstream URL, its headers, the object id, the size, the upstream key, and an expiry. The payload is encrypted, authenticated with a message authentication code over the whole envelope, and Base64url encoded into a query parameter.</p>
+<p>That one decision buys three separate things.</p>
+<p>Replicas need no shared state. Everything required to serve a URL travels inside the URL, so any replica can serve any request with no sticky sessions and no shared cache.</p>
+<p>Holding a valid token is itself proof that upstream approved that object for that client. The token can only have come from a Batch response the forge authorized, so cached bytes never reach a client the forge didn&#39;t clear. The access check and the cache hit stay connected without the cache having to remember anything about who asked.</p>
+<p>And because the token always carries the upstream action, an object evicted between the Batch call and the transfer still resolves. The proxy falls back to fetching it, rather than failing a request that was valid when it was issued.</p>
+<h2>The Locking API Nobody Optimizes</h2>
+<p><code>GET .../locks</code> is answered from an in-memory snapshot per repository. The first client to ask after the snapshot goes stale walks every upstream cursor page and publishes the result, and everyone else reads it. A client polling on a timer costs upstream one walk per <code>ListTtl</code>, however many clients are running.</p>
+<p>The proxy also assembles the cursor pages itself, so a client gets the whole listing in one round trip instead of walking pages over a wide-area link. For a studio where every editor polls lock state on a timer, that pair of changes is the largest single reduction in upstream traffic the service makes, and it has nothing to do with object bytes.</p>
+<p>The cache never decides who may read locks. It only remembers, briefly, what upstream already decided. A caller with no current admission is checked with a single-page request under its own credential before it sees anything, and an admission only ever exists because a real upstream call succeeded. A credential revoked upstream can still read listings for up to <code>AdmissionTtl</code>.</p>
+<p>Creation and release are never cached, only relayed, because upstream is the only thing that may grant or release a lock. A successful one drops the snapshot immediately, so a client that just took a lock sees it.</p>
+<p>Staleness here costs a retry, not a conflict. Two clients can both see a file unlocked within <code>ListTtl</code> and both try to lock it. Upstream grants one and refuses the other, exactly as it would have without the cache. What the proxy can&#39;t see is a lock taken outside it, through a forge&#39;s web interface or a client not configured through the proxy, and <code>ListTtl</code> is the only thing bounding how long that stays invisible. That&#39;s why it&#39;s short, and why it isn&#39;t a knob to turn up casually.</p>
+<h2>Batched Locking, and What It Can&#39;t Promise</h2>
+<p>git-lfs issues one lock request per path, one after another. Locking several hundred assets over a wide-area link is several hundred sequential round trips, which is the kind of number that turns a routine operation into a coffee break.</p>
+<p><code>POST .../locks/batch</code> is a proxy extension that takes them at once and fans them out in parallel under a rate limiter. Each item is still one upstream call carrying the caller&#39;s own credential, so upstream decides every lock individually under the caller&#39;s identity. The proxy chooses only the order and the concurrency.</p>
+<p>It always returns 200 when the request was well formed, with one result per item in the order they were sent. Partial success is the normal outcome here, not an error case, and failing the whole request would throw away the half that worked.</p>
+<p>This is not atomic and it cannot be, over an API with no transaction. A client that disconnects part way through leaves the locks already granted still granted. The result array is authoritative, and a client has to reconcile against it rather than assuming the request either happened or didn&#39;t.</p>
+<p>Forge rate limits are the expected failure here rather than an edge case. A refusal carrying <code>Retry-After</code> pauses every call to that upstream for the stated duration. Anything but zero on the throttled-items counter means the concurrency is above what that forge tolerates.</p>
+<h2>Two Planes, Opposite Placement</h2>
+<p><code>Store:Enabled: false</code> runs the same binary with the object plane switched off. No store, no volume, no eviction, and batch responses relayed unrewritten, so clients receive the forge&#39;s own hrefs and transfer straight from it. Object bytes never cross the process.</p>
+<p>That mode exists entirely because of the placement conflict. A full deployment near the client caches the bytes. A metadata-only deployment near the forge handles the lock listings and the batched locking. Neither one is a degraded version of the other, they&#39;re two different jobs that happened to arrive through the same API.</p>
+<p>The two are interchangeable from a client&#39;s point of view when they share their token keys and public base URL, because a rewritten transfer URL carries everything needed to serve it. One hostname can resolve to a different instance for different clients without anyone needing two credential entries. A client that batches against one and transfers against the other misses, and the object is fetched from upstream, which is correct rather than a failure.</p>
+<p>A metadata-only deployment needs no persistent volume and can be a plain Deployment rather than a StatefulSet, which makes it cheap enough to put wherever it&#39;s useful.</p>
+<h2>The Tension With Not Locking at All</h2>
+<p>I&#39;ve argued in a couple of places that studios should be reducing how much their workflow depends on file locking, and that lock-free approaches to binary assets are worth the investment. Building infrastructure that makes locking faster looks like it cuts against that.</p>
+<p>My opinion is that both are true at once, and treating them as opposites is the mistake. Reducing lock dependence is a multi-year structural change that touches asset organization, tooling, and habits. The locking a studio does today is happening regardless of what its roadmap says, and making it cost one round trip instead of several hundred is worth doing this week. One is the destination and the other is the current condition, and refusing to improve the current condition because it isn&#39;t the destination is how teams end up with neither.</p>
+<h2>Limits</h2>
+<p>The hit and miss counters are the pair to watch on the object plane. A low hit ratio means the proxy is costing latency without saving bandwidth, which usually means the volume is too small for the working set rather than that the idea is wrong.</p>
+<p>On the locking plane, lock list hits against refreshes is directly the multiple by which upstream lock traffic has been reduced. If that number is near one, the snapshot isn&#39;t being shared and the deployment is in the wrong place.</p>
+<p>Two things I&#39;d flag before anyone adopts this. Batched locking is an extension, so a stock git-lfs client won&#39;t use it and something has to be taught to. And access times are stamped explicitly on every hit rather than read from the filesystem, because <code>noatime</code> and <code>relatime</code> mounts make filesystem access times unreliable and eviction depends on them. That last one is the sort of detail that works perfectly in testing and then quietly evicts the wrong objects in production.</p>
 
     </article>
   </main>

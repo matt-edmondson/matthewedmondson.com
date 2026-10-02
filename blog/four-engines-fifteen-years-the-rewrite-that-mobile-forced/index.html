@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Four Engines, Fifteen Years (Part 3 of 5) | Matt Edmondson</title>
+  <meta name="description" content="Porting a shipped PC puzzle game to iOS meant a third engine rather than a port. Mobile turned three things that had been constants into data: screen resolution, application lifecycle, and how much of the codebase belongs to somebody else's SDK." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-engines-fifteen-years-the-rewrite-that-mobile-forced/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Four Engines, Fifteen Years (Part 3 of 5) | Matt Edmondson" />
+  <meta property="og:description" content="Porting a shipped PC puzzle game to iOS meant a third engine rather than a port. Mobile turned three things that had been constants into data: screen resolution, application lifecycle, and how much of the codebase belongs to somebody else's SDK." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-engines-fifteen-years-the-rewrite-that-mobile-forced/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,58 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <p class="series-part">Part 3 of 5</p>
+      <h1>Four Engines, Fifteen Years</h1>
+      <p class="post-subtitle">The Rewrite That Mobile Forced</p>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-11-27">November 27, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=opengl">opengl</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=ios">ios</a>
+        <a class="post-tag" href="/#tag=mobile">mobile</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
-
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+      <img class="post-hero" src="/assets-blog/four-engines-fifteen-years-the-rewrite-that-mobile-forced.jpeg" alt="" width="1200" height="675" />
+<p>Two posts into this series, the engines have been getting structurally better on their own terms. This one changed because something outside it changed. The puzzle game that shipped on Steam around 2010 was rebuilt for iOS in 2014 and published by DeNA, and the rebuild ran on a third engine, Carbon Monoxide.</p>
+<p>Not a port. The game code is new, the engine underneath is new, and the reason is that mobile turned three things that had been constants into variables.</p>
+<h2>Fifteen Screens and a Base Class</h2>
+<p>This codebase has a screen for everything. Intro, cube intro, intro animation, splash, main menu, level select, difficulty, options, tutorial, in-game, pause, post-game, editor, reset save, and a Facebook prompt, all inheriting from a shared menu base and, under that, the engine&#39;s own <code>cmScreen</code>.</p>
+<p>The PC version had modes. This has a state machine with fifteen named states and two layers of base class defining what a state must do: <code>MenuBaseScreen</code>, which nothing ever instantiates directly, and the engine&#39;s <code>cmScreen</code> beneath it.</p>
+<p>Mobile is why. A phone game gets interrupted constantly, has to resume where it left off, and lives inside a platform that will suspend it mid-frame. Every one of those transitions is a state change, and a codebase with implicit modes can&#39;t describe them. Making each screen a class with an explicit lifecycle turns &quot;what happens when a call arrives during the tutorial&quot; from a bug into a question with an addressable answer.</p>
+<p>Average file size here is 184 lines across 112 files. That sits between Gumball&#39;s 475 and Manic&#39;s 73, which is roughly what a codebase looks like when the decomposition is driven by a domain concept rather than by library boundaries.</p>
+<h2>Resolution Stopped Being a Number</h2>
+<p>The engine has a <code>cmAnchor</code> type, and its existence marks the single biggest change in how this codebase thinks compared to its predecessor.</p>
+<p>On PC in 2010, the game could treat resolution as something read once at startup and largely ignored, because the aspect ratio landed in a narrow band and the window didn&#39;t change shape. On iOS in 2014 there were several device sizes and two orientations, and there was going to be a new size next year.</p>
+<p>An anchor expresses where a thing sits relative to something else rather than where it sits in pixels. Once that type exists, layout becomes data the engine resolves at runtime instead of coordinates baked into the code. That&#39;s not a rendering improvement, it&#39;s the difference between supporting a new device by adding a configuration and supporting it by editing every screen.</p>
+<p>The same pressure produced <code>cmFontAtlas</code> and <code>cmFontGlyph</code>. The PC engine rendered text through FreeType more or less directly. Packing glyphs into an atlas means text draws in far fewer calls, which matters much more on a mobile GPU than on a desktop one. Immediate-mode drawing, which the first engine used everywhere, isn&#39;t merely dated here. It isn&#39;t available.</p>
+<h2>Three Renderers, One of Them Blind</h2>
+<p>The renderer is an interface with three implementations: <code>cmRenderGL</code>, <code>cmRenderGLES</code>, and <code>cmRenderNULL</code>. The platform layer is split the same way, into <code>cmPlatformWindows</code> and <code>cmPlatformIOS</code>, selected at compile time.</p>
+<p>The desktop and mobile backends are the obvious pair, and they&#39;re what makes one game run on two very different graphics APIs without the game code choosing. The interesting one is the third.</p>
+<p><code>cmRenderNULL</code> is a real implementation, 274 lines of it, that accepts every call and draws nothing. A null backend means the game can run with no GPU at all: timing a simulation without the renderer in the way, running logic on a machine with no display, or isolating whether a problem is in the game or in the drawing.</p>
+<p>Compare that with the first engine, where drawing was <code>glBegin</code> calls emitted inline from game objects. There was no interface to implement, so there was nothing a null renderer could have been. The ability to run headless isn&#39;t a feature that gets added to a codebase like that, it&#39;s a consequence of having separated two things years earlier.</p>
+<p>That decision is also why this engine outlived the game it was written for. A renderer behind an interface can gain a backend. A renderer made of inline draw calls has to be rewritten.</p>
+<h2>How Much of the Codebase Belongs to Someone Else</h2>
+<p>The third-party list is where a commercially published mobile game stops resembling a personal project. This one integrates a social SDK, an advertising SDK from the publisher&#39;s own network, and a gameplay video recording SDK, alongside the audio codecs.</p>
+<p>That&#39;s a category of dependency the earlier engines never had. The Steam integration in the first engine was one platform&#39;s API, adopted once. These arrive as a set, each with its own initialization order, its own callbacks into the application lifecycle, and its own opinion about when it may present something over the top of the game.</p>
+<p>There&#39;s a screen in the list called <code>FacebookAskScreen</code>, and it&#39;s the leftover from this. A screen exists in the game&#39;s state machine whose entire job is asking for a social permission, because the integration needed a moment in the flow and the flow is made of screens. An SDK requirement became a game state.</p>
+<p>My opinion is that this is the part of mobile development that&#39;s hardest to plan for and easiest to underestimate. The engine work is bounded and knowable. The integration work is not, because it&#39;s driven by other people&#39;s release schedules and by business requirements that arrive after the architecture is set.</p>
+<h2>What Carried Over, and What Didn&#39;t</h2>
+<p>The manager pattern came across. There&#39;s a <code>cmAudioManager</code>, and the naming conventions across the GUI types show the same instincts as the previous engine.</p>
+<p>What didn&#39;t come across is the assumption that the engine and the game share a codebase. <code>cmGUI</code>, <code>cmGUIButton</code>, <code>cmGUILabel</code>, <code>cmGUIImage</code>, <code>cmGUIOptionButton</code>, <code>cmFramebuffer</code>, <code>cmColor</code> are engine types with a prefix, consumed by game code that doesn&#39;t define them. The <code>cm</code> prefix is doing what the <code>Manic</code> prefix did, and it&#39;s doing it across a boundary that would eventually become a separate repository.</p>
+<p>The engine did not come first.</p>
+<p>Critical Mass 2&#39;s first commit is 2014-05-03, and it already contains <code>cmPlatform.cpp</code>, <code>cmPlatformIOS.cpp</code>, <code>cmPlatformWindows.cpp</code>, <code>cmMath.h</code>, <code>cmMatrix.h</code>, and <code>cmVector.h</code>. The prefix and the two-platform split are there on day one, inside the game project.</p>
+<p>Carbon Monoxide doesn&#39;t become its own repository until 2014-11-06, six months later, and the engine directory in that first commit holds 64 source files. Every one of them already existed in the game on the same day, and 58 of the 64 are byte-identical, matching at the level of the stored object rather than by inspection. The six that differ are the predictable ones: <code>cmFont.cpp</code>, <code>cmMath.cpp</code>, and the four platform and rendering backends, <code>cmPlatformIOS.mm</code>, <code>cmPlatformWindows.cpp</code>, <code>cmPlatformWindows.h</code> and <code>cmRenderGLES.mm</code>. The files that had to know something about where they were running are the files that had already drifted.</p>
+<p>So this engine is a program that grew a library out of itself. The seam was drawn on day one and enforced six months later. <code>cm</code> marked which code belonged to the engine, written into filenames, and the repository split is the point where something other than discipline started holding it.</p>
+<p>The previous engine&#39;s static libraries and the one before that&#39;s filename prefixes took a rule out of convention the same way. What differs here is that the convention was laid down in advance. Naming a boundary before anything enforces it is cheap. Enforcing it afterwards is a set of renames and a build file.</p>
+<p>That thread continues in the next post. This engine is the same one that, a decade later, powers a game built almost entirely out of generated code and scripts.</p>
+<h2>What Mobile Taught the Engine</h2>
+<p>All of it outlived the platform that forced it.</p>
+<p>Explicit states beat implicit modes, because an interruption has to land somewhere and a named state is somewhere. Layout wants to be relative and resolved late, because the thing it&#39;s relative to keeps changing. And batching isn&#39;t an optimization to apply once something is slow, it&#39;s a constraint that determines what the drawing API can look like at all.</p>
+<p>None of those are mobile lessons in the end. They&#39;re the lessons a constrained platform teaches faster than an unconstrained one lets a person avoid.</p>
 
     </article>
   </main>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Four Engines, Fifteen Years (Part 1 of 5) | Matt Edmondson</title>
+  <meta name="description" content="The first engine I shipped a commercial game on started as someone else's OpenGL tutorial basecode and kept its state in a header with 603 global declarations. It also had a self-tuning, time-budgeted texture streamer writing into mapped GPU memory. Both things are true, and the second one explains the first." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-engines-fifteen-years-603-globals-and-a-texture-streamer/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Four Engines, Fifteen Years (Part 1 of 5) | Matt Edmondson" />
+  <meta property="og:description" content="The first engine I shipped a commercial game on started as someone else's OpenGL tutorial basecode and kept its state in a header with 603 global declarations. It also had a self-tuning, time-budgeted texture streamer writing into mapped GPU memory. Both things are true, and the second one explains the first." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-engines-fifteen-years-603-globals-and-a-texture-streamer/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <p class="series-part">Part 1 of 5</p>
+      <h1>Four Engines, Fifteen Years</h1>
+      <p class="post-subtitle">603 Globals and a Texture Streamer</p>
+      <div class="post-meta">
+        <time datetime="2025-11-25">November 25, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=opengl">opengl</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=streaming">streaming</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/four-engines-fifteen-years-603-globals-and-a-texture-streamer.png" alt="" width="1200" height="675" />
+<p>This is the first of five posts working through four custom C++ engines I built between roughly 2008 and now, in the order I built them. I&#39;ve kept all the source, so this isn&#39;t a memory exercise. The numbers come from counting the actual repositories.</p>
+<p>The first one worth writing about is Gumball Engine, which shipped a puzzle game on Steam around 2010. Its <code>globals.h</code> contains 603 declarations. Its source files average 475 lines. It began life as somebody else&#39;s tutorial code.</p>
+<p>It also streams textures out of a compressed asset pack on a per-frame time budget, throttles its own I/O against a wall-clock measurement, and decompresses straight into memory mapped from the GPU. It has two texture eviction policies as well, and ships with both of them switched off.</p>
+<h2>Somebody Else&#39;s Basecode</h2>
+<p>The file that starts everything is <code>NeHeGL.cpp</code>, and its header comment is intact:</p>
+<pre><code>Jeff Molofee's Revised OpenGL Basecode
+Huge Thanks To Maxwell Sayles &amp; Peter Puck
+http://nehe.gamedev.net
+2001</code></pre>
+<p>A generation of self-taught graphics programmers learned from those tutorials. The window creation, the pixel format selection, the message loop, the multisampling setup, all of it arrived as working code that I modified until it was mine. The Mac support came the same way, through a Cocoa GameShell conversion carrying its own attribution to two more people.</p>
+<p>Starting from working code means something is on screen on day one instead of week three, and that difference decides whether a project survives. What a basecode can&#39;t teach is how to organize the ten thousand lines that come after, and the interesting question is what a person builds in that vacuum.</p>
+<h2>The Streaming System</h2>
+<p>The answer, in this case, is a texture streamer.</p>
+<p>The game ships its assets in a single gzip-compressed pack. Loading a texture means finding its offset in that pack, seeking there, decompressing a TGA header, then decompressing pixel data. Doing that synchronously when a texture is first needed means a visible hitch, and doing all of it at startup means a long load and a memory footprint sized by the whole game rather than by what&#39;s on screen.</p>
+<p>So <code>updateStreamingTextures(float milliseconds)</code> runs every frame, from both the Windows loop and the Mac one, and is handed the actual frame duration. It advances whatever work is outstanding and returns. There are no threads anywhere in it.</p>
+<p><strong>It seeks incrementally.</strong> A gzip stream can&#39;t be randomly accessed cheaply, so reaching a texture&#39;s offset means decompressing forward to it. Rather than doing that in one blocking call, the streamer moves forward by a bounded number of bytes per frame, holding its position in the file across frames and resuming next time.</p>
+<p><strong>It tunes its own budget.</strong> This is the part I&#39;d still defend. Each seek is timed with a performance counter, and the byte budget adapts:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> timeout </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 10.0f</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">duration </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> timeout </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> obytesToSeek </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> bytesToSeek</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> streamingTextureByteFactor </span><span style="color:#8BD5CA">*=</span><span style="color:#F5A97F"> 2</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">duration </span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5"> timeout </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> obytesToSeek </span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5"> bytesToSeek </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> streamingTextureByteFactor </span><span style="color:#8BD5CA">></span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> streamingTextureByteFactor </span><span style="color:#8BD5CA">/=</span><span style="color:#F5A97F"> 2</span><span style="color:#939AB7">;</span></span></code></pre><p>Under ten milliseconds, do twice as much next frame. Over it, halve. The engine doesn&#39;t need to know whether it&#39;s running on a fast disk or a slow one, because it discovers that continuously and converges on whatever the machine can sustain. In 2010, when the same game might be on an SSD or a laptop drive or an optical disc, that&#39;s the difference between one tuned constant that&#39;s wrong on most hardware and no constant at all.</p>
+<p><strong>It decompresses into GPU memory.</strong> Once the header is known, the streamer allocates a pixel buffer object and maps it:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">glBindBuffer</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">GL_PIXEL_UNPACK_BUFFER</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> streamingTextureBufferId</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">glBufferData</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">GL_PIXEL_UNPACK_BUFFER</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> width </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> height </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> channels</span><span style="color:#939AB7">,</span><span style="color:#ED8796"> NULL</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> GL_STREAM_DRAW</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">streamingTextureBufferMemory </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">GLbyte </span><span style="color:#8BD5CA">*</span><span style="color:#939AB7">)</span><span style="color:#8AADF4;font-style:italic">glMapBuffer</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">GL_PIXEL_UNPACK_BUFFER</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> GL_WRITE_ONLY</span><span style="color:#939AB7">);</span></span></code></pre><p>Decompressed pixels are written directly into that mapping, so there&#39;s no staging copy in system memory that later gets handed to the driver. The upload is the decompression. That&#39;s the correct way to do it, and it isn&#39;t the obvious way.</p>
+<p><strong>It manages residency, and then it stops.</strong> Every streamed texture carries a fade-in timer
+and a last-used timer, against two constants: <code>TEXTURE_POP</code> at 250 milliseconds and
+<code>TEXTURE_UNLOAD</code> at 5000. A texture fades in over a quarter second when it arrives, which
+hides the moment it appears, and is released after five seconds unused. That&#39;s a working set
+policy with a hysteresis window, in a game from a solo developer.</p>
+<p>It is also switched off in the build that shipped, and the commit history is unusually clear
+about how that happened. Three commits land on 2011-06-08. The first adds
+<code>unloadUnusedBackgrounds</code>, which evicts background textures and, in its commit message,
+&quot;stays at 100 meg&quot;. The second adds the general policy, <code>unloadUnusedTextures</code>, behind a
+<code>FULL_TEX_MGMT</code> define. The third is one line:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#EED49F">#ifndef</span><span style="color:#8AADF4;font-style:italic"> FULL_TEX_MGMT</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">//#define FULL_TEX_MGMT 1</span></span>
+<span class="line"><span style="color:#EED49F">#endif</span></span></code></pre><p>The general policy was written, tried, and traded back for the narrow one inside a single day.
+Turning it off also turns <code>preloadTextures</code> back on, and that function warms 131 textures at
+startup so they never stream at all. Seven weeks later, on the same day the atlas work landed,
+<code>unloadUnusedBackgrounds</code> gained an unconditional <code>return</code> at the top of its body.</p>
+<p>So the shipped game streams textures in and never releases any of them. Both eviction policies
+are still in the source, one behind a commented-out define and one behind an early return, and
+both were switched off deliberately, within a day of the alternative being measured.</p>
+<p>There&#39;s also a low-resolution asset path, selected by a <code>smalltextures</code> flag that switches the pack directory. Two quality tiers, chosen at runtime.</p>
+<h2>Right Instinct, Wrong Structure</h2>
+<p>The streamer isn&#39;t the only advanced thing in here. The others are worth more, because of how they fail.</p>
+<p><strong>A call-tree profiler.</strong> There&#39;s a hand-built hierarchical profiler with a <code>profilefunc</code> node carrying a parent pointer, a vector of children, and an <code>exclusiveTime</code> field. Understanding that a profiler should build a call tree, and that self time and total time are different questions, is not beginner knowledge. Sixty-one call sites across the renderer feed it.</p>
+<p>The implementation undoes it. The entry point is <code>void profileStart(string func)</code>, taking a <code>std::string</code> by value, called as <code>profileStart(__FUNCTION__)</code> at the top of hot functions. Every profiled call heap-allocates a string, copies it into a node, and pushes that node into a vector. Then it takes the address of the element it just pushed and stores it as the current node, so the next sibling push can reallocate the vector and leave every parent pointer in the tree dangling.</p>
+<p>The commented-out lines are the tell. Inside <code>profileStart</code> there are dead filters that would have restricted profiling to three or four named functions. Somebody noticed the profiler was too expensive and reached for measuring fewer things, rather than for measuring the same things without allocating.</p>
+<p><strong>A redundant state filter.</strong> <code>glOptionEnable</code> exists because redundant <code>glEnable</code> calls cost something, which is a real and non-obvious thing to know. It checks whether the state is already set before calling into the driver.</p>
+<p>It checks by walking a <code>std::vector&lt;GLenum&gt;</code> with an iterator, comparing one element at a time, on every state change. To avoid a driver call that is often little more than setting a flag, it does a linear scan. The optimization is correct and the data structure makes it a pessimization, and the distance between those two is the whole story of this engine.</p>
+<p><strong>A best-fit atlas allocator.</strong> <code>findEmptyChunk</code> walks the atlas looking for the free chunk that wastes the least area, tracking the smallest overhead seen and returning immediately on an exact fit. That&#39;s best-fit allocation, arrived at independently for texture packing.</p>
+<p>It identifies a free chunk by testing whether its filename string is empty, and it scans every chunk on every allocation. Right algorithm, and the free list is a linear walk over strings.</p>
+<p>All three go the same way. The idea is one a good engine programmer would have. The structure underneath it is whatever was reachable without knowing that the structure is where the win actually lives.</p>
+<h2>The Globals Are the State Machine</h2>
+<p>Twenty of those 603 globals are the streaming system&#39;s state. The open file handle, the temporary TGA header, the width, height, channels, stride, bit depth, the target byte, the adaptive byte factor, the bytes read so far, the buffer id, the mapped pointer, and three flags tracking whether the header is loaded, whether a seek is in progress, and whether decompression has started.</p>
+<p>Read that list again as a description rather than a complaint. Those are the member variables of a coroutine. They&#39;re exactly the state a resumable operation has to keep between suspensions: where it is, what it&#39;s doing, and what it has already produced.</p>
+<p>C++ would not get coroutines for another decade. What this code needed was an object that owned an in-progress streaming operation, and what it had was a header file. So the coroutine frame became globals, one per field, because globals were the only storage with the right lifetime.</p>
+<p>That reframes the whole codebase for me. The 603 globals aren&#39;t the absence of design. A meaningful fraction of them are designs that had nowhere to live. The engine wasn&#39;t naive about streaming, it was naive about ownership, and those are different failures with different fixes.</p>
+<h2>Immediate Mode, Everywhere</h2>
+<p>The tension is real, though. The same codebase that maps a pixel buffer and streams into it also draws with 98 calls to <code>glBegin</code> and <code>glVertex</code> in <code>engine_graphics.cpp</code> and another 76 in <code>visuals.cpp</code>.</p>
+<p>Those two facts sit about a thousand lines apart. One subsystem got years of attention because
+it was the thing standing between the game and shipping. The other mostly stayed at tutorial
+level because a puzzle game with a few hundred cubes never made it hurt.</p>
+<p>Mostly, but not entirely, and the exception is the more interesting case. On 2011-05-11 the
+text renderer was converted to vertex buffer objects, then converted again to use
+<code>glBufferSubData</code>, then reverted to immediate mode, all within one day. The commit that ends
+the sequence is called &quot;working version after ATI crap&quot;. A fourth commit that day rolled
+<code>engine_graphics.cpp</code> back to an earlier revision, and it finished the day with four more
+<code>glVertex</code> calls in it than it started with.</p>
+<p>That reframes some of the immediate-mode drawing. It isn&#39;t all untouched tutorial code. Part
+of it is code that moved off immediate mode and was moved back, because the buffer path broke
+on a driver a real customer was running. The word for that is a retreat, not an oversight, and
+in 2011, with a game selling on Steam and Impulse against whatever hardware buyers owned, it
+was the right retreat. ATI is a recurring character in this log. It has its own fix in
+2010-10-21, its own workaround for static texture upload in 2011-06-09, and a texture bind
+cache that was &quot;implemented but disabled&quot; on 2011-06-16.</p>
+<p>That&#39;s what a solo engine looks like. Sophistication is not evenly distributed, it&#39;s concentrated wherever the pain was, and the distribution is a record of what the project actually struggled with.</p>
+<h2>What the Globals Actually Cost</h2>
+<p>Not crashes and not performance. The game shipped and worked.</p>
+<p>The cost was that changing anything required knowing everything. With 603 globals, any function might depend on any state, so &quot;is it safe to change this&quot; has no local answer. Fine for one person holding the whole model. A wall for anyone else, and for the same person two years later.</p>
+<p>The second cost was that nothing could be constructed in isolation, so nothing could be tested in isolation. There&#39;s no test project and there was never going to be one.</p>
+<p>The third cost was reuse, and the reuse wasn&#39;t zero. Both of the designs worth keeping did survive into the next engine. The best-fit atlas allocator reappears there almost line for line, and the streaming state machine reappears as a class with one method per state. What didn&#39;t survive was this code. Every idea had to be rewritten from scratch to escape the header it lived in, and rewriting from scratch is what a design costs when it has no owner.</p>
+<h2>What I&#39;d Keep</h2>
+<p>I wouldn&#39;t tell anyone starting out to avoid this path. Beginning from working basecode and hacking at it until it belongs to the person writing it is how a lot of us got here, and reading about architecture before shipping anything produces people who can discuss engines without having built one.</p>
+<p>The change I&#39;d make is small and specific, and the streaming system is the argument for it. The moment a piece of work needs to remember where it is between frames, that state wants an owner. Not a manager, not an architecture, just a struct that something passes around. Had those twenty globals been one <code>StreamingTexture</code> struct, the system would have been portable to the next engine, testable without a window, and capable of running more than one stream at a time.</p>
+<p>That&#39;s the whole gap. The design was already there. It just had nowhere to live.</p>
+<p>The next engine is where I overcorrected on exactly that, and split one program into twenty-four projects.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Four Engines, Fifteen Years (Part 5 of 5) | Matt Edmondson</title>
+  <meta name="description" content="Putting four custom C++ engines side by side, a similar volume of code spread across six times as many files, 603 globals fell to none, and every improvement took a rule out of convention and handed it to something that enforces it." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-engines-fifteen-years-what-the-numbers-show/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Four Engines, Fifteen Years (Part 5 of 5) | Matt Edmondson" />
+  <meta property="og:description" content="Putting four custom C++ engines side by side, a similar volume of code spread across six times as many files, 603 globals fell to none, and every improvement took a rule out of convention and handed it to something that enforces it." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-engines-fifteen-years-what-the-numbers-show/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,91 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <p class="series-part">Part 5 of 5</p>
+      <h1>Four Engines, Fifteen Years</h1>
+      <p class="post-subtitle">What the Numbers Show</p>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-11-29">November 29, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=career">career</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
-
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+      <img class="post-hero" src="/assets-blog/four-engines-fifteen-years-what-the-numbers-show.jpg" alt="" width="1200" height="675" />
+<p>This series has worked through four custom C++ engines in the order I built them. The point of keeping the source was never nostalgia. It&#39;s that a claim about how one&#39;s judgment improved is worth very little, and four repositories that can be counted are worth something.</p>
+<p>Here is what counting them showed.</p>
+<h2>The One Table</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Engine</th>
+<th>Era</th>
+<th>Lines</th>
+<th>Files</th>
+<th>Average file</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Gumball</td>
+<td>2010</td>
+<td>20,421</td>
+<td>43</td>
+<td>475</td>
+</tr>
+<tr>
+<td>Manic</td>
+<td>2012</td>
+<td>29,030</td>
+<td>397</td>
+<td>73</td>
+</tr>
+<tr>
+<td>Critical Mass 2, on Carbon Monoxide</td>
+<td>2014</td>
+<td>20,617</td>
+<td>112</td>
+<td>184</td>
+</tr>
+<tr>
+<td>Carbon Monoxide, now</td>
+<td>current</td>
+<td>33,591</td>
+<td>266</td>
+<td>126</td>
+</tr>
+</tbody></table></div>
+<p>Volume moves far less than structure does. All four sit in the same tens of thousands of lines. What changes by a factor of nine is how many pieces that code is divided into.</p>
+<p>Fifteen years of improving judgment did not produce less code. It produced a similar amount of code with far more seams in it, and nearly everything else in these posts is a consequence of that.</p>
+<p>Every count here is lines of code in <code>.c</code>, <code>.cpp</code>, <code>.h</code>, <code>.hpp</code>, <code>.inl</code>, <code>.m</code> and <code>.mm</code> files, excluding blank lines, comments and third-party code sitting in the source directories. That last exclusion matters more than it sounds: <code>glext.h</code> alone accounts for 9,480 lines in the first engine and 13,146 in Critical Mass 2, and Manic carries the whole SQLite amalgamation. The current row is the engine plus the game code built on it, Dungeoneer&#39;s <code>CarbonMonoxideBase</code>. The 2014 row is the iOS game rather than the engine underneath it, so it belongs beside the others rather than on the same trend line.</p>
+<p>One more number. The first engine&#39;s <code>globals.h</code> declares 603 globals. The current game&#39;s headers declare none.</p>
+<h2>Every Improvement Took a Rule Out of Convention</h2>
+<p>Reading the four in sequence, the changes look varied. Filename prefixes became static libraries. Libraries became a submodule with a pinned version. Manager singletons became compile-time concepts. Hand-written content classes became code generated from JSON schemas. Hand-written behavior became scripts.</p>
+<p>Each one takes a rule that lived in convention and hands it to something that enforces it.</p>
+<p>And almost nothing was thrown away. The atlas allocator written for the first engine is still recognizable in the second. The streaming state machine that lived in twenty globals became a class with one method per state. The ideas survived every rewrite. What kept having to be rebuilt was the structure holding them, which is the same observation from the other direction.</p>
+<p><code>engine_graphics.cpp</code> and <code>engine_sound.cpp</code> said &quot;these are separate concerns&quot; and nothing stopped either from touching the other&#39;s globals. Making them libraries meant the linker said it. A manager said &quot;there is one of these&quot; and nothing checked. A singleton concept means the compiler checks. A struct and its loader and its editor&#39;s model of it said &quot;these agree&quot; and nothing verified it. Generating all three from one schema means they cannot disagree.</p>
+<p>Once I saw that, the useful question stopped being &quot;what&#39;s the right architecture&quot; and became &quot;which of my current rules are only conventions.&quot; That question has an answer on any codebase, including ones with no engine in them.</p>
+<h2>What Each One Actually Contributed</h2>
+<p><strong>Gumball</strong> proved that the idea and the structure under it are separate skills. It went on Steam with 603 globals, and also with a self-tuning texture streamer, a call-tree profiler that understood exclusive time, a redundant GL state filter, and best-fit atlas packing. Every one of those is something a good engine programmer would think of. The profiler allocated a string per sample and stored pointers into a growing vector. The state filter did a linear scan to avoid a flag set. The instincts were years ahead of the data structures, and knowing that a technique exists turns out to be much easier than knowing what makes it pay.</p>
+<p><strong>Manic</strong> proved that boundaries need enforcement, and it&#39;s where the instincts that survive today arrived. Its particle system precomputes a shared interpolation curve into a table, pools particles in an allocation-free ring buffer, and invalidates its own cache so the editor felt immediate. That combination is why it was the code I sent to EA. It also introduced sixteen manager singletons, which reorganized global state without changing who could reach it. Both are true of the same engine, which keeps happening.</p>
+<p><strong>Carbon Monoxide on mobile</strong> proved that a constrained platform teaches faster than an unconstrained one lets a person avoid. Explicit states, relative layout, and batched drawing all arrived because iOS made the alternatives impossible. It also put the renderer behind an interface with three backends, one of which draws nothing, and that decision is why the engine outlived the game it was written for.</p>
+<p><strong>Carbon Monoxide now</strong> proved that the ceiling on a codebase is how much of it has to be written by hand. Moving content into schemas and behavior into scripts didn&#39;t make the C++ better. It made there be less of it in the places that change most often.</p>
+<h2>What I&#39;d Do Differently</h2>
+<p>Ordered by how much they&#39;d have mattered.</p>
+<p>I&#39;d have found the ownership problem years earlier. Globals became managers became services, and all three answer &quot;where does this live&quot; while leaving &quot;who may change it and when&quot; open. The step from the second engine to the fourth is the step I&#39;d compress hardest, and nothing about it required fifteen years of experience. It required someone to ask why a subsystem couldn&#39;t be constructed on its own.</p>
+<p>I&#39;d have written tests, and I&#39;d have started when the answer was still cheap. None of these four have a test project. The reason is the same in each case: the state a subsystem needed couldn&#39;t be stood up in isolation. That&#39;s a design symptom, not a testing decision, and it went unexamined precisely because the absence of tests never blocked anything.</p>
+<p>And I&#39;d have revisited defaults on a schedule. The second engine is 32-bit only because that was reasonable in 2012 and nobody revisited it. It has a global <code>using namespace std;</code> because that saved typing in week one, and a decade later the build documentation carries a note about a Windows header collision caused by it. Defaults don&#39;t decay loudly. They just quietly stop being right.</p>
+<h2>Whether to Write One at All</h2>
+<p>For almost everyone the answer is no.</p>
+<p>Unreal and Unity and Godot exist, they solve problems these engines never got to, and a person choosing between writing an engine and shipping a game should ship the game. I&#39;ve spent most of my professional life working in other people&#39;s engines, and I&#39;d have been worse at it without having built these, which is a different claim than saying the engines were the efficient path.</p>
+<p>What building them actually bought was that nothing in a game engine is opaque to me now. When a commercial engine behaves strangely at the asset pipeline, or the frame loop, or the platform layer, I have a model of what it&#39;s probably doing, because I&#39;ve written a bad version of it. That&#39;s worth a great deal and it is not worth fifteen years on its own. It came as a side effect of making games I wanted to make with the tools I had.</p>
+<p>So the recommendation I&#39;d give is narrow. Write an engine if the writing is the part being enjoyed, or if a specific need genuinely isn&#39;t served. Don&#39;t write one to learn architecture, because the lesson is available in any codebase and the engine is a slow way to receive it. And if one gets written, expect the valuable output to be the judgment rather than the engine, because four of mine are in an archive and the judgment is what I use every day.</p>
+<h2>The Thing I&#39;d Tell the Person Starting</h2>
+<p>Ship something first, however badly built. The first engine here went on Steam carrying 603 globals, and the fact that it shipped is why there were three more. An architecture that never ships teaches nothing about what a codebase has to survive.</p>
+<p>Then, having shipped, ask which of the rules are only conventions. That question is what the next fifteen years turned out to be about.</p>
 
     </article>
   </main>

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Packing Assets in the Order They're Needed | Matt Edmondson</title>
+  <meta name="description" content="A compressed asset pack can only be read forward. Seeking backward means decompressing the whole file again from byte zero, so the order assets sit in the file decides how much work loading costs. An explicit manifest, ordered by first use, turns startup into a single forward pass." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/packing-assets-in-the-order-theyre-needed/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Packing Assets in the Order They're Needed | Matt Edmondson" />
+  <meta property="og:description" content="A compressed asset pack can only be read forward. Seeking backward means decompressing the whole file again from byte zero, so the order assets sit in the file decides how much work loading costs. An explicit manifest, ordered by first use, turns startup into a single forward pass." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/packing-assets-in-the-order-theyre-needed/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,123 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Packing Assets in the Order They&#39;re Needed</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-08">December 8, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=asset-pipeline">asset-pipeline</a>
+        <a class="post-tag" href="/#tag=streaming">streaming</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/packing-assets-in-the-order-theyre-needed.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>A gzip stream can only be read forward. Reaching a byte halfway in means decompressing everything before it. Reaching a byte already passed means starting over from zero.</p>
+<p>That second case is the one that matters, and it&#39;s in my engine&#39;s streaming loader as an explicit branch:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">writeLog</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"rewinding seek"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">...</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">gzrewind</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">streamingTextureFileHandle</span><span style="color:#939AB7">);</span></span></code></pre><p>An asset requested behind the read head costs a full rewind and a re-decompress of everything up to it. Request assets in a different order from the one they&#39;re packed in, and loading degrades from a walk through the file into a series of restarts.</p>
+<p>Which makes the order assets sit in the pack a real engineering decision, and one worth a manifest of its own.</p>
+<p>This is the ninth post taking one system at a time out of my custom engines.</p>
+<h2>The Manifest</h2>
+<p>Next to the game data sits <code>asset-list.txt</code>, 286 entries, one asset per line. It isn&#39;t an index of what&#39;s in the pack. It&#39;s the order the pack is built in.</p>
+<p>The sections are these:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Position</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Levels</td>
+<td>1 to 10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Meshes</td>
+<td>11 to 13</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Fonts</td>
+<td>14 to 15</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Sounds</td>
+<td>16 to 32</td>
+<td>17</td>
+</tr>
+<tr>
+<td>Textures, low resolution</td>
+<td>33 to 159</td>
+<td>127</td>
+</tr>
+<tr>
+<td>Textures, full resolution</td>
+<td>160 to 286</td>
+<td>127</td>
+</tr>
+</tbody></table></div>
+<p>Reading down the file is watching the game start up. The ten level definitions and three meshes come first, because the game can&#39;t do anything without them. Fonts next, because nothing can be drawn as text before them. Sounds after that.</p>
+<p>Then the textures, and their order is the giveaway:</p>
+<pre><code>textures\small\manicgames.tga
+textures\small\whiteparticle.tga
+textures\small\titlegrid.tga
+textures\small\newswindow.tga
+textures\small\criticalmasslogo.tga
+textures\small\loadingbar.tga
+textures\small\cursor.tga</code></pre>
+<p>The studio logo is first, because it&#39;s the first thing on screen. Then the title screen background, the news panel, the game logo, the loading bar, and the cursor. After those come the colored cursor variants, the menu toggles, the social icons, and only then the colored blocks the game is actually played with.</p>
+<p>Nobody wrote that order by thinking about it in the abstract. It&#39;s a transcription of what the game asks for, in the sequence it asks.</p>
+<h2>Why the Order Is the Optimization</h2>
+<p>With the pack built this way, startup is a single forward pass. The read head advances through levels, meshes, fonts, sounds, and into the textures in the order the loader wants them, and never once has to go back.</p>
+<p>Get the order wrong and every misordered pair is a rewind. Not a seek, a rewind, decompressing from the beginning of the file. Two assets requested out of order near the end of a large pack means decompressing that pack twice.</p>
+<p>That asymmetry is what makes this worth doing at all. In an uncompressed archive, a backward seek is a file pointer moving and costs nothing worth measuring, so pack order is close to irrelevant. Compression buys smaller downloads and a smaller install, and the price is that random access stops being free. The manifest is what pays that price down.</p>
+<p>The general shape: when a storage format makes one access pattern cheap and another expensive, the layout of the data becomes part of the performance work, and it&#39;s usually a cheaper lever than optimizing the reader.</p>
+<h2>The Two Tiers Are a Trick</h2>
+<p>The part I&#39;d point at as genuinely clever is the texture section, which contains every texture twice. One hundred and twenty-seven low-resolution textures, then the same one hundred and twenty-seven at full resolution.</p>
+<p>The two blocks are identical sets, in identical order.</p>
+<p>That mirroring is what makes both quality settings a forward-only read.</p>
+<p>A machine running the low-resolution path reads entries 1 through 159 and stops. Everything it needs is a contiguous prefix of the file, and the second half is never touched.</p>
+<p>A machine running full resolution reads 1 through 32, skips the entire low-resolution block in one forward move, and reads 160 through 286 in order. One skip, still monotonic, still no rewind.</p>
+<p>Had the tiers been interleaved, with each texture&#39;s small and full versions adjacent, both configurations would skip constantly. Had only the differing textures been duplicated, the orders would diverge and one configuration would rewind. Duplicating the whole set costs pack size, which is disk space and download, and buys a forward-only read for every configuration. That&#39;s the cost, and it&#39;s the right way round for a game people install once and load repeatedly.</p>
+<h2>Four Manifests, Not One</h2>
+<p>There are four of these files: the base list at 286 entries, a Mac list at 294, and demo versions of both, at 237 and 245.</p>
+<p>That looks like duplication and it&#39;s the correct structure. The demo boots into a different flow, shows different screens, and doesn&#39;t contain some content at all, so its first-use order genuinely differs. The Mac build loads a different set of platform assets in a different sequence.</p>
+<p>One shared list with conditionals would produce an order that&#39;s correct for no build in particular. A manifest per product matches the fact that first-use order is a property of the specific thing being shipped.</p>
+<h2>The Manifest Is Measured, Not Remembered</h2>
+<p>The order isn&#39;t reasoned out. It&#39;s recorded. The loader logs every request as it services it:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">writeLog</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"streaming "</span><span style="color:#8BD5CA"> +</span><span style="color:#CAD3F5"> filename</span><span style="color:#939AB7">);</span></span></code></pre><p>That line is there for this. Play the game through, and the log is the exact sequence in which assets were first asked for, on a real run. Take the log, turn it into the list, rebuild the pack in that order.</p>
+<p>The transformation is manual, done in a text editor. That was the right call and I&#39;d make it again. It&#39;s 286 entries, once per release, and a log that&#39;s already one filename per line in the correct order. A script to do it would have been maybe an hour to write and a thing to maintain forever, against a task that takes a few minutes with a keyboard and happens a handful of times a year.</p>
+<p>Knowing which steps are worth automating is its own skill. The threshold is frequency multiplied by the cost of getting it wrong, not how automatable something looks. This one is infrequent and self-correcting: get the order slightly wrong and the next recording fixes it.</p>
+<p>The dates say this was the design rather than a later optimisation. Both halves land on
+2010-09-24, two months after the project&#39;s first commit, and they land together. The first
+commit that day is called &quot;asset packing and adaptive streaming textures&quot;. The second, which
+finishes the job, is &quot;adaptive streaming done, priority sorted asset file&quot;. The loader and the
+ordering the loader depends on were built as one thing.</p>
+<p>That&#39;s the only order in which this works. A streaming loader bolted onto an arbitrarily
+ordered pack would spend its first week rewinding, and the natural fix from inside that
+position is to make rewinding faster rather than to make it unnecessary. The ordering has to be
+part of the idea from the start, because once the loader exists and is slow, the pack format
+looks like a constraint instead of a variable.</p>
+<h2>What I&#39;d Add</h2>
+<p>Not automation of the generation. A check.</p>
+<p>The weakness isn&#39;t that the list is built by hand, it&#39;s that nothing verifies the shipped list still matches what the game does. Between one release and the next, a new title-screen texture can appear and land in the middle of the gameplay section, and the only symptom is a slightly slower load that nobody attributes to a text file.</p>
+<p>So: run the game as part of the build, capture the log, compare the observed order against the manifest, and fail on divergence. That leaves the manual step exactly where it is, and turns a silent regression into a build error telling someone to redo it.</p>
+<p>The cheaper version of the same idea is a counter. The loader already knows when it rewinds, because it logs it. Counting rewinds during a scripted boot and failing on anything non-zero catches a bad ordering immediately, precisely, and without needing to compare two lists at all. One number, and it&#39;s zero when the pack is right.</p>
+<p>That&#39;s what everything else in these engines that eventually improved has in common: leave the judgment with the person, and hand the enforcement to something that can&#39;t forget.</p>
+<h2>What Transfers</h2>
+<p>Ask what access pattern the storage format makes cheap, and lay the data out to match it. Compressed streams, tape, spinning disks, and network ranges all reward sequential access and punish going backward, and the punishment is usually much larger than the reward for anything else.</p>
+<p>Order by first use, not by category. Grouping by type is how a directory is organized and has nothing to do with how the data is read.</p>
+<p>Duplicate rather than interleave when two configurations need different subsets. Storage is cheap and a forward-only read for both is worth more than the bytes.</p>
+<p>And derive the order from a recording rather than from reasoning. The program already knows what it asked for and when, so the ordering should be a transcript of a real run. Whether the transcript becomes the manifest by script or by text editor is a question about how often it happens, not a question about whether it&#39;s rigorous.</p>
 
     </article>
   </main>

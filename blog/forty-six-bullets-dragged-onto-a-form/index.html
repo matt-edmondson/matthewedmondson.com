@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forty-Six Bullets Dragged onto a Form | Matt Edmondson</title>
+  <meta name="description" content="The oldest game code I still have is a Visual Basic 6 shooter from August 2004, written at seventeen in a rural town of a hundred people. The bullet pool is forty-six shapes dragged onto a form, GDI is declared by hand, and the changelog records the exact moment I found out about double buffering." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/forty-six-bullets-dragged-onto-a-form/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Forty-Six Bullets Dragged onto a Form | Matt Edmondson" />
+  <meta property="og:description" content="The oldest game code I still have is a Visual Basic 6 shooter from August 2004, written at seventeen in a rural town of a hundred people. The bullet pool is forty-six shapes dragged onto a form, GDI is declared by hand, and the changelog records the exact moment I found out about double buffering." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/forty-six-bullets-dragged-onto-a-form/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Forty-Six Bullets Dragged onto a Form</h1>
+      <div class="post-meta">
+        <time datetime="2025-12-12">December 12, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <a class="post-tag" href="/#tag=visual-basic">visual-basic</a>
+        <a class="post-tag" href="/#tag=gdi">gdi</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=object-pooling">object-pooling</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+        <a class="post-tag" href="/#tag=archive">archive</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/forty-six-bullets-dragged-onto-a-form.jpg" alt="" width="1200" height="675" />
+
+<p>The oldest game code I still have is a top-down shooter written in Visual Basic 6, last touched in August 2004, when I was seventeen and living in a town of about a hundred people in rural South Australia. Thirteen numbered betas, a feature list, and six friends credited as testers by name and handle.</p>
+<p>What&#39;s in there is the first, crude version of most of the things I&#39;d spend the next twenty years doing properly.</p>
+<h2>The Bullet Pool Is Forty-Six Shapes</h2>
+<p>Opening the play form shows what the game is made of:</p>
+<pre><code>46 × VB.Shape Bulletbox
+46 × VB.Shape eBulletBox
+ 6 × VB.Shape RockBox
+ 4 × VB.Shape eBoundingBox
+ 4 × VB.Line   (screen borders)</code></pre>
+<p>Every bullet, asteroid, and enemy is a Visual Basic form control. Not a struct in an array with a sprite drawn at its position, an actual control placed on a form in the designer.</p>
+<p>Which means the pool size is however many shapes I dragged onto the form. Forty-six player bullets exist because I drew forty-six rectangles, one at a time, in the IDE. Wanting forty-seven would have meant drawing another one.</p>
+<p>The thing is, this is object pooling. Nothing is created or destroyed while the game runs. There&#39;s a fixed set of objects, each either in use or parked, and firing a bullet means finding an unused one and moving it. That&#39;s the same idea as the ring buffer in my particle system eight years later, arrived at without knowing it had a name, and expressed by dragging shapes with a mouse.</p>
+<p>It&#39;s also why the number is forty-six rather than a round number. Forty-six is how many fitted before I got bored.</p>
+<h2>GDI, Declared by Hand</h2>
+<p>The shared module is a wall of Win32 declarations:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">Declare</span><span style="color:#C6A0F6"> Function </span><span style="color:#CAD3F5">BitBlt Lib </span><span style="color:#A6DA95">"gdi32"</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ByVal hDestDC </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#CAD3F5">, ByVal X </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#CAD3F5">, ...</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">Declare</span><span style="color:#C6A0F6"> Function </span><span style="color:#CAD3F5">CreateCompatibleDC Lib </span><span style="color:#A6DA95">"gdi32"</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ByVal hdc </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> As</span><span style="color:#EED49F;font-style:italic"> Long</span></span>
+<span class="line"><span style="color:#CAD3F5">Declare</span><span style="color:#C6A0F6"> Function </span><span style="color:#CAD3F5">CreateCompatibleBitmap Lib </span><span style="color:#A6DA95">"gdi32"</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ByVal hdc </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#CAD3F5">, ...</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">Declare</span><span style="color:#C6A0F6"> Function </span><span style="color:#CAD3F5">SelectObject Lib </span><span style="color:#A6DA95">"gdi32"</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ByVal hdc </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#CAD3F5">, ByVal hObject </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#CAD3F5">Declare</span><span style="color:#C6A0F6"> Sub </span><span style="color:#CAD3F5">Sleep Lib </span><span style="color:#A6DA95">"Kernel32"</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">ByVal dwMilliseconds </span><span style="color:#8BD5CA">As</span><span style="color:#EED49F;font-style:italic"> Long</span><span style="color:#939AB7">)</span></span></code></pre><p>Visual Basic had drawing methods of its own. These are the underlying Windows graphics calls, declared by hand so they can be called from a language that wasn&#39;t built for it.</p>
+<p>Doing that at seventeen meant reading Win32 documentation written for C programmers and translating each signature into VB&#39;s declaration syntax, where getting a parameter&#39;s type wrong doesn&#39;t produce a compile error, it corrupts memory. There&#39;s no type checking across that boundary at all.</p>
+<p>The whole <code>DT_</code> enum for text formatting flags is transcribed in there too, all twenty-odd constants with their hex values, most of which the game never uses. That&#39;s the mark of someone copying a reference table rather than the two entries they need, which is exactly what I&#39;d expect and is how a person ends up knowing what the other eighteen do.</p>
+<h2>The Changelog Records the Moment</h2>
+<p>The feature list is a real development diary, and one entry stands out:</p>
+<blockquote>
+<p><strong>Beta10</strong>
+Switched graphic engines to facilitate double buffering to fix flicker
+Streamlined program flow</p>
+</blockquote>
+<p>That&#39;s the moment. Ten betas of a flickering game, then finding out that the fix is to draw into an off-screen surface and copy the finished frame in one operation.</p>
+<p>Four years later I wrote a C++ engine and called it Double Buff. I&#39;d have said that name was a joke about a technique everybody knows. Reading this, it&#39;s a name commemorating the first hard thing I solved.</p>
+<p>Other entries are just as revealing.</p>
+<blockquote>
+<p><strong>Beta12</strong>
+Added an animation for the explosions so that they dissapate and are offscreen quicker, therefore requireing less sprites to be onscreen</p>
+</blockquote>
+<p>That&#39;s a content change made for a performance reason, and the reasoning is correct. Shorter explosions means fewer live objects means less work per frame. Seventeen-year-old me couldn&#39;t grow the pool past what was on the form, so he shortened the animation instead. Working within a fixed budget by changing the content rather than the code is a thing I&#39;d now call production, and it&#39;s here, at the very beginning, forced by a constraint I&#39;d created by drawing rectangles.</p>
+<blockquote>
+<p><strong>Beta8</strong>
+Made an array for enemies. Allows for 4 simultaneous enemies onscreen.
+Removed the graphics loaded into the executable making it 10 times smaller</p>
+</blockquote>
+<p>That entry holds two steps. The first is discovering arrays as a way to have more than one of something, which is the step from &quot;the enemy&quot; to &quot;an enemy.&quot;</p>
+<p>The second reads like tidiness and isn&#39;t. At 14 kilobits, a build that&#39;s ten times smaller is the difference between a thirteen-minute download and a ninety-second one, for every tester, every release. Moving the art out of the executable was the first asset pipeline decision I ever made, and it was made for bandwidth. Every engine I&#39;ve built since has made the same decision again with more ceremony and less reason.</p>
+<blockquote>
+<p><strong>Beta7</strong>
+Enemy now shoots. 20% chance every renderloop.</p>
+</blockquote>
+<p>A twenty percent chance per frame. That ties fire rate to frame rate, so the enemy shoots faster on a faster machine. It&#39;s the classic mistake and it&#39;s completely reasonable when nobody has explained that frames aren&#39;t a unit of time. The fix is the same one the whole industry learned: multiply by delta.</p>
+<blockquote>
+<p><strong>Beta6</strong>
+The enemys movement is determined by a random parabolic expression allowing it to move in smooth curves</p>
+</blockquote>
+<p>Procedural movement from a randomly parameterized curve. That&#39;s a real technique, chosen because hand-authoring paths for an enemy that appears repeatedly is tedious, which is the correct reason to reach for it.</p>
+<blockquote>
+<p><strong>Beta11</strong>
+Added an option screen where you can choose whether you want sound, buffering fullscreen or either or.</p>
+</blockquote>
+<p>Double buffering is a <em>user-facing option</em>, because on a slow enough machine the extra copy cost more than the flicker. That&#39;s a real tradeoff exposed to the player, and it dates the code precisely.</p>
+<h2>What Was Borrowed</h2>
+<p>The collision module isn&#39;t mine. It carries its original header:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">'This module was created by Alejandro Albino</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">'Thursday, October 10th, 2002</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">'You may do whatever you want with this module, but</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">'if you do good with it, please make sure to give me credit</span></span></code></pre><p>I kept the attribution, which turns out to be a habit rather than an accident. The engine after this started from NeHe&#39;s OpenGL basecode with the header intact. The one after that vendored Valve&#39;s profiling helpers with their copyright. The current one uses a third-party expression parser rather than a hand-written one.</p>
+<p>Four codebases across twenty years, and in every one the borrowed parts are still labeled. That&#39;s the only thing in this archive I&#39;d claim I got right first time.</p>
+<h2>Thirteen Betas and Six Testers</h2>
+<p>The process around it is as developed as the code.</p>
+<p>Thirteen numbered releases. A written changelog per release, in plain language, describing what changed and sometimes why. A features list separating what works from what&#39;s planned. Six friends listed as testers, with their handles, in the file that shipped with the game.</p>
+<p>The archive still holds what shipping one of those cost. <code>Beta13.zip</code> is 728 kilobytes, which at 14 kilobits is around seven minutes of upload at the theoretical floor and longer in reality, then the same again for each person downloading it. Beside it sits <code>Beta13_nosound.zip</code> at 256 kilobytes, a build with the music stripped out so it&#39;s a third the size.</p>
+<p>That second file is the detail I&#39;d missed on the first pass. It isn&#39;t a feature, it&#39;s a distribution format, made because some of the six couldn&#39;t afford the full download. Shipping to six people over that connection was enough work to justify maintaining a second build.</p>
+<p>Nobody made me do any of that. There was no team, no deadline, and no audience beyond people who&#39;d play it because they knew me. I did it because releasing something to named people and telling them what changed felt like what making a game meant.</p>
+<p>That&#39;s the same instinct that shows up much later as release notes, as postmortems, as the documents I now write for a living. It arrived before any of the engineering did.</p>
+<h2>What There Was to Learn From</h2>
+<p>This was written in rural South Australia, in a town of about a hundred people. That number does most of the explaining for everything above.</p>
+<p>A town of a hundred has no bookshop, no technical section in a library, no computer club, and nobody else within driving distance building games. There was no one to ask in person, and no one to show it to who would recognize what was hard about it. The nearest person who knew what a device context was lived somewhere I&#39;d never been.</p>
+<p>The connection was 14 kilobit dial-up. Not 56k, which was the standard by then. Fourteen, and the reason for that number is an interesting story in itself.</p>
+<p>When the town was wired, the phone lines were run through a frequency-slicing multiplexer, so several houses shared the frequency range of one physical pair of copper wires. For voice that&#39;s a fair trade. A phone call needs a few kilohertz, the copper carries far more than that, and slicing it lets one run of cable serve several premises instead of one. Fewer kilometres of copper to a town of a hundred people, for no loss anybody would hear.</p>
+<p>The loss lands somewhere nobody was listening. A 56k modem needs the whole usable spectrum of the line to reach its rated speed, and a sliced line doesn&#39;t have a whole spectrum to give. So the ceiling was fourteen.</p>
+<p>ADSL was worse than slow, it was impossible. ADSL works by using the frequencies <em>above</em> the voice band, and a multiplexer that only forwards the voice band has nothing to carry them on. It isn&#39;t a matter of distance or line quality or being far down the priority list. The infrastructure physically could not pass the signal, and fixing it meant replacing the infrastructure. That took until nearly a decade after most of the country had broadband.</p>
+<p>Convert that number. Fourteen kilobits is about 1.7 kilobytes a second at the theoretical ceiling, and less in practice. A documentation page with images on it is a minute. A code sample worth downloading is several. Nothing is browsed at that speed, it&#39;s fetched, deliberately, one thing at a time, having decided in advance it justified the wait.</p>
+<p>I&#39;ve written elsewhere in this series about infrastructure that becomes a single point of failure through an accumulation of locally sensible decisions, each correct in context, with a collective failure mode nobody modelled until the load changed. This is that, at the scale of a town. Optimising copper for voice subscribers was right for the load that existed. The load that arrived was data, and the same decision that saved cable foreclosed it for ten years.</p>
+<p>So the sources were these. MSDN, on the disc that came with the compiler, which mattered enormously because the disc was the only copy that could be read at the speed of reading. It&#39;s excellent reference material written for professionals who already know what they&#39;re looking for. It states precisely what <code>CreateCompatibleDC</code> returns. It does not mention that the reason a game flickers has a name.</p>
+<p>Books existed and cost more than a teenager in a town of a hundred had, and couldn&#39;t be browsed before buying.</p>
+<p>Then forums and code-sharing sites, where people uploaded a zip of something that worked, with a readme, and other people downloaded it and pasted bits into their own projects. The collision module in this game came from that world, which is why it arrives with a personal email address and a request for credit in the header rather than a licence file. Somebody wrote something useful, put it somewhere public, and asked to be acknowledged. That was the whole system.</p>
+<p>And Usenet and web forums for questions, where a good answer might arrive in two days and a bad one in ten minutes, and where asking badly got a person told off in a way that taught them to write a careful question before they learned to write careful code.</p>
+<p>That last one carried more weight than it sounds. For somebody with no local access to anyone who knew anything, a forum wasn&#39;t a supplement to a community. It was the entire community, and a slow pipe to it was still the only pipe there was.</p>
+<p>What that adds up to is a specific bottleneck. The hard part was almost never understanding a technique. It was <strong>finding out the technique had a name</strong>. Ten betas of a flickering game is not ten betas of failing to implement double buffering. It&#39;s ten betas of not knowing that &quot;double buffering&quot; is a phrase that can be typed into a search box.</p>
+<h2>Sneakernet</h2>
+<p>The way around all of this was to carry it.</p>
+<p>School had a connection that home did not, so browsing happened there and reading happened at home. I&#39;d go through forums and articles at school, save the text and the code to floppy disks, and carry boxes of them back and forth. A 3.5 inch disk holds 1.44 megabytes, which is nothing for anything but is a great deal of plain text. The game&#39;s own release archive is half a disk.</p>
+<p>What that arrangement does to how a person learns is the interesting part, and I didn&#39;t notice it at the time because it was just how things were.</p>
+<p>Reading became batch mode. Everything had to be decided in advance: what might be useful, what was worth the space, what to grab in case. Then it came home and got read offline, with no way to follow a link, check a reference, or search for the term in the article that turned out to be the important one. A question raised at the kitchen table on Saturday waited until Monday.</p>
+<p>Which means the cost of a wrong guess about what to save was a day, sometimes a week. Not a second. Guessing well about what would matter before knowing what it said was the actual skill, and it&#39;s a strange one to have practised.</p>
+<p>It also explains why some sources beat others by so much. A code-sharing site where somebody had zipped up a working thing was worth ten forum threads, because it was one fetch that could be evaluated later at leisure. MSDN on a disc beat MSDN on the web by an enormous margin, not because the content differed but because the disc could be searched at the speed of thinking. Anything with random access won, and anything requiring a round trip per question lost.</p>
+<p>There&#39;s a version of this I&#39;d meet again years later, writing a game that streamed assets out of a compressed archive where seeking backwards meant decompressing the whole file again. The fix there was to work out the order things would be needed and pack them that way, so a session became one forward pass. I&#39;d been doing that by hand with a box of floppy disks, deciding what to fetch and in what order because the cost of getting it wrong was measured in days.</p>
+<h2>What Arrived Afterwards</h2>
+<p>The years right after this changed that bottleneck more than anything since.</p>
+<p>Video arrived in 2005, and watching somebody build something is a different kind of teaching from reading about it, particularly for anything visual.</p>
+<p>Then 2008 brought two things in the same year. A question-and-answer site meant a specific problem now had a specific answer that stayed answered and was findable by the next person with the same problem. And a code host meant a real, working, large codebase could be read for free, which had previously required knowing somebody willing to send one.</p>
+<p>Free professional engines followed at the end of that decade and through the next, so building a game stopped requiring somebody to build the thing that runs the game first.</p>
+<p>Each removed a different obstacle: not knowing what to search for, not being able to watch the work being done, having nobody to ask, having no real code to read, and having to write an engine before writing a game.</p>
+<h2>What Somebody Starting Now Has</h2>
+<p>All of the above, plus something genuinely new.</p>
+<p>A person learning today can describe a symptom in plain language and get a straight answer. &quot;My game flickers when things move&quot; produces the words <em>double buffering</em>, an explanation of why it happens, and example code, in one exchange. The bottleneck that cost me ten betas has essentially been removed. That is a wonderful thing and not a loss. Nobody learned anything valuable from those ten betas that they couldn&#39;t have learned in the eleventh.</p>
+<p>A learner today can also read the source of the engines they use, run code in a browser without installing anything, publish to an audience the same afternoon, and get feedback from people making the same things. Every one of those took me years to arrange or never happened at all.</p>
+<p>And the loop closed. Reading stopped being batch mode. A question that occurs while reading gets answered while reading, instead of being written down and carried back to school on a disk. Guessing correctly about what would be useful before knowing what it said is a skill nobody needs any more, which is exactly as it should be, because it was never the interesting part.</p>
+<p>The change that matters most isn&#39;t any single tool, though. It&#39;s that where somebody lives stopped determining what they can learn. A teenager in that same town today has the same access as one in a capital city, which was emphatically not true at 14 kilobits, and is the largest thing that has improved about this in twenty years.</p>
+<p>That should stop anyone who teaches or hires. The talent was never concentrated in cities. The copper was, and a decision about how to share it decided what a hundred people could learn for the next ten years.</p>
+<p>The one thing that doesn&#39;t come with any of it is the reason to finish. Thirteen numbered releases, a changelog written for six named friends, and a features list separating done from planned were not requirements of the tooling. They were the part I invented because releasing to people I knew felt like what making a game meant.</p>
+<p>That instinct is the only thing in this archive I&#39;d tell somebody to copy deliberately, because it&#39;s the one thing the modern setup makes easier to skip. When distribution is free and instant, shipping stops being an event, and it was the event that made me write down what changed and why. Somebody starting now can build in a week what took me a year, which means the interesting question stops being whether they can and becomes whether they&#39;ll bother to finish and tell anyone.</p>
+<h2>What the Archive Is Actually For</h2>
+<p>Every technique in this file has a better version somewhere later. The pool became a ring buffer. The hand-declared GDI became a render backend behind an interface. The per-frame probability became delta-scaled. The changelog became a release process.</p>
+<p>What the old version shows is which problems I found on my own, and the answer is most of them. Pooling, buffering, externalizing assets, cutting content to fit a budget, and giving the player a performance option are all here, all reasoned out, all expressed with whatever was to hand.</p>
+<p>The tools were terrible. Dragging forty-six rectangles onto a form is not a technique. But a seventeen-year-old in a town of a hundred people, with a copy of Visual Basic, an MSDN disc, and no idea what any of it was called, got to the right shape of nearly every answer. That&#39;s a more encouraging thing to find in an archive than good code would have been, and it&#39;s the part I&#39;d want somebody starting today to take from it: the answers are reachable in an afternoon now, and reaching for them is still the whole job.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

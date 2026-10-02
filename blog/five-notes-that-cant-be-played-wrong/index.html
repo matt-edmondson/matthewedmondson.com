@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Five Notes That Can't Be Played Wrong | Matt Edmondson</title>
+  <meta name="description" content="A rhythm game from a twelve hour jam that composes its own music. The generator contains no music theory at all. Every constraint lives in which five sounds were recorded, so an unguarded random pick can't produce a wrong note, and the note it picks is also the thing the player has to hit." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/five-notes-that-cant-be-played-wrong/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Five Notes That Can't Be Played Wrong | Matt Edmondson" />
+  <meta property="og:description" content="A rhythm game from a twelve hour jam that composes its own music. The generator contains no music theory at all. Every constraint lives in which five sounds were recorded, so an unguarded random pick can't produce a wrong note, and the note it picks is also the thing the player has to hit." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/five-notes-that-cant-be-played-wrong/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Five Notes That Can&#39;t Be Played Wrong</h1>
+      <div class="post-meta">
+        <time datetime="2025-12-17">December 17, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C#</span>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=unity">unity</a>
+        <a class="post-tag" href="/#tag=procedural-generation">procedural-generation</a>
+        <a class="post-tag" href="/#tag=audio">audio</a>
+        <a class="post-tag" href="/#tag=game-jam">game-jam</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/five-notes-that-cant-be-played-wrong.jpg" alt="" width="1200" height="675" />
+
+<p>In 2012 I spent twelve hours making a rhythm game that writes its own music. It&#39;s called Terrible Rhythm, the subtitle is &quot;My procedural music is bad&quot;, and the repository is named <code>spamgame</code>.</p>
+<p>The generator is about a hundred and forty lines of Unity C# and contains no music theory whatsoever. There&#39;s no scale, no chord table, no interval arithmetic, no check that one note goes acceptably after another. It picks notes at random and the result is listenable, because the constraint isn&#39;t in the code.</p>
+<h2>The Note Set Is a Chord</h2>
+<p>Here is the entire pitch selection:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">pitch </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Random</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Range</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">0</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> spawnerArray</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Length</span><span style="color:#939AB7">);</span></span></code></pre><p>An unguarded uniform pick over however many spawners exist in the scene. Nothing filters it and nothing corrects it afterward.</p>
+<p>It works because of what&#39;s in the sounds folder:</p>
+<pre><code>e.wav   g.wav   b.wav   g2.wav   b2.wav</code></pre>
+<p>E, G and B are an E minor triad. <code>g2</code> and <code>b2</code> are two of those an octave up. Five playable voices, and all five belong to the same chord.</p>
+<p>That&#39;s the whole design. Any note is consonant with any other note, so any sequence of them is consonant, and so is any two of them sounding at once while the release envelope is still open. There&#39;s no wrong choice available to make, which is why the selection code doesn&#39;t have to make a right one.</p>
+<p>The music theory is real and it&#39;s all upstream, expressed once as a decision about which five files to record. The generator inherits it by having nothing else to pick from.</p>
+<p>A second set sits beside the first:</p>
+<pre><code>notee.wav  noteg.wav  noteb.wav  noteg2.wav  noteb2.wav</code></pre>
+<p>Sustained chord voices that fade, and short retriggerable note voices, one pair per pitch. <code>Music.cs</code> keeps them in separate branches of the hierarchy, <code>Chords</code> and <code>Notes</code>, so a held key can swell the chord while each successful hit fires a percussive attack.</p>
+<p>The mapping from key to pitch is authored rather than coded. A paddle carries both as plain strings:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> note</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> string</span><span style="color:#CAD3F5"> key</span><span style="color:#939AB7">;</span></span></code></pre><p>filled in per paddle in the scene, and the controls screen shows where they ended up: Q, W, E, R, and T, five adjacent keys under the left hand, one per voice. No script knows which key plays which note, or that there are five of them. <code>Music.PlayNote</code> takes a name and finds the child object with it, and the generator sizes its pitch range from <code>FindGameObjectsWithTag(&quot;Spawner&quot;)</code> at runtime, so a sixth voice would need a prefab, a spare key and one more line in <code>Music.Start</code>, which is the only place the five names are written down.</p>
+<h2>The Phrase Is the Unit, Not the Note</h2>
+<p>Generation happens eight beats at a time:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> phraseLength </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 8</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> repeats </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 4</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> currentRepeat </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 4</span><span style="color:#939AB7">;</span></span></code></pre><p>A phrase is filled, played four times, and then thrown out and refilled. <code>currentRepeat</code> starts at the repeat count so the first frame generates immediately rather than needing a separate initialization path.</p>
+<p>Repetition is what separates generated music from noise. A stream of individually plausible notes with no structure sounds like a stream of individually plausible notes. The same eight beats four times sounds like a decision somebody made. Then the phrase changes and the change is audible, because there&#39;s an established thing for it to differ from.</p>
+<p>Eight beats and four repeats is thirty two beats, which at 128 BPM is fifteen seconds of music per composition.</p>
+<h2>Difficulty Is a Remapping, Not a Range</h2>
+<p>Note lengths come from a roll and then get bent:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> l </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Random</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Range</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">,</span><span style="color:#F5A97F">8</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8BD5CA">..</span><span style="color:#CAD3F5">.</span></span>
+<span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> mult </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#939AB7">)(</span><span style="color:#CAD3F5">GameObject</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Find</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"GameTimer"</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">GetComponent</span><span style="color:#91D7E3">&#x3C;</span><span style="color:#EED49F;font-style:italic">GameTimer</span><span style="color:#91D7E3">></span><span style="color:#939AB7">()</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">gameTimer</span><span style="color:#8BD5CA">/</span><span style="color:#F5A97F">60.0f</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">mult</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">l</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> l</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">2</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">l</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">2</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> l</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">2</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">l</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">3</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> l</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">4</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#8BD5CA">    ..</span><span style="color:#CAD3F5">.</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">l</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">8</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> l</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">8</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Ten of those blocks, one per difficulty band, selected by <code>gameTimer/60</code> so the game gets harder every sixty seconds. <code>length = l*0.5f</code> at the end, so lengths land on half beats.</p>
+<p>The construction is the interesting part. The roll is always the same, uniform over one to eight. Every band maps that roll onto the same small set of legal durations, and only the proportions change. In the first minute, rolls of six, seven, and eight all become 8, so long notes dominate. By the last band nearly everything becomes 1 and only an eight survives as a 2.</p>
+<p>The output alphabet stays fixed at whole, half, quarter, and eighth. Difficulty moves weight across it. That&#39;s why the game gets faster without ever getting arrhythmic: it can&#39;t produce a duration that isn&#39;t on the grid, at any difficulty, because the remap has no other values to give.</p>
+<p>Writing it as a hundred lines of <code>if</code> rather than a table of weights is the twelve hour deadline showing, and it has one real advantage. Every band is visible at once as a column of numbers, so tuning the curve means reading down the page rather than reasoning about a distribution.</p>
+<h2>Half Notes Come in Pairs</h2>
+<p>One flag carries the only piece of rhythmic grammar in the file:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">nexthalf</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    nexthalf </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    l</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#8BD5CA">    ...</span><span style="color:#CAD3F5"> the difficulty remap </span><span style="color:#8BD5CA">..</span><span style="color:#CAD3F5">.</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">l</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> nexthalf </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>When the generator produces the shortest note, the next note is forced to match it.</p>
+<p>Eighth notes arriving alone push everything after them off the beat. Arriving in pairs, they fill a beat exactly and the phrase stays aligned to the grid. It&#39;s one boolean, it bypasses the difficulty table entirely when set, and it&#39;s the difference between syncopation and drift.</p>
+<p>The phrase is also closed off at the end:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">length</span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5">usedTime</span><span style="color:#8BD5CA">&#x3C;=</span><span style="color:#CAD3F5">phraseLength</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    //good</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    length </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> phraseLength</span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5">usedTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The last note is shortened to whatever is left, so a phrase always totals exactly eight beats and the loop point lands on the barline. The empty <code>if</code> with a <code>//good</code> comment is the condition being read in the order it was thought about.</p>
+<h2>The Note and the Level Are the Same Object</h2>
+<p>In most rhythm games a chart is authored against a piece of music. Here there is no chart. The generated note is the gameplay:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> BulletSpawn</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> length</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#8BD5CA">    ..</span><span style="color:#CAD3F5">.</span></span>
+<span class="line"><span style="color:#C6A0F6">    float</span><span style="color:#CAD3F5"> bulletLength </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> length</span><span style="color:#8BD5CA">*</span><span style="color:#F5A97F">38.0f</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    tailObj</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">transform</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Translate</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Vector3</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">up</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">bulletLength</span><span style="color:#8BD5CA">/</span><span style="color:#F5A97F">2.0f</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    tailObj</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">transform</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">localScale </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> new</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">2.5f</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5">bulletLength</span><span style="color:#939AB7">,</span><span style="color:#F5A97F">2.5f</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The falling block&#39;s tail is scaled directly by the note&#39;s duration, times a constant that converts beats to world units. A held note is a long block because it is the same number.</p>
+<p>The generator also runs its own clock from the composition:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">spawnTime </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> phrase</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">phraseStep</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">length </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> baseTime</span><span style="color:#939AB7">;</span></span></code></pre><p>The delay before the next spawn is the current note&#39;s length, so spawning is variable rate and driven by the music rather than by a fixed tick. <code>baseTime</code> is <code>1.0f/(bpm/60.0f)</code>, seconds per beat written as the reciprocal of beats per second.</p>
+<p>Hitting a block plays its pitch and scores it, with the multiplier taken from the same difficulty clock:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> mult </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#939AB7">)(</span><span style="color:#8BD5CA">...</span><span style="color:#CAD3F5">gameTimer</span><span style="color:#8BD5CA">/</span><span style="color:#F5A97F">60.0f</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">+</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">mult</span><span style="color:#8BD5CA">*=</span><span style="color:#F5A97F">10</span><span style="color:#939AB7">;</span></span></code></pre><p>So one number, elapsed time, drives note density, score value, and how hard the phrase is to read, and they all move together.</p>
+<h2>What Was Switched Off at the Deadline</h2>
+<p>Two things are commented out, and in a twelve hour jam both are the sensible position for a switch to be left in.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">//Random.seed = 1234;</span></span></code></pre><p>A fixed seed for hearing the same composition twice while tuning the remap tables, disabled so the shipped game varies.</p>
+<p>And in the backing track:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">...</span><span style="color:#8AADF4;font-style:italic">Find</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Snare"</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">...</span><span style="color:#CAD3F5">volume </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> ...</span><span style="color:#CAD3F5">volume </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> fade </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Time</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">deltaTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">...</span><span style="color:#8AADF4;font-style:italic">Find</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"Hat"</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">...</span><span style="color:#CAD3F5">volume </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> ...</span><span style="color:#CAD3F5">volume </span><span style="color:#8BD5CA">+=</span><span style="color:#CAD3F5"> fade </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> Time</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">deltaTime</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">//if(...Find("Bass")...volume &#x3C; 1) ...</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">//if(...Find("Pad")...volume &#x3C; 1) ...</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">//if(...Find("Seq")...volume &#x3C; 1) ...</span></span></code></pre><p>Six backing stems exist, all six are wired up, and three of the fade-ins are switched off. Kick starts at full, snare and hat come up over time, and bass, pad, and sequencer stay silent. The arrangement that shipped is a subset of the arrangement that was built, chosen by commenting out three lines during the last hours.</p>
+<h2>What I&#39;d Change</h2>
+<p>Clamp the release envelope. <code>Music.cs</code> subtracts from volume every frame with no floor, so the value keeps going negative once a note has faded. Unity clamps it on the way to the mixer, which is why it sounds correct, and the stored number drifts further from zero the longer the game runs.</p>
+<p>Make the difficulty bands data. Ten near-identical blocks of eight comparisons is the fastest thing to type and the slowest thing to change, and the same curve is a small array of weights per band.</p>
+<p>And cache the lookups. <code>GameObject.Find(&quot;GameTimer&quot;)</code>, <code>GameObject.Find(&quot;Music&quot;)</code> and <code>FindGameObjectsWithTag(&quot;Spawner&quot;)</code> all run inside <code>Update</code>, some of them per note. At this scale nothing notices, and it&#39;s the habit that stops scaling first.</p>
+<h2>What Transfers</h2>
+<p>Put the constraint in the content rather than the code. Every note this generator can play is consonant because of which five sounds were recorded, so the selection logic is one unguarded call to a random number generator. Choosing an alphabet where every symbol is valid is usually cheaper than validating symbols after the fact, and it can&#39;t be circumvented by a later change to the selection code.</p>
+<p>Generate in phrases and repeat them. Structure is what makes generated output read as composed, and repetition is the cheapest structure there is.</p>
+<p>Remap a fixed roll onto a fixed set of legal values, and vary the mapping rather than the range. The output can then never leave the set, whatever the difficulty, which is how this game speeds up without ever falling off the beat.</p>
+<p>And when the generated thing is also the thing being played, there&#39;s no chart to keep in sync with anything. A note&#39;s duration is its block&#39;s height, and the two cannot disagree because they are one number.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

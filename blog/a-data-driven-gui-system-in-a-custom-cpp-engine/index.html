@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Data-Driven GUI System in a Custom C++ Engine | Matt Edmondson</title>
+  <meta name="description" content="The GUI system in my second engine is a small web browser: screens are text pages, a stylesheet restyles elements by copying prototype objects with the assignment operator, buttons can be hyperlinks, and a missing page renders a 404. A tour of how it works, why the god-object base class is the load-bearing decision, and which ghosts are still in the code." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/a-data-driven-gui-system-in-a-custom-cpp-engine/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="A Data-Driven GUI System in a Custom C++ Engine | Matt Edmondson" />
+  <meta property="og:description" content="The GUI system in my second engine is a small web browser: screens are text pages, a stylesheet restyles elements by copying prototype objects with the assignment operator, buttons can be hyperlinks, and a missing page renders a 404. A tour of how it works, why the god-object base class is the load-bearing decision, and which ghosts are still in the code." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/a-data-driven-gui-system-in-a-custom-cpp-engine/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>A Data-Driven GUI System in a Custom C++ Engine</h1>
+      <div class="post-meta">
+        <time datetime="2026-01-28">January 28, 2026</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=ui">ui</a>
+        <a class="post-tag" href="/#tag=gui">gui</a>
+        <a class="post-tag" href="/#tag=data-driven">data-driven</a>
+        <a class="post-tag" href="/#tag=tooling">tooling</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/a-data-driven-gui-system-in-a-custom-cpp-engine.jpg" alt="" width="1200" height="675" />
+
+<p>Ask my second engine for a screen that doesn&#39;t exist and it doesn&#39;t crash, and it doesn&#39;t show nothing. The loader has a fallback branch:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    loadFile</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"404.gui"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p><code>404.gui</code> is a real file in the shipped data: one text control, &quot;404 File not found&quot;, red, 25 points, centered.</p>
+<p>That fallback is the tell for the whole design. The GUI system in this engine is a small web browser. Screens are text files. A stylesheet restyles every button in the project from one place. A button, an image, or a piece of text can be a hyperlink that navigates to another screen. Pages include other pages. Sizes can be percentages of the parent. And a broken link renders a 404 instead of failing.</p>
+<p>None of that was a metaphor I was reaching for in 2012. I&#39;d been building websites, and when I needed to describe interfaces in data, the web was what my head already reached for. This continues the series taking one system at a time out of my custom engines. This one belongs to the second engine, the one with the twenty-four projects and the editor tools, and it still runs: the tree was ported to SDL2 a week ago and the GUI came through mostly by renaming things.</p>
+<p>The library is 4,439 lines of C++. The repository carries 8,451 lines of <code>.gui</code> text describing interfaces built with it, across a few generations of menus, close to two lines of interface for every line of the code that interprets them. The data outweighs the implementation, which is roughly what a data-driven system should look like.</p>
+<h2>A Screen Is a Page</h2>
+<p>A <code>.gui</code> file is a list of control blocks. Here&#39;s a real excerpt from the particle editor&#39;s main screen:</p>
+<pre><code>window
+name=wndColorPicker
+size=360,340
+text=Color Picker
+visible=false
+contents=ManicParticleEditor/colorpicker-contents.inc.gui
+end
+
+layout.autoPosition.exact=15,24
+
+button
+name=btnNew
+text=New
+end</code></pre>
+<p>A bare word opens a control, <code>key=value</code> lines set properties, <code>end</code> closes it. The parser is one function with an else-if ladder 83 string comparisons long, every property any control can have, in one place. There are sixteen control types: the ordinary ones (button, text, image, checkbox, textbox, slider, progress, dropbox, listbox, line), an image slider, a draggable window, and then the ones that give away who this system was really for. A thumbnail file browser, a saturation/value color picker, a multi-handle gradient slider, and a viewport.</p>
+<p>Composition is web-shaped too. <code>include=</code> splices another file into this one, which is how every screen pulls in the stylesheet. <code>contents=</code> hands a whole file to a control&#39;s own child manager, so a window&#39;s interior is a separate page (an iframe, essentially). The two editors that both need a color picker share it the crude way: identical copies of <code>colorpicker-contents.inc.gui</code> in both folders.</p>
+<p>Names are identity. Every control is registered in a map by name, duplicate names throw an error dialog, and controls the game will never talk to get <code>name=auto</code>, which auto-numbers them. The shipped data does that 59 times. Names are also the z-order: the draw order is a vector of strings, resolved through the map into a cached list of pointers. The commented-out loop above the cache still does a map lookup per control per frame, left in place like a fossil of the day the profiler said no.</p>
+<h2>The Style Engine Is the Assignment Operator</h2>
+<p>The stylesheet is <code>java.style</code>, 214 lines, included at the top of every screen. It defines <code>class</code> blocks:</p>
+<pre><code>class
+name=button
+exactSize=true
+position=auto
+font.face=segoeui.ttf
+font.size=8
+font.color=0,0,0
+anchor=left
+clamp=top left
+image.inactive=ui/java/button.tga
+image.hover=ui/java/button-hover.tga
+image.active=ui/java/button-down.tga
+end</code></pre>
+<p>A class named <code>button</code> restyles every plain <code>button</code> in every file loaded after it. A class named <code>button.med</code> is a variant opted into by opening a block with <code>button.med</code> instead of <code>button</code>. Element selectors and modifier classes, in other words, and the cascade is exactly CSS&#39;s: constructor defaults, then the stylesheet, then the block&#39;s own inline properties, each layer overwriting the last.</p>
+<p>The mechanism behind it is my favorite thing in the library. When the parser sees a control open, it looks the line up in the style table and does this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">control </span><span style="color:#8BD5CA">=</span><span style="color:#C6A0F6;font-weight:bold"> new</span><span style="color:#CAD3F5"> ManicGUIButton</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">ManicGUIControlManager </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> tmp </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> control</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">controlManager</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guiManager</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">styleExists</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">line</span><span style="color:#939AB7">))</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5">control </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> *</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guiManager</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">styles</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">line</span><span style="color:#939AB7">]);</span></span>
+<span class="line"><span style="color:#CAD3F5">control</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">controlManager </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> tmp</span><span style="color:#939AB7">;</span></span></code></pre><p>Styles are prototype objects (actual constructed controls, parked in a map), and applying one is the compiler-generated assignment operator. The entire style engine is <code>operator=</code>, plus one pointer saved and restored around it.</p>
+<p>There&#39;s a quirk with teeth. Clearing a control manager also wipes the global style table, and loading a <code>contents=</code> file starts with a clear. So every window-interior page begins with <code>include=styles/java.style</code>, re-registering the styles its own load just destroyed. Every frame in the frameset carries its own link tag. It works because the files are disciplined, and it would be a genuinely confusing afternoon for anyone who didn&#39;t know.</p>
+<h2>Every Control Is Every Control</h2>
+<p>That assignment-operator trick has a precondition, and the precondition explains the strangest-looking thing in the library: the base class. <code>ManicGUIControl</code> is two hundred lines of public fields, the union of every field any control needs. A contiguous excerpt:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> hue</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> sat</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> val</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> huebk</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> satbk</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> valbk</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#CAD3F5">GLuint satvaltex</span><span style="color:#939AB7">;</span></span></code></pre><p>Every button in the engine carries the color picker&#39;s hue and an OpenGL texture handle for a gradient it will never render. Every text label carries a <code>password</code> flag, a field-of-view for the viewport, nine window-chrome texture slots, and four scroll-arrow images. The derived classes add behavior only. <code>ManicGUIButton</code> declares seven virtual overrides and not one data member. Even the multi-handle gradient slider keeps its handle positions in the base class&#39;s string vector and calls <code>atof</code> on them every frame.</p>
+<p>This looks like the god object anti-pattern, and in most respects it is one. But it&#39;s also the single decision the rest of the system stands on. Because all state lives in the base, the parser can set any of its 82 property keys on any control without knowing the type, a style prototype can be a plain base-class instance, and copying one over a derived control with <code>operator=</code> slices off exactly nothing, because there is nothing to slice. Uniform state is the price of data-driven everything, paid up front, in one class.</p>
+<p>The other consequence is that nothing is encapsulated, and the games lean on that hard. The particle editor opens its color picker by writing <code>wndColorPicker-&gt;visible = true;</code> and pushes the current color into it with <code>svpPicker-&gt;hue = h/360.0f;</code>. State goes in through public fields, and events come out through a callback. Two channels, both blunt.</p>
+<h2>Layout Is Two Anchors and a Typewriter</h2>
+<p>Every control has an <code>anchor</code> (which of nine points on itself its position refers to) and a <code>clamp</code> (which of nine points on its parent that position is measured from). The earlier post about the mobile engine&#39;s layout system described the same two anchors, and this is where they came from, in rougher form. Geometry is resolved at query time by walking the parent chain. Nothing stores a screen rectangle, and the root manager holds pointers to the live window size, so a resize re-resolves everything with no invalidation pass. The same lesson as the mobile engine, learned here first: a derived value can&#39;t go stale.</p>
+<p>The walk has one hardcoded opinion. Children of a window are offset by the title bar and padding:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">v1</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">+=</span><span style="color:#F5A97F">  0</span><span style="color:#8BD5CA"> +</span><span style="color:#F5A97F"> 15</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">v1</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">+=</span><span style="color:#F5A97F"> 18</span><span style="color:#8BD5CA"> +</span><span style="color:#F5A97F"> 15</span><span style="color:#939AB7">;</span></span></code></pre><p>The drawing code sizes the window chrome from the skin&#39;s actual textures. The layout code assumes the title bar is 18 pixels. The default skin&#39;s title bar is 18 pixels. Nobody ever made a second skin.</p>
+<p>Sizes and positions go through a converter that accepts <code>280</code>, <code>100%</code>, and <code>100%-32</code>, meaning percent of the parent axis, with one addition or subtraction. It&#39;s a homemade <code>calc()</code>, and a worse one, because the expression evaluator has a real bug: a percentage on the right side of the operator computes something wild (it applies the percent to the running total, not the operand). The bug has never fired. All 8,451 lines of shipped data write the percent on the left, and nothing enforces that except that I wrote both the parser and the data.</p>
+<p>Then there&#39;s flow layout, which isn&#39;t containers at all. It&#39;s a typewriter. The file maintains a cursor. <code>position=auto</code> places a control at the cursor, and after every control the parser does:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">control</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">autoPosition</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> control</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">position </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> autoPosition</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">autoPosition</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> autoPosition</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> control</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x</span><span style="color:#939AB7">;</span></span></code></pre><p>Controls are words. <code>layout.autoPosition.break=16,24</code> is the carriage return, resetting x and dropping down. A cursor can be saved under a name and jumped back to later. It reads exactly like typesetting a page, because that&#39;s what it is.</p>
+<h2>Input Still Speaks Win32</h2>
+<p>The message entry point is this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> message</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> message</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> wParam</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> lParam</span><span style="color:#939AB7">);</span></span></code></pre><p>For fourteen years those were literal <code>WM_KEYDOWN</code> and <code>WM_LBUTTONUP</code> codes with the mouse position packed into <code>lParam</code>, exactly as Windows delivered them. The SDL2 port left the signature alone. It renamed the constants to <code>MANIC_MSG_*</code> one for one and taught the window to translate:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">case</span><span style="color:#CAD3F5"> SDL_MOUSEWHEEL:</span></span>
+<span class="line"><span style="color:#CAD3F5">    message </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> MANIC_MSG_MOUSEWHEEL</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">    // The Win32 path reported wheel notches in units of WHEEL_DELTA.</span></span>
+<span class="line"><span style="color:#CAD3F5">    wParam </span><span style="color:#8BD5CA">=</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#939AB7">)(</span><span style="color:#CAD3F5">event</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">wheel</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">*</span><span style="color:#F5A97F"> 120</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">    break</span><span style="color:#939AB7">;</span></span></code></pre><p>A Linux build in 2026 multiplies scroll events by 120 because that&#39;s what <code>WHEEL_DELTA</code> was worth in <code>windows.h</code>. The API outlived the platform that defined it. When every consumer agrees on a dialect, the dialect stays.</p>
+<p>Routing is a top-down walk of the z-order with sensible game-tool politics. Open dropdowns get first refusal, because they overhang everything. A click only counts if the press and release land on the same control. Clicking a window raises it. Focus is a boolean named <code>active</code> that clicking anywhere else turns off, and keys are broadcast to whatever is active.</p>
+<p>Mouse capture is my favorite implementation in the file. While a window is being dragged, its hit test does this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">active</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    v1</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">-=</span><span style="color:#F5A97F"> 2000</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    v1</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">-=</span><span style="color:#F5A97F"> 2000</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    v3</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">+=</span><span style="color:#F5A97F"> 2000</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    v3</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">+=</span><span style="color:#F5A97F"> 2000</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Mid-drag, the window is four thousand pixels bigger in every direction, so the cursor can&#39;t outrun it. Sliders do the same thing while their handle is held. That&#39;s the whole capture system. It is indefensible in principle and has never once failed in practice.</p>
+<p>The genuinely dangerous case is reentrancy. A button&#39;s <code>link=</code> property loads another screen from inside the button&#39;s own click handler, which destroys every control, including the button whose member function is currently executing. The system survives on a flag: <code>clearControls</code> sets <code>controlReset</code>, the handler returns immediately without touching another member, and the dispatch loop checks the flag before taking another step through a list that no longer exists. Retained-mode UI&#39;s classic hazard, handled not with deferred deletion but with a tripwire and discipline.</p>
+<h2>The Game Gets Strings</h2>
+<p>Everything that happens in the tree is reported to one function pointer as <code>(name, action, button, position)</code>. The game&#39;s side of the contract looks like this, from the dungeon crawler&#39;s main menu:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#EED49F"> Menu</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">callback</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">string</span><span style="color:#EE99A0;font-style:italic"> control</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> action</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> button</span><span style="color:#939AB7">,</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#EE99A0;font-style:italic"> position</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">control</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">compare</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"txtGame"</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F">0</span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#CAD3F5"> action</span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5">MOUSE_UP </span><span style="color:#8BD5CA">&#x26;&#x26;</span><span style="color:#CAD3F5"> button</span><span style="color:#8BD5CA">==</span><span style="color:#CAD3F5">MOUSE_LEFT</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">        runEditor</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">        changeState</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">StateGame</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span></code></pre><p>Each game state swaps in its own callback, so &quot;screens&quot; in the game are different switchboards. The particle editor&#39;s switchboard is a 551-line function servicing 242 controls described across two thousand lines of layout. Events that hit no control arrive with an empty name. The click fell through to the page background, and the game treats that as &quot;the user clicked the world.&quot;</p>
+<p>The weakness is the obvious one: rename a control in the layout file and it silently disconnects from the game, because the compiler can&#39;t see the string. I hit that about once per tool. The strength is that the entire UI-to-game boundary is one function, which takes a single breakpoint and reads like a transcript.</p>
+<p>There was also the start of a scripting language, <code>onclick=battlewindow.toggleVisible</code> in the data, from an abandoned space game whose menus toggled hangar and cargo windows. The interpreter supports exactly one verb. <code>toggleVisible</code> turned out to be all the declarative behavior anyone needed, and everything else went through the callback.</p>
+<h2>One Quad, a Scissor, and a Texture Matrix</h2>
+<p>Rendering is OpenGL 1.x immediate mode with one modern habit: every textured rectangle in every interface is the same unit quad in a single VBO, drawn under a translate/scale/rotate. Windows are nine-slice, sized from their corner textures. Interiors clip children with <code>glScissor</code>, and off-screen quads are culled before submission, with counters.</p>
+<p>Text is cached: each control keeps a handle to a GL buffer of glyph quads, and invalidates it by comparing its string against the cached copy, every control, every frame. Cache invalidation by <code>strcmp</code>, sixty times a second, and at tool scale it&#39;s completely fine.</p>
+<p>Two controls do something sneakier. Any image slot can name a <code>.anim</code> instead of a texture (a flipbook strip with a frame rate), and playback happens entirely in the texture matrix: scale U by 1/frames, translate by the frame index, draw the same quad. Animation with zero vertex changes. And the saturation/value picker regenerates its gradient the brute-force way: when the hue changes, it computes every pixel on the CPU and re-uploads the texture. It runs on every drag of the hue slider, and nobody has ever noticed the cost.</p>
+<p>All of it wears one skin: 46 TGA files under <code>ui/java/</code> (buttons, checkboxes, scroll arrows, window chrome) with Segoe UI at 8 points on top. The folder is named after what the result looks like, which is a Java Swing application, and I have decided to find that charming rather than apologize for it.</p>
+<h2>The Tools Are the Real Users</h2>
+<p>Nine executables in the tree load <code>.gui</code> screens, and the interesting ones are the editors, the tools from the post about editors sharing the engine&#39;s runtime. This GUI system is <em>how</em> they share it, and two controls exist purely for their benefit.</p>
+<p>The viewport is a control whose <code>render()</code> is an empty function. It draws nothing. Its job is to be a named rectangle: the editor calls <code>activateViewport(&quot;vpMain&quot;)</code> and the engine sets <code>glViewport</code> to that control&#39;s rectangle and renders the 3D scene into it. The scene view is a hole cut in the page, positioned by the same anchors as the buttons around it.</p>
+<p>The thumbnail browser is a file manager as a control: it lists the actual directory, shows folder icons at four sizes, ellipsizes long filenames, plays <code>.anim</code> thumbnails live in the grid, and navigates into folders on click. The particle editor&#39;s texture picking is this one control and a <code>CONTENT_CHANGE</code> event.</p>
+<p>And the &quot;GUI editor&quot; is the punchline of the whole design: 228 lines, no editing features. It loads a screen, then polls the modification time of every file that screen came from and reloads when one changes, per subtree, so a window&#39;s interior page reloads without rebuilding the screen around it. The actual editor is whatever text editor is already open. This program is the refresh button, held down. Total-replace loading of a text format made hot reload a forty-line feature, and hot reload is nine tenths of what a GUI editor is for.</p>
+<p>The games use the tree for menus (the dungeon crawler&#39;s title screen is text controls whose stylesheet grows them from 100 to 128 points on hover, the entire menu feel expressed in <code>font.hover.*</code>) and then skip the tree for HUDs. The RTS draws health bars and command buttons by calling <code>renderQuad</code> directly, using the library as an immediate-mode 2D API. The retained tree is for interfaces somebody authors, and the draw helpers are for interfaces the game computes. Both turned out to be things a GUI library should sell.</p>
+<h2>The Ghosts</h2>
+<p>Reading old code of mine, the absences say as much as the code.</p>
+<p>The type-code list reserves <code>GUI_MENUBAR</code>, <code>GUI_MENUBUTTON</code>, and <code>GUI_MENUITEM</code>. No menu classes exist. Every tool that wanted a menu bar made a row of ordinary buttons, which is why a real menu system never became urgent enough to build. There&#39;s a property-grid control that draws a tidy two-column table, reachable only from C++, because it never got a keyword in the parser. A <code>holdfocus</code> flag is carefully set on textboxes and dropdowns and read by nothing.</p>
+<p>The textbox itself is a monument to sufficiency: it synthesizes characters from raw key codes with manual shift and caps-lock handling, supports append and backspace, and has no cursor movement, no selection, no clipboard. There is no way to type a colon into it. For naming emitters and typing numbers into editor fields, it never needed more.</p>
+<p>And the ghost I keep going back to: the engine has a Quake-style console. Backtick summons it, it&#39;s a third of the screen tall, it fades away after it&#39;s been quiet, and for a while the engine&#39;s <code>console(n)</code> debug macro piped every log line into it. The engine&#39;s printf was a GUI control. The macro history is still in the header, one commented line at a time: GUI console, then stdout, and today <code>SDL_Log</code>. The console object is still constructed and still updates every frame. The line that would draw it is commented out in both places it appears. It&#39;s not dead code so much as a room nobody goes into anymore, with the furniture still arranged.</p>
+<h2>What Transfers</h2>
+<p>Give missing content a rendering. The 404 page costs nothing and converts a class of crashes into a message that names what to fix. Any data-driven system can have one.</p>
+<p>A text format, plus loading that throws the tree away and rebuilds it, buys hot reload almost for free, and hot reload is worth more than any editor UI built in its place.</p>
+<p>Prototype-based styling through plain assignment is a real technique, and its precondition is uniform state. The god-object base class wasn&#39;t the mistake in this design. It was the payment for the parser and the style engine both being trivial. Anyone who wants the trick has to flatten the state knowingly.</p>
+<p>Resolve layout from live inputs at query time. Pointers to the parent&#39;s size meant window resizing was never a feature. It was a property the system had by construction.</p>
+<p>And a string-keyed boundary between UI and logic is a real trade: one debuggable transcript of everything the interface does, bought with silent breakage on rename. I&#39;d take it again for tools, and I&#39;d want it compiler-checked for anything bigger.</p>
+<p>The web shape (pages, a stylesheet, links, a 404) was a good fit for tool interfaces in 2012. Fourteen years and one platform port later, the same files still load, which suggests it still is.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

@@ -86,7 +86,7 @@
     .tagline {
       font-size: 1.15rem;
       color: var(--ctp-subtext1);
-      margin-bottom: 2.5rem;
+      margin-bottom: 1.5rem;
     }
 
     .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
@@ -112,7 +112,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.8rem;
-      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
     }
 
     .links a {
@@ -562,6 +562,13 @@
       Producer <span class="dot">·</span> Game Developer <span class="dot">·</span>
       Software Engineer <span class="dot">·</span> Melbourne, Australia
     </p>
+    <div class="links">
+      <a class="primary" href="https://ktsu.dev">ktsu.dev</a>
+      <a href="/resume/">Resume</a>
+      <a href="https://github.com/matt-edmondson">GitHub</a>
+      <a href="https://www.linkedin.com/in/medmondson-aus">LinkedIn</a>
+      <a href="https://www.nuget.org/profiles/ktsu.dev">NuGet</a>
+    </div>
     <p class="lede">Notes on game production, engineering, and the places they meet.
       <a href="/about/">More about me &rarr;</a></p>
 
@@ -584,87 +591,611 @@
         <div class="filter-group">
           <h4>Category</h4>
           <div class="filter-list">
-            <button class="filter-opt" type="button" aria-pressed="true" data-cat=""><span>All</span><span class="n">16</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Development"><span>Development</span><span class="n">10</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C#"><span>C#</span><span class="n">9</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Architecture"><span>Architecture</span><span class="n">6</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Software Engineering"><span>Software Engineering</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Production"><span>Production</span><span class="n">3</span></button>
+            <button class="filter-opt" type="button" aria-pressed="true" data-cat=""><span>All</span><span class="n">63</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Software Engineering"><span>Software Engineering</span><span class="n">44</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Game Development"><span>Game Development</span><span class="n">35</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C++"><span>C++</span><span class="n">22</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="C#"><span>C#</span><span class="n">16</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Architecture"><span>Architecture</span><span class="n">12</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Development"><span>Development</span><span class="n">11</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Production"><span>Production</span><span class="n">11</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="DevOps"><span>DevOps</span><span class="n">5</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Leadership"><span>Leadership</span><span class="n">4</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-cat="AI"><span>AI</span><span class="n">2</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-cat="Debugging"><span>Debugging</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="Leadership"><span>Leadership</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="AI"><span>AI</span><span class="n">1</span></button>
             <button class="filter-opt" type="button" aria-pressed="false" data-cat="Communication"><span>Communication</span><span class="n">1</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-cat="DevOps"><span>DevOps</span><span class="n">1</span></button>
           </div>
         </div>
         <div class="filter-group">
           <h4>Tag</h4>
           <div class="filter-list long">
-            <button class="filter-opt" type="button" aria-pressed="true" data-tag=""><span>All</span><span class="n">16</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="csharp"><span>csharp</span><span class="n">11</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="dotnet"><span>dotnet</span><span class="n">10</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="architecture"><span>architecture</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="design-patterns"><span>design-patterns</span><span class="n">4</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="ktsu"><span>ktsu</span><span class="n">3</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="debugging"><span>debugging</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="leadership"><span>leadership</span><span class="n">2</span></button>
-            <button class="filter-opt" type="button" aria-pressed="false" data-tag="library-deep-dive"><span>library-deep-dive</span><span class="n">2</span></button>
+            <button class="filter-opt" type="button" aria-pressed="true" data-tag=""><span>All</span><span class="n">63</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="game-development"><span>game-development</span><span class="n">33</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="cpp"><span>cpp</span><span class="n">23</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="game-engine"><span>game-engine</span><span class="n">22</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="csharp"><span>csharp</span><span class="n">18</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="dotnet"><span>dotnet</span><span class="n">14</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="architecture"><span>architecture</span><span class="n">11</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="opengl"><span>opengl</span><span class="n">8</span></button>
+            <button class="filter-opt" type="button" aria-pressed="false" data-tag="performance"><span>performance</span><span class="n">8</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="archaeology"><span>archaeology</span><span class="n">7</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="php"><span>php</span><span class="n">7</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="mysql"><span>mysql</span><span class="n">5</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="procedural-generation"><span>procedural-generation</span><span class="n">5</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="production"><span>production</span><span class="n">5</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="tooling"><span>tooling</span><span class="n">5</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="animation"><span>animation</span><span class="n">4</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="design-patterns"><span>design-patterns</span><span class="n">4</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="git"><span>git</span><span class="n">4</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ktsu"><span>ktsu</span><span class="n">4</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ui"><span>ui</span><span class="n">4</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="algorithms"><span>algorithms</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="api-design"><span>api-design</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="audio"><span>audio</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="graphics"><span>graphics</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="leadership"><span>leadership</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="mobile"><span>mobile</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="scripting"><span>scripting</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="source-control"><span>source-control</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="streaming"><span>streaming</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="unreal-engine"><span>unreal-engine</span><span class="n">3</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="build-infrastructure"><span>build-infrastructure</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="caching"><span>caching</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="career"><span>career</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="code-generation"><span>code-generation</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="code-review"><span>code-review</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="community"><span>community</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="data-driven"><span>data-driven</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="debugging"><span>debugging</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="dsp"><span>dsp</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="game-jam"><span>game-jam</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="godot"><span>godot</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="gui"><span>gui</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="language-design"><span>language-design</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="library-deep-dive"><span>library-deep-dive</span><span class="n">2</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="msbuild"><span>msbuild</span><span class="n">2</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="nuget"><span>nuget</span><span class="n">2</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="performance"><span>performance</span><span class="n">2</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="production"><span>production</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="reliability"><span>reliability</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="roslyn"><span>roslyn</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="semantic-types"><span>semantic-types</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="team-management"><span>team-management</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="testing"><span>testing</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="tools"><span>tools</span><span class="n">2</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="advertising"><span>advertising</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ai"><span>ai</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ai-governance"><span>ai-governance</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="archive"><span>archive</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="asset-pipeline"><span>asset-pipeline</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="build-server"><span>build-server</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ci-cd"><span>ci-cd</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="claude-code"><span>claude-code</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="coaching"><span>coaching</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="code-quality"><span>code-quality</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="communication"><span>communication</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="concurrency"><span>concurrency</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="config"><span>config</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="constructors"><span>constructors</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="content-pipeline"><span>content-pipeline</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="coroutines"><span>coroutines</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="crisis-management"><span>crisis-management</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="daemons"><span>daemons</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="data-oriented"><span>data-oriented</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="design-flaw"><span>design-flaw</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="design-philosophy"><span>design-philosophy</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="determinism"><span>determinism</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="devops"><span>devops</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="distributed-systems"><span>distributed-systems</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="documentation"><span>documentation</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="domain-modeling"><span>domain-modeling</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ecs"><span>ecs</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="editor"><span>editor</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="engineering-management"><span>engineering-management</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="error-handling"><span>error-handling</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="formatting"><span>formatting</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="founding-team"><span>founding-team</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="game-feel"><span>game-feel</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="gdi"><span>gdi</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="git-lfs"><span>git-lfs</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="git-worktrees"><span>git-worktrees</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="glsl"><span>glsl</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ide0055"><span>ide0055</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="incident-response"><span>incident-response</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="infrastructure"><span>infrastructure</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="interpreter"><span>interpreter</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="ios"><span>ios</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="javascript"><span>javascript</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="layout"><span>layout</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="library-design"><span>library-design</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="linq"><span>linq</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="memory-management"><span>memory-management</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="moderation"><span>moderation</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="music"><span>music</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="object-initializers"><span>object-initializers</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="object-pooling"><span>object-pooling</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="observability"><span>observability</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="open-source"><span>open-source</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="particles"><span>particles</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="pathfinding"><span>pathfinding</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="persistence"><span>persistence</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="postmortems"><span>postmortems</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="primitive-obsession"><span>primitive-obsession</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="procedural"><span>procedural</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="process"><span>process</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="project-guid"><span>project-guid</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="roslyn"><span>roslyn</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="psychological-safety"><span>psychological-safety</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="quality"><span>quality</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="real-time"><span>real-time</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="refactoring"><span>refactoring</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="search"><span>search</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="security"><span>security</span><span class="n">1</span></button>
-            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="semantic-types"><span>semantic-types</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="serialization"><span>serialization</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="shaders"><span>shaders</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="sockets"><span>sockets</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="software-engineering"><span>software-engineering</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="sonarcloud"><span>sonarcloud</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="stakeholder-management"><span>stakeholder-management</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="static-analysis"><span>static-analysis</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="statistics"><span>statistics</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="strong-typing"><span>strong-typing</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="studio-policy"><span>studio-policy</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="synthesis"><span>synthesis</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="system-text-json"><span>system-text-json</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="teams"><span>teams</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="threading"><span>threading</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="troubleshooting"><span>troubleshooting</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="type-safety"><span>type-safety</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="unity"><span>unity</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="using-directives"><span>using-directives</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="version-control"><span>version-control</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="vibe-coding"><span>vibe-coding</span><span class="n">1</span></button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="visual-basic"><span>visual-basic</span><span class="n">1</span></button>
             <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="visual-studio"><span>visual-studio</span><span class="n">1</span></button>
-            <button class="filter-more" type="button" data-tag-more="1" data-label="Show 44 more">Show 44 more</button>
+            <button class="filter-opt extra" type="button" aria-pressed="false" data-tag="web"><span>web</span><span class="n">1</span></button>
+            <button class="filter-more" type="button" data-tag-more="1" data-label="Show 133 more">Show 133 more</button>
           </div>
         </div>
         <p class="filter-count" id="filter-count"></p>
       </aside>
       <div class="writing-main">
       <ul class="post-grid">
+        <li class="post-card" data-tags="coaching leadership production team-management psychological-safety" data-cats="|Production|Leadership|" data-date="2026-02-17T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/a-direct-and-empowering-coaching-style-for-engineering-teams.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-02-17">February 17, 2026</time>
+            <h3><a href="/blog/a-direct-and-empowering-coaching-style-for-engineering-teams/">A Direct and Empowering Coaching Style for Engineering Teams</a></h3>
+            <p>Why I lead with recognition, follow with pressure, and try to give the people I coach authority over their work rather than just instructions about it.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="production engineering-management founding-team career game-development" data-cats="|Production|Game Development|Leadership|" data-date="2026-02-14T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/the-engineer-producer-dual-role-a-replayable-founding-pattern.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-02-14">February 14, 2026</time>
+            <h3><a href="/blog/the-engineer-producer-dual-role-a-replayable-founding-pattern/">The Engineer-Producer Dual Role: A Replayable Founding Pattern</a></h3>
+            <p>An engineer-capable lead producer takes on hands-on engineering at the founding stage because the project demands more than the bench can supply, then moves back to producer-at-scale once the team is deep enough. I've now run this arc twice.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="unreal-engine source-control code-review ci-cd git game-development" data-cats="|Game Development|DevOps|Production|" data-date="2026-02-13T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/zero-trust-for-unreal-development.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-02-13">February 13, 2026</time>
+            <h3><a href="/blog/zero-trust-for-unreal-development/">Zero-Trust for Unreal Development</a></h3>
+            <p>Every change reaches main through the same gate (PR, review, CI), with review scaling to risk and the failsafe itself subject to review. The principle, the threat model, and how the approach actually works inside an Unreal studio.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="git game-development architecture team-management" data-cats="|Development|Game Development|DevOps|" data-date="2026-01-31T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/branching-strategies-for-game-teams-small-vs-large.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-31">January 31, 2026</time>
+            <h3><a href="/blog/branching-strategies-for-game-teams-small-vs-large/">Branching Strategies for Game Teams: Small vs. Large</a></h3>
+            <p>Git branching strategies that scale with team size, from 2-person indie studios to 30+ developer teams, including binary asset workflows and the Perforce hybrid approach.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine ui gui architecture mobile game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2026-01-30T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/comparing-two-custom-game-engine-gui-systems.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-30">January 30, 2026</time>
+            <h3><a href="/blog/comparing-two-custom-game-engine-gui-systems/">Comparing Two Custom Game Engine GUI Systems</a></h3>
+            <p>A follow-up to the tour of my second engine's GUI: the same problems, solved again two years later in the Carbon Monoxide engine, and then refined for a decade. Where the old system managed slicing, reentrancy, and mouse capture with discipline, the new one manages them with structure, and the comparison shows which ideas survived by being copied and which survived by being re-learned.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="ai static-analysis roslyn code-quality dotnet sonarcloud code-review" data-cats="|AI|Software Engineering|C#|" data-date="2026-01-29T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/static-analysis-is-not-a-weaker-kind-of-code-review.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-29">January 29, 2026</time>
+            <h3><a href="/blog/static-analysis-is-not-a-weaker-kind-of-code-review/">Static Analysis Is Not a Weaker Kind of Code Review</a></h3>
+            <p>Before anyone opens a pull request in my open source repositories, 306 static analysis rules have already returned a verdict, 94 of them security rules, every one of them reproducible and free. The habit of asking a language model to review code instead is not a tooling preference, it is a decidable question being re-asked in a form that cannot be decided, and it is most attractive to the operators least equipped to notice what it missed.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine ui gui data-driven tooling game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2026-01-28T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/a-data-driven-gui-system-in-a-custom-cpp-engine.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-28">January 28, 2026</time>
+            <h3><a href="/blog/a-data-driven-gui-system-in-a-custom-cpp-engine/">A Data-Driven GUI System in a Custom C++ Engine</a></h3>
+            <p>The GUI system in my second engine is a small web browser: screens are text pages, a stylesheet restyles elements by copying prototype objects with the assignment operator, buttons can be hyperlinks, and a missing page renders a 404. A tour of how it works, why the god-object base class is the load-bearing decision, and which ghosts are still in the code.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp php javascript procedural-generation determinism archaeology" data-cats="|Software Engineering|C++|Game Development|" data-date="2026-01-22T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/you-dont-want-randomness-you-want-reproducibility.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-22">January 22, 2026</time>
+            <h3><a href="/blog/you-dont-want-randomness-you-want-reproducibility/">You Don't Want Randomness, You Want Reproducibility</a></h3>
+            <p>The same decision turns up three times across twenty years of my code: a C++ engine carrying its own rand(), a static site generator carrying mulberry32, and a PHP card server reseeding from the clock on every request. Two are right and one is worse than doing nothing, and the difference is not about randomness.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php mysql advertising refactoring archaeology" data-cats="|Software Engineering|Production|" data-date="2026-01-21T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/three-hundred-files-the-rebrand-that-left-both-versions-in-place.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-21">January 21, 2026</time>
+            <h3><a href="/blog/three-hundred-files-the-rebrand-that-left-both-versions-in-place/">Three Hundred Files</a></h3>
+            <p class="card-subtitle">Part 5 &middot; The Rebrand That Left Both Versions in Place</p>
+            <p>3dsmaxforum became digitalartsfront in a full rewrite, and the previous version's files were left in the directory beside the new ones, referenced by nothing. Underneath the rebrand sat a self-serve advertising platform with campaign caps, frequency capping and PayPal billing.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php mysql community moderation archaeology" data-cats="|Software Engineering|Production|" data-date="2026-01-20T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/three-hundred-files-two-scores-one-for-making-and-one-for-being-seen.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-20">January 20, 2026</time>
+            <h3><a href="/blog/three-hundred-files-two-scores-one-for-making-and-one-for-being-seen/">Three Hundred Files</a></h3>
+            <p class="card-subtitle">Part 4 &middot; Two Scores, One for Making and One for Being Seen</p>
+            <p>The community kept two separate numbers per member. Participation counted what they made, weighted by effort. Popularity counted how others responded. Keeping them apart is the design decision, and the weights are four integers in a cron job.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php sockets daemons infrastructure archaeology" data-cats="|Software Engineering|" data-date="2026-01-19T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/three-hundred-files-a-socket-server-in-php-restarted-by-cron.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-19">January 19, 2026</time>
+            <h3><a href="/blog/three-hundred-files-a-socket-server-in-php-restarted-by-cron/">Three Hundred Files</a></h3>
+            <p class="card-subtitle">Part 3 &middot; A Socket Server in PHP, Restarted by Cron</p>
+            <p>The live chat on a 2008 art community ran on a non-blocking socket server written in PHP, with heartbeats, a pid lockfile, and cron as its supervisor. The daemon harness under it was written for a VoIP softphone, and the commented-out entries are still in the launcher.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php mysql search algorithms archaeology" data-cats="|Software Engineering|" data-date="2026-01-18T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/three-hundred-files-the-search-engine-is-a-table-of-words.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-18">January 18, 2026</time>
+            <h3><a href="/blog/three-hundred-files-the-search-engine-is-a-table-of-words/">Three Hundred Files</a></h3>
+            <p class="card-subtitle">Part 2 &middot; The Search Engine Is a Table of Words</p>
+            <p>A hand-written inverted index in PHP and MySQL: one table mapping words to ids, another holding word, document and count. The interesting decision is what counts as a document, because a forum thread and every reply under it are indexed as one.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php mysql web community archaeology" data-cats="|Software Engineering|Production|" data-date="2026-01-17T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/three-hundred-files-no-forum-software.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-17">January 17, 2026</time>
+            <h3><a href="/blog/three-hundred-files-no-forum-software/">Three Hundred Files</a></h3>
+            <p class="card-subtitle">Part 1 &middot; No Forum Software</p>
+            <p>A 3D art community I built and ran from around 2007 to 2016, recovered from a web host backup. Over three hundred PHP files, sixty-two database tables, and no forum package anywhere near it. This is what was in there and how the order of it was worked out.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="testing quality statistics production reliability" data-cats="|Software Engineering|Production|" data-date="2026-01-16T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/thirty-seven-percent-of-the-time-you-see-nothing.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-16">January 16, 2026</time>
+            <h3><a href="/blog/thirty-seven-percent-of-the-time-you-see-nothing/">Thirty Seven Percent of the Time, You See Nothing</a></h3>
+            <p>There is a class of defect that a test plan cannot find and production cannot avoid. The argument is arithmetic rather than anecdote: a one percent failure survives a full day of testing about as often as it gets seen once and closed as unreproducible, and the same defect reaches ten thousand people a day at a million users.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="error-handling reliability csharp unreal-engine api-design" data-cats="|Software Engineering|Architecture|" data-date="2026-01-13T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/deciding-between-failing-fast-and-carrying-on.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-13">January 13, 2026</time>
+            <h3><a href="/blog/deciding-between-failing-fast-and-carrying-on/">Deciding Between Failing Fast and Carrying On</a></h3>
+            <p>Meeting data that should not exist, the argument is usually crash versus carry on. That is the wrong axis. Both can be loud and both can be quiet, and the one thing never defensible is continuing silently, which is what a codebase does when nobody chooses at all.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="php mysql version-control tools archaeology" data-cats="|Software Engineering|Game Development|" data-date="2026-01-06T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/branching-and-three-way-merge-in-a-browser-based-data-editor.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-06">January 6, 2026</time>
+            <h3><a href="/blog/branching-and-three-way-merge-in-a-browser-based-data-editor/">Branching and Three-Way Merge in a Browser-Based Data Editor</a></h3>
+            <p>DataTool, a personal prototype of a browser-based editor for game design data from 2016, later became the basis for a tool adopted by a game team of about 60 developers. Recovered from a web host backup, it puts branches, three-way merges, per-cell conflict resolution and undo on database rows, and creating a branch inserts one row and copies nothing.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="game-development process game-jam cpp teams" data-cats="|Game Development|Production|" data-date="2026-01-04T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/the-game-jam-starts-two-weeks-early.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-04">January 4, 2026</time>
+            <h3><a href="/blog/the-game-jam-starts-two-weeks-early/">The Game Jam Starts Two Weeks Early</a></h3>
+            <p>Five Global Game Jams in version control, 2014 to 2018. The first commit lands ten to fifteen days before the weekend in every year after the first, and none of that early work is gameplay. It's the repository, the engine, the build and the installer, so that five to seven people can start writing a game at hour zero.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="procedural-generation audio dsp synthesis game-development architecture" data-cats="|Software Engineering|Game Development|Architecture|" data-date="2026-01-02T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/subtractive-dungeons-additive-terrain.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-02">January 2, 2026</time>
+            <h3><a href="/blog/subtractive-dungeons-additive-terrain/">Subtractive Dungeons, Additive Terrain</a></h3>
+            <p>Every generator I've written turns out to be doing one of the two things a synthesizer does: starting with too much and filtering it down, or starting with nothing and summing contributions. In one case the correspondence isn't an analogy at all, because fractal terrain and additive synthesis use the same word for the same arithmetic.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="csharp godot animation game-feel game-development" data-cats="|Software Engineering|Game Development|C#|" data-date="2026-01-01T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/moving-is-a-lean-plus-a-wiggle.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2026-01-01">January 1, 2026</time>
+            <h3><a href="/blog/moving-is-a-lean-plus-a-wiggle/">Moving Is a Lean Plus a Wiggle</a></h3>
+            <p>A fruit merging game where the character has no animation data. Everything it does is sine accumulators and one multiplier: a lean while moving, a decaying wobble on stopping whose frequency slows as it dies, and a juggle arc built from a quarter sine handed off to a quarter cosine.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="csharp godot graphics tools animation game-development" data-cats="|Software Engineering|Game Development|C#|" data-date="2025-12-31T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/five-layers-moving-at-different-speeds.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-31">December 31, 2025</time>
+            <h3><a href="/blog/five-layers-moving-at-different-speeds/">Five Layers Moving at Different Speeds</a></h3>
+            <p>A procedurally drawn cartoon eye that fakes a sphere out of flat layers by moving each one a different fraction of the gaze vector. The highlight stays where the light is, the eyelid closes along a curve, and one shape-building trick produces both the lid and a capsule.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="unreal-engine git source-control caching build-infrastructure game-development" data-cats="|DevOps|Game Development|" data-date="2025-12-29T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/the-source-control-heartbeat-caching-branch-state-for-unreal-editors.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-29">December 29, 2025</time>
+            <h3><a href="/blog/the-source-control-heartbeat-caching-branch-state-for-unreal-editors/">The Source Control Heartbeat: Caching Branch State for Unreal Editors</a></h3>
+            <p>An Unreal editor with source control enabled asks the same question every thirty seconds, on every workstation, and the people on the worst connections pay the most for it. Answering it once, next to the forge, turns out to be a small service with a lot of sharp edges around authorization and correctness.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="git-lfs git caching source-control build-infrastructure game-development" data-cats="|DevOps|Game Development|" data-date="2025-12-28T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/caching-git-lfs-why-the-bytes-and-the-locks-want-opposite-homes.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-28">December 28, 2025</time>
+            <h3><a href="/blog/caching-git-lfs-why-the-bytes-and-the-locks-want-opposite-homes/">Caching Git LFS: Why the Bytes and the Locks Want Opposite Homes</a></h3>
+            <p>A caching proxy for the Git LFS HTTP API turns out to have two separate jobs with contradictory deployment requirements. Object bytes are bandwidth-bound and belong near the client. Lock listings are round-trip-bound and belong near the forge. One deployment can't be right for both.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="dotnet csharp semantic-types domain-modeling music ktsu" data-cats="|Software Engineering|C#|Architecture|" data-date="2025-12-25T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/pitch-pitch-class-and-note-are-three-different-types.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-25">December 25, 2025</time>
+            <h3><a href="/blog/pitch-pitch-class-and-note-are-three-different-types/">Pitch, Pitch Class, and Note Are Three Different Types</a></h3>
+            <p>Music theory is full of values that look like the same integer and mean different things. Modeling it in C# made the case for semantic types better than file paths or physical quantities did, and showed exactly where a type system stops helping and a scored guess has to take over.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="dotnet csharp system-text-json serialization api-design" data-cats="|Software Engineering|C#|" data-date="2025-12-21T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/why-jsonrequired-cant-depend-on-another-property.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-21">December 21, 2025</time>
+            <h3><a href="/blog/why-jsonrequired-cant-depend-on-another-property/">Why JsonRequired Can't Depend on Another Property</a></h3>
+            <p>System.Text.Json decides whether a property is required before it reads any JSON, which is why a requirement conditional on a sibling value can't be expressed with the built-in attribute. Working around it means a converter, and the converter has to buffer, re-materialize, and take its member model from the serializer rather than from reflection.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp procedural-generation game-engine algorithms pathfinding game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-18T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/generate-too-much-then-delete.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-18">December 18, 2025</time>
+            <h3><a href="/blog/generate-too-much-then-delete/">Generate Too Much, Then Delete</a></h3>
+            <p>A dungeon generator from 2012 that never tries to build a correct dungeon. It places too many rooms, connects every pair it can, then removes rooms and doors one at a time while a pathfinder confirms each removal is safe. Correctness comes from the deletions, not the construction.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="csharp unity procedural-generation audio game-jam game-development" data-cats="|Software Engineering|Game Development|C#|" data-date="2025-12-17T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/five-notes-that-cant-be-played-wrong.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-17">December 17, 2025</time>
+            <h3><a href="/blog/five-notes-that-cant-be-played-wrong/">Five Notes That Can't Be Played Wrong</a></h3>
+            <p>A rhythm game from a twelve hour jam that composes its own music. The generator contains no music theory at all. Every constraint lives in which five sounds were recorded, so an unguarded random pick can't produce a wrong note, and the note it picks is also the thing the player has to hit.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="glsl shaders opengl graphics procedural game-development" data-cats="|Software Engineering|Game Development|" data-date="2025-12-15T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/noise-as-an-event-generator.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-15">December 15, 2025</time>
+            <h3><a href="/blog/noise-as-an-event-generator/">Noise as an Event Generator</a></h3>
+            <p>A glitch post-process built from one idea: sample smooth noise along time, then threshold it. Below the threshold nothing happens, above it the effect fires with a magnitude the noise already shaped. Occasional, organic bursts from two texture samples and no state.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine animation opengl tooling game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-14T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/keyframes-in-source-code.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-14">December 14, 2025</time>
+            <h3><a href="/blog/keyframes-in-source-code/">Keyframes in Source Code</a></h3>
+            <p>An RTS where every building animates and none of the animation is authored in a tool. Keyframes are C++ calls at normalized times, the period is one number, animations cycle by construction, and tuning means a recompile.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine scripting interpreter language-design game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-13T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/inside-a-1300-line-scripting-language.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-13">December 13, 2025</time>
+            <h3><a href="/blog/inside-a-1300-line-scripting-language/">Inside a 1,300-Line Scripting Language</a></h3>
+            <p>A close read of my engine's scripting system: a line-based interpreter over a third-party expression parser, a binding layer where C++20 concepts derive what's scriptable from a variant, execution state small enough to be a vector of tuples, and suspension implemented as the absence of an action.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="visual-basic gdi game-engine object-pooling game-development archive" data-cats="|Software Engineering|Game Development|" data-date="2025-12-12T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/forty-six-bullets-dragged-onto-a-form.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-12">December 12, 2025</time>
+            <h3><a href="/blog/forty-six-bullets-dragged-onto-a-form/">Forty-Six Bullets Dragged onto a Form</a></h3>
+            <p>The oldest game code I still have is a Visual Basic 6 shooter from August 2004, written at seventeen in a rural town of a hundred people. The bullet pool is forty-six shapes dragged onto a form, GDI is declared by hand, and the changelog records the exact moment I found out about double buffering.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine ui animation api-design game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-11T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/every-widget-knows-how-to-arrive-and-leave.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-11">December 11, 2025</time>
+            <h3><a href="/blog/every-widget-knows-how-to-arrive-and-leave/">Every Widget Knows How to Arrive and Leave</a></h3>
+            <p>A UI motion system where animating in and animating out are properties of a component rather than code somebody writes. Three animatable channels, each with a delay, a duration, a target and an easing curve, cubic-Bezier curves behind names, and one X-macro list generating the enum and the dispatch table.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="csharp dotnet audio dsp real-time performance" data-cats="|Software Engineering|C#|Architecture|" data-date="2025-12-10T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/a-synthesizer-in-a-garbage-collected-language.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-10">December 10, 2025</time>
+            <h3><a href="/blog/a-synthesizer-in-a-garbage-collected-language/">A Synthesizer in a Garbage-Collected Language</a></h3>
+            <p>A modular synth written in C#, where the audio callback takes a lock, allocates on the heap, and dispatches to the thread pool. Every one of those comes from a correct instinct expressed with the nearest available tool, in the one domain that punishes it hardest.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp procedural-generation game-engine graphics performance game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-09T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/a-galaxy-that-is-a-pure-function.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-09">December 9, 2025</time>
+            <h3><a href="/blog/a-galaxy-that-is-a-pure-function/">A Galaxy That Is a Pure Function</a></h3>
+            <p>An infinite starfield where the chunk's identifier is the seed for its own contents, so four billion chunks of stars exist without any of them being stored. The ID is a packed coordinate, the mapping is done in double because a galaxy exceeds float, and the chunk store is a sorted vector.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine asset-pipeline streaming performance game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-08T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/packing-assets-in-the-order-theyre-needed.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-08">December 8, 2025</time>
+            <h3><a href="/blog/packing-assets-in-the-order-theyre-needed/">Packing Assets in the Order They're Needed</a></h3>
+            <p>A compressed asset pack can only be read forward. Seeking backward means decompressing the whole file again from byte zero, so the order assets sit in the file decides how much work loading costs. An explicit manifest, ordered by first use, turns startup into a single forward pass.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine scripting coroutines game-development language-design" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-07T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/wait-states-are-the-whole-point.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-07">December 7, 2025</time>
+            <h3><a href="/blog/wait-states-are-the-whole-point/">Wait States Are the Whole Point</a></h3>
+            <p>Entity behavior is sequential in intent and awkwardly parallel in implementation. A scripting language whose defining feature is that a script can suspend mid-loop and resume next frame closes that gap, and the scoped binding model decides what each script is allowed to touch.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine particles performance data-oriented game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-06T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/a-particle-is-eleven-numbers.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-06">December 6, 2025</time>
+            <h3><a href="/blog/a-particle-is-eleven-numbers/">A Particle Is Eleven Numbers</a></h3>
+            <p>The particle system I sent to EA as a portfolio piece in 2013. Eleven values per particle, two of them random seeds that stand in for everything varied, a shared interpolation curve baked into a lookup table, five force types with three application modes, and a ring buffer that never allocates.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp code-generation game-engine tooling data-driven game-development" data-cats="|Software Engineering|Game Development|C++|Architecture|" data-date="2025-12-05T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/one-schema-six-implementations.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-05">December 5, 2025</time>
+            <h3><a href="/blog/one-schema-six-implementations/">One Schema, Six Implementations</a></h3>
+            <p>A JSON schema declaring a class and its typed members generates the C++ class, both directions of serialization, deep copy, deep equality, lifetime, and an editor panel. Thirty-five declarations produce nine thousand lines, and the editor for a new content type costs nothing.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine tooling content-pipeline editor game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-04T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/tools-that-share-the-runtime.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-04">December 4, 2025</time>
+            <h3><a href="/blog/tools-that-share-the-runtime/">Tools That Share the Runtime</a></h3>
+            <p>Content tools went from five separate editor executables to a tool framework running inside the game itself. The move removed the export format that could drift, put authoring in the same renderer the player sees, and made tool state something the engine persists rather than something each tool reinvents.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine ui mobile layout game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-03T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/two-anchors-and-a-touch-rect-relative-ui-layout.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-03">December 3, 2025</time>
+            <h3><a href="/blog/two-anchors-and-a-touch-rect-relative-ui-layout/">Two Anchors and a Touch Rect: Relative UI Layout</a></h3>
+            <p>A layout system where every element declares which point on its parent it attaches to and which point on itself does the attaching, resolves against the aspect ratio at query time, and keeps the region it draws separate from the region it can be touched.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl game-engine algorithms performance game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-02T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/best-fit-atlas-packing-and-the-cost-of-the-free-list.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-02">December 2, 2025</time>
+            <h3><a href="/blog/best-fit-atlas-packing-and-the-cost-of-the-free-list/">Best-Fit Atlas Packing and the Cost of the Free List</a></h3>
+            <p>A texture atlas allocator is a memory allocator in two dimensions, and the same choices apply. Best-fit packing with an early exit on an exact match, a one-pixel border that exists for a reason nobody guesses first, and a free list that was a linear scan for years longer than it should have been.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl streaming game-engine performance game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-12-01T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/time-sliced-asset-streaming-without-threads.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-12-01">December 1, 2025</time>
+            <h3><a href="/blog/time-sliced-asset-streaming-without-threads/">Time-Sliced Asset Streaming Without Threads</a></h3>
+            <p>A streaming loader that runs entirely inside the frame loop, advances a bounded amount of work per frame, and tunes its own I/O budget against a wall-clock measurement. No threads, no locks, and a failure mode that degrades instead of stalling.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl game-engine architecture testing game-development" data-cats="|Software Engineering|Game Development|C++|Architecture|" data-date="2025-11-30T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/the-renderer-that-draws-nothing.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-30">November 30, 2025</time>
+            <h3><a href="/blog/the-renderer-that-draws-nothing/">The Renderer That Draws Nothing</a></h3>
+            <p>An engine with three render backends, one of which accepts every call and draws nothing. The null implementation costs 274 lines, proves the abstraction is real, and buys the ability to run the game with no GPU at all.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine architecture career game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-11-29T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/four-engines-fifteen-years-what-the-numbers-show.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-29">November 29, 2025</time>
+            <h3><a href="/blog/four-engines-fifteen-years-what-the-numbers-show/">Four Engines, Fifteen Years</a></h3>
+            <p class="card-subtitle">Part 5 &middot; What the Numbers Show</p>
+            <p>Putting four custom C++ engines side by side, a similar volume of code spread across six times as many files, 603 globals fell to none, and every improvement took a rule out of convention and handed it to something that enforces it.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp game-engine code-generation ecs scripting game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-11-28T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/four-engines-fifteen-years-generating-the-game-instead-of-writing-it.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-28">November 28, 2025</time>
+            <h3><a href="/blog/four-engines-fifteen-years-generating-the-game-instead-of-writing-it/">Four Engines, Fifteen Years</a></h3>
+            <p class="card-subtitle">Part 4 &middot; Generating the Game Instead of Writing It</p>
+            <p>A decade after it shipped a mobile puzzle game, the same engine now runs a dungeon crawler where 9,315 lines of C++ are generated from 35 JSON files, entity behavior lives in a custom scripting language, and the engine is a submodule rather than a folder.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl game-engine ios mobile game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-11-27T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/four-engines-fifteen-years-the-rewrite-that-mobile-forced.jpeg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-27">November 27, 2025</time>
+            <h3><a href="/blog/four-engines-fifteen-years-the-rewrite-that-mobile-forced/">Four Engines, Fifteen Years</a></h3>
+            <p class="card-subtitle">Part 3 &middot; The Rewrite That Mobile Forced</p>
+            <p>Porting a shipped PC puzzle game to iOS meant a third engine rather than a port. Mobile turned three things that had been constants into data: screen resolution, application lifecycle, and how much of the codebase belongs to somebody else's SDK.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl game-engine architecture tooling game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-11-26T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/four-engines-fifteen-years-twenty-four-projects-decomposing-an-engine.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-26">November 26, 2025</time>
+            <h3><a href="/blog/four-engines-fifteen-years-twenty-four-projects-decomposing-an-engine/">Four Engines, Fifteen Years</a></h3>
+            <p class="card-subtitle">Part 2 &middot; Twenty-Four Projects: Decomposing an Engine</p>
+            <p>The second engine answered the first one's problem by splitting into twenty-four projects with an enforced dependency graph. Average file size fell from 475 lines to 73. It also introduced sixteen manager singletons, which turned out to be global state with a nicer name.</p>
+          </div>
+
+        </li>
+        <li class="post-card" data-tags="cpp opengl game-engine architecture streaming game-development" data-cats="|Software Engineering|Game Development|C++|" data-date="2025-11-25T00:00:00.000Z">
+          <img class="post-thumb" src="/assets-blog/four-engines-fifteen-years-603-globals-and-a-texture-streamer.png" alt="" loading="lazy" width="1200" height="675" />
+          <div class="post-card-body">
+            <time datetime="2025-11-25">November 25, 2025</time>
+            <h3><a href="/blog/four-engines-fifteen-years-603-globals-and-a-texture-streamer/">Four Engines, Fifteen Years</a></h3>
+            <p class="card-subtitle">Part 1 &middot; 603 Globals and a Texture Streamer</p>
+            <p>The first engine I shipped a commercial game on started as someone else's OpenGL tutorial basecode and kept its state in a header with 603 global declarations. It also had a self-tuning, time-budgeted texture streamer writing into mapped GPU memory. Both things are true, and the second one explains the first.</p>
+          </div>
+
+        </li>
         <li class="post-card" data-tags="csharp linq performance" data-cats="|Development|C#|" data-date="2025-11-23T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-linq-except-builds-its-own-set.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/set-semantics-and-deferred-execution-in-linq-except.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-11-23">November 23, 2025</time>
-            <h3><a href="/blog/csharp-linq-except-builds-its-own-set/">Set Semantics and Deferred Execution in LINQ Except</a></h3>
+            <h3><a href="/blog/set-semantics-and-deferred-execution-in-linq-except/">Set Semantics and Deferred Execution in LINQ Except</a></h3>
             <p>A close look at how LINQ's Except works, why it never delegates to the collection's Contains, and how that changes when to materialize a query and which container to use.</p>
           </div>
 
@@ -688,118 +1219,118 @@
 
         </li>
         <li class="post-card" data-tags="crisis-management postmortems leadership production incident-response" data-cats="|Production|Leadership|DevOps|" data-date="2025-11-20T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/crisis-mode-composure-authoring-postmortems.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/crisis-mode-composure-authoring-postmortems-not-pointing-fingers.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-11-20">November 20, 2025</time>
-            <h3><a href="/blog/crisis-mode-composure-authoring-postmortems/">Crisis-Mode Composure: Authoring Postmortems, Not Pointing Fingers</a></h3>
+            <h3><a href="/blog/crisis-mode-composure-authoring-postmortems-not-pointing-fingers/">Crisis-Mode Composure: Authoring Postmortems, Not Pointing Fingers</a></h3>
             <p>Two infrastructure crises played out the same way. Stay calm, work the problem, communicate steadily, recognize the people who got through it alongside the team, and write the postmortem rather than pointing fingers. A producer's playbook for crisis composure as a learnable practice.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet csharp ktsu open-source library-design design-philosophy" data-cats="|Software Engineering|" data-date="2025-11-19T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/four-themes-of-ktsu-dev.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/design-principles-behind-the-ktsu-dev-dotnet-library-catalog.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-11-19">November 19, 2025</time>
-            <h3><a href="/blog/four-themes-of-ktsu-dev/">Design Principles Behind the ktsu.dev .NET Library Catalog</a></h3>
+            <h3><a href="/blog/design-principles-behind-the-ktsu-dev-dotnet-library-catalog/">Design Principles Behind the ktsu.dev .NET Library Catalog</a></h3>
             <p>ktsu.dev is the open-source .NET project I have been building since 2023. The libraries vary in size and scope, but they share four principles that govern what I will build and what I won't. This is the design philosophy underneath the library catalog.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet csharp config persistence ktsu library-deep-dive" data-cats="|Software Engineering|" data-date="2025-11-10T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/ktsu-appdatastorage-zero-friction-config-persistence.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/atomic-configuration-persistence-for-dotnet-desktop-applications.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-11-10">November 10, 2025</time>
-            <h3><a href="/blog/ktsu-appdatastorage-zero-friction-config-persistence/">Atomic Configuration Persistence for .NET Desktop Applications</a></h3>
+            <h3><a href="/blog/atomic-configuration-persistence-for-dotnet-desktop-applications/">Atomic Configuration Persistence for .NET Desktop Applications</a></h3>
             <p>Persisting application config is the kind of work every project does, every project gets slightly wrong, and every project regrets having rolled its own. ktsu.AppDataStorage is the small library I built so I would never write that code again (safe writes, debounced saves, automatic backups, and a one-line API).</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet csharp semantic-types primitive-obsession ktsu library-deep-dive" data-cats="|Software Engineering|" data-date="2025-10-30T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/ktsu-semantics-type-safe-strings-paths-quantities.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/type-safe-strings-paths-and-physical-quantities-in-dotnet.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-10-30">October 30, 2025</time>
-            <h3><a href="/blog/ktsu-semantics-type-safe-strings-paths-quantities/">Type-Safe Strings, Paths, and Physical Quantities in .NET</a></h3>
+            <h3><a href="/blog/type-safe-strings-paths-and-physical-quantities-in-dotnet/">Type-Safe Strings, Paths, and Physical Quantities in .NET</a></h3>
             <p>Primitive obsession is the bug class where everything is a string or a double and the compiler can't help. ktsu.Semantics is the library I built to make domain types impossible to misuse. Email addresses, file paths, temperatures, and user IDs become first-class types with built-in validation and zero runtime cost over their primitives.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet msbuild nuget architecture devops" data-cats="|Development|C#|Architecture|" data-date="2025-10-20T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-build-infrastructure-79-repositories.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/build-infrastructure-for-79-dotnet-repositories-with-a-custom-msbuild-sdk.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-10-20">October 20, 2025</time>
-            <h3><a href="/blog/dotnet-build-infrastructure-79-repositories/">Build Infrastructure for 79 .NET Repositories with a Custom MSBuild SDK</a></h3>
+            <h3><a href="/blog/build-infrastructure-for-79-dotnet-repositories-with-a-custom-msbuild-sdk/">Build Infrastructure for 79 .NET Repositories with a Custom MSBuild SDK</a></h3>
             <p>How a custom MSBuild SDK, topological dependency sorting, automated versioning, and cross-repo synchronization keep 79+ independent .NET libraries building and publishing consistently.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp dotnet security architecture design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-10-08T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-layered-security-architecture.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/a-layered-security-architecture-for-dotnet-data-processing.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-10-08">October 8, 2025</time>
-            <h3><a href="/blog/dotnet-layered-security-architecture/">A Layered Security Architecture for .NET Data Processing</a></h3>
+            <h3><a href="/blog/a-layered-security-architecture-for-dotnet-data-processing/">A Layered Security Architecture for .NET Data Processing</a></h3>
             <p>A layered security architecture for .NET data processing systems: input validation, JWT auth, role-based access, rate limiting, encryption, and security headers with working code.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp dotnet debugging distributed-systems observability" data-cats="|Development|C#|Debugging|" data-date="2025-09-29T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-distributed-tracing-structured-logging.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/distributed-tracing-and-structured-logging-in-dotnet.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-09-29">September 29, 2025</time>
-            <h3><a href="/blog/dotnet-distributed-tracing-structured-logging/">Distributed Tracing and Structured Logging in .NET</a></h3>
+            <h3><a href="/blog/distributed-tracing-and-structured-logging-in-dotnet/">Distributed Tracing and Structured Logging in .NET</a></h3>
             <p>A scientific approach to debugging .NET systems: correlation IDs for request tracing, structured logging, Activity-based distributed tracing, and practical patterns for finding bugs faster.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp dotnet performance memory-management design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-09-15T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-reducing-gc-pressure-arraypool-span.png" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/reducing-gc-pressure-in-dotnet-with-arraypool-and-span.png" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-09-15">September 15, 2025</time>
-            <h3><a href="/blog/dotnet-reducing-gc-pressure-arraypool-span/">Reducing GC Pressure in .NET with ArrayPool and Span</a></h3>
+            <h3><a href="/blog/reducing-gc-pressure-in-dotnet-with-arraypool-and-span/">Reducing GC Pressure in .NET with ArrayPool and Span</a></h3>
             <p>Practical techniques for reducing GC pressure in .NET: object pooling, Span&lt;T&gt;, ArrayPool, LOH management, and continuous memory monitoring.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp dotnet threading concurrency design-patterns" data-cats="|Development|C#|Architecture|" data-date="2025-09-02T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-threading-synchronization-patterns-production-libraries.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/threading-and-synchronization-patterns-in-production-dotnet-libraries.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-09-02">September 2, 2025</time>
-            <h3><a href="/blog/csharp-threading-synchronization-patterns-production-libraries/">Threading and Synchronization Patterns in Production .NET Libraries</a></h3>
+            <h3><a href="/blog/threading-and-synchronization-patterns-in-production-dotnet-libraries/">Threading and Synchronization Patterns in Production .NET Libraries</a></h3>
             <p>Practical threading patterns from production .NET code, including lock objects as parameters, thread dispatch queues, ReaderWriterLockSlim vs Lock, and how to actually test for thread safety.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp type-safety design-patterns architecture dotnet strong-typing" data-cats="|Development|C#|Architecture|" data-date="2025-08-19T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-eliminating-primitive-obsession-with-semantic-types.jpg" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/eliminating-primitive-obsession-in-csharp-with-semantic-types.jpg" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-08-19">August 19, 2025</time>
-            <h3><a href="/blog/csharp-eliminating-primitive-obsession-with-semantic-types/">Eliminating Primitive Obsession in C# with Semantic Types</a></h3>
+            <h3><a href="/blog/eliminating-primitive-obsession-in-csharp-with-semantic-types/">Eliminating Primitive Obsession in C# with Semantic Types</a></h3>
             <p>How wrapping strings and paths in semantic types catches entire categories of bugs at compile time, and a look at the CRTP-based approach used in the ktsu.dev Semantics library.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp formatting roslyn ide0055 using-directives" data-cats="|Development|C#|" data-date="2025-07-29T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-ide0055-using-directive-grouping.png" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/enforcing-using-directive-grouping-with-ide0055-in-csharp.png" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-07-29">July 29, 2025</time>
-            <h3><a href="/blog/csharp-ide0055-using-directive-grouping/">Enforcing Using Directive Grouping with IDE0055 in C#</a></h3>
+            <h3><a href="/blog/enforcing-using-directive-grouping-with-ide0055-in-csharp/">Enforcing Using Directive Grouping with IDE0055 in C#</a></h3>
             <p>How C#'s IDE0055 formatting rule behaves with using directives, why some formatting problems never trigger a violation, and how to work around it.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="csharp object-initializers constructors" data-cats="|Development|C#|" data-date="2025-07-18T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/csharp-object-initialization-order.png" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/object-initialization-order-in-csharp-and-how-to-design-around-it.png" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-07-18">July 18, 2025</time>
-            <h3><a href="/blog/csharp-object-initialization-order/">Object Initialization Order in C# and How to Design Around It</a></h3>
+            <h3><a href="/blog/object-initialization-order-in-csharp-and-how-to-design-around-it/">Object Initialization Order in C# and How to Design Around It</a></h3>
             <p>How C# object initialization order works, why object initializers run after the default constructor, and how to design types around that behavior.</p>
           </div>
 
         </li>
         <li class="post-card" data-tags="dotnet debugging nuget msbuild troubleshooting build-server project-guid visual-studio git-worktrees architecture design-flaw" data-cats="|Development|Debugging|Architecture|" data-date="2025-06-14T00:00:00.000Z">
-          <img class="post-thumb" src="/assets-blog/dotnet-duplicate-project-guids-build-server-state.png" alt="" loading="lazy" width="1200" height="675" />
+          <img class="post-thumb" src="/assets-blog/duplicate-project-guids-and-msbuild-build-server-state.png" alt="" loading="lazy" width="1200" height="675" />
           <div class="post-card-body">
             <time datetime="2025-06-14">June 14, 2025</time>
-            <h3><a href="/blog/dotnet-duplicate-project-guids-build-server-state/">Duplicate Project GUIDs and MSBuild Build Server State</a></h3>
+            <h3><a href="/blog/duplicate-project-guids-and-msbuild-build-server-state/">Duplicate Project GUIDs and MSBuild Build Server State</a></h3>
             <p>Debugging a cryptic .NET restore error that turns out to expose a design flaw in MSBuild's GUID-based project identity system, and why it bites anyone using Git worktrees or forks.</p>
           </div>
 
@@ -807,13 +1338,6 @@
       </ul>
       <p class="filter-empty" hidden>Nothing matches that combination.</p>
       </div>
-    </div>
-
-    <div class="links">
-      <a class="primary" href="https://ktsu.dev">ktsu.dev</a>
-      <a href="https://github.com/matt-edmondson">GitHub</a>
-      <a href="https://www.linkedin.com/in/medmondson-aus">LinkedIn</a>
-      <a href="https://www.nuget.org/profiles/ktsu.dev">NuGet</a>
     </div>
   </main>
 

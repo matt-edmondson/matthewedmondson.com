@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>The Renderer That Draws Nothing | Matt Edmondson</title>
+  <meta name="description" content="An engine with three render backends, one of which accepts every call and draws nothing. The null implementation costs 274 lines, proves the abstraction is real, and buys the ability to run the game with no GPU at all." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/the-renderer-that-draws-nothing/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="The Renderer That Draws Nothing | Matt Edmondson" />
+  <meta property="og:description" content="An engine with three render backends, one of which accepts every call and draws nothing. The null implementation costs 274 lines, proves the abstraction is real, and buys the ability to run the game with no GPU at all." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/the-renderer-that-draws-nothing/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,56 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>The Renderer That Draws Nothing</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-11-30">November 30, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=opengl">opengl</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=testing">testing</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/the-renderer-that-draws-nothing.png" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>The engine I wrote for mobile has three render backends. One targets desktop OpenGL, one targets OpenGL ES, and one accepts every call and draws nothing at all.</p>
+<p>That third one is 274 lines of code that produce no pixels, and it&#39;s the reason I trust the other two.</p>
+<p>This is the last of eight posts taking one system at a time out of my custom engines.</p>
+<h2>Why Two Backends Forces an Interface</h2>
+<p>An engine with one graphics API doesn&#39;t have a renderer abstraction, it has graphics calls wherever drawing happens. My first engine was like that: game objects emitted vertices inline, so the drawing code and the game code were the same code.</p>
+<p>Adding a second API is what makes the boundary real. Desktop OpenGL and OpenGL ES overlap heavily and differ in exactly the places that matter, so code written against one won&#39;t compile against the other. That incompatibility is useful pressure, because it forces every drawing call in the game to become a call to something the engine defines.</p>
+<p>The result is that game code names operations rather than API functions. It asks for a quad, a texture bind, a framebuffer target. What that becomes on the way to the hardware belongs to the backend, and the backend is selected at compile time.</p>
+<p>Two implementations is the minimum that proves an interface exists. One implementation can always be an accidental rename of the underlying API, and it usually is, because there&#39;s nothing pushing back.</p>
+<h2>The Third One Is the Interesting One</h2>
+<p><code>cmRenderNULL</code> implements the same interface and does nothing. Every call is accepted, nothing is drawn, and no graphics context is required.</p>
+<p>The immediate benefit is that the game can run with no GPU. Simulation timing without the renderer confusing the measurement. Logic running on a machine with no display. Automated runs that need the game to execute rather than to look correct.</p>
+<p>The subtler benefit is that it proves the abstraction. An interface with two real implementations can still leak, because both of them are graphics APIs and both can quietly rely on the same assumption. A null implementation can&#39;t rely on anything. If the game runs correctly against a backend that does nothing, then nothing outside the renderer depends on rendering having happened, which is a property that&#39;s hard to establish any other way.</p>
+<p>That&#39;s the null object pattern doing something more useful than avoiding a null check. It&#39;s a test of whether a boundary is where it claims to be, and it&#39;s cheap. Most of those 274 lines are empty function bodies.</p>
+<h2>The Boundary Has to Be an Operation</h2>
+<p>The design decision that makes a null backend possible is that the interface is expressed in operations rather than in resources the caller holds.</p>
+<p>If game code holds a texture id, a buffer handle, or a shader location, those are graphics concepts and the null backend has to fabricate plausible ones. Every fabricated handle is a chance for game code to do something with it that only works because the real backend behaves a certain way.</p>
+<p>If game code instead asks the renderer to draw a thing described in the engine&#39;s own types, the null backend has nothing to fake. It receives a description and discards it.</p>
+<p>That&#39;s the test I&#39;d apply to any abstraction, not only rendering. Can a do-nothing implementation satisfy it without inventing anything? If it can&#39;t, the interface is exposing the thing it was supposed to be hiding.</p>
+<h2>Platforms, Split the Same Way</h2>
+<p>The same split appears one level down, with separate Windows and iOS platform implementations behind a common interface, chosen at compile time.</p>
+<p>The first engine did this with <code>#ifdef</code> blocks inline, so a single function might contain both the Windows and the Mac version of a step, separated by preprocessor directives. That works and it rots. Every function becomes a place where two platforms are interleaved, and reading either one means mentally deleting the other. Adding a third platform means touching every one of those functions.</p>
+<p>Separate implementation files behind one interface means adding a platform is adding a file. It also means each file is readable on its own, which matters more than it sounds when debugging something that only reproduces on one of them.</p>
+<h2>What It Cost</h2>
+<p>An interface is the intersection of what its implementations can do, so anything one API offers that the others don&#39;t is either absent or leaks through as a special case. A desktop-only feature has nowhere clean to live in a design that also targets mobile, and the pressure is always toward the lowest common denominator.</p>
+<p>And there&#39;s indirection at the call site. Every draw goes through a virtual call rather than straight to the API. For this engine, drawing a few thousand quads, that never showed up in a profile. For a renderer issuing hundreds of thousands of calls a frame it would, and the answer there is to batch at a higher level so the interface is crossed less often rather than to remove the interface.</p>
+<h2>The Return Was Longevity</h2>
+<p>The measurable outcome is that this engine outlived the game it was written for by more than a decade, and the renderer abstraction is the main reason.</p>
+<p>A renderer behind an interface can gain a backend. When the target changed, the work was a new implementation of a known interface, which is bounded and reviewable. The first engine, where drawing was inline API calls in game code, could not have been ported. It would have been rewritten, and rewriting is what happened instead.</p>
+<p>That&#39;s the general argument for interfaces at the boundary of anything a project doesn&#39;t control. Not because abstraction is a virtue, and not because a second implementation is planned, but because the thing on the other side will eventually change, and the interface converts a rewrite into an addition.</p>
+<h2>What Transfers</h2>
+<p>Two implementations to make an interface real, because one implementation is usually a rename.</p>
+<p>A null implementation to prove it, because it can only be satisfied by an interface that genuinely hides what&#39;s behind it, and it&#39;s mostly empty function bodies.</p>
+<p>Operations rather than handles, so that a do-nothing implementation has nothing to fabricate.</p>
+<p>And separate files rather than preprocessor branches, so that each platform can be read without mentally deleting the others.</p>
 
     </article>
   </main>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate Too Much, Then Delete | Matt Edmondson</title>
+  <meta name="description" content="A dungeon generator from 2012 that never tries to build a correct dungeon. It places too many rooms, connects every pair it can, then removes rooms and doors one at a time while a pathfinder confirms each removal is safe. Correctness comes from the deletions, not the construction." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/generate-too-much-then-delete/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Generate Too Much, Then Delete | Matt Edmondson" />
+  <meta property="og:description" content="A dungeon generator from 2012 that never tries to build a correct dungeon. It places too many rooms, connects every pair it can, then removes rooms and doors one at a time while a pathfinder confirms each removal is safe. Correctness comes from the deletions, not the construction." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/generate-too-much-then-delete/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Generate Too Much, Then Delete</h1>
+      <div class="post-meta">
+        <time datetime="2025-12-18">December 18, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=procedural-generation">procedural-generation</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=algorithms">algorithms</a>
+        <a class="post-tag" href="/#tag=pathfinding">pathfinding</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/generate-too-much-then-delete.png" alt="" width="1200" height="675" />
+
+<p>My second engine shipped a dungeon crawler, and its level generator is the only place in twenty years of my code where the abbreviation appears in the identifiers:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> Dungeon</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">pcg</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> Dungeon</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">pcgRooms</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> Dungeon</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">pcgDoors</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> Dungeon</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">pcgRoomCull</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> Dungeon</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">pcgDoorCull</span><span style="color:#939AB7">();</span></span></code></pre><p>Five passes and about thirteen hundred lines. What it shows is that not one of those passes tries to produce a correct dungeon. Every guarantee the finished level has comes from something being deleted while a test watched.</p>
+<p>This continues the series taking one system at a time out of my custom engines.</p>
+<h2>The Outer Loop Throws Away Whole Dungeons</h2>
+<p>The driver is four lines of intent:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">while</span><span style="color:#939AB7">((</span><span style="color:#CAD3F5">currentDepth </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> minDepth </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> currentRooms </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> minRooms</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#CAD3F5"> dungeonTries</span><span style="color:#8BD5CA">++</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#F5A97F"> 100</span><span style="color:#939AB7">){</span></span></code></pre><p>Build an entire dungeon. Measure how deep it got and how many rooms survived. If either falls short of the minimum, discard all of it and build another. Give up after a hundred attempts and ship whatever the last one produced.</p>
+<p>Writing a room placer that always yields a dungeon at least six rooms deep is hard, because depth is a property of the finished graph and the placer works one room at a time. Writing a placer that usually gets there and then checking is easy, and the check is code that has to exist anyway, since the game needs to know how deep each room is regardless.</p>
+<p>The cap is the part that separates this from a student version. Constraints that interact can be jointly unsatisfiable for a given bounding box, and an unbounded loop meets that condition on somebody else&#39;s machine, at generation time, with no output and no error. A hundred tries converts an unbounded hang into a dungeon that&#39;s slightly smaller than requested. The failure mode is a disappointment rather than a crash, which is the correct place to land.</p>
+<h2>Rooms Are Placed Like Space Invaders</h2>
+<p>Each candidate room gets a random size drawn until it satisfies an area constraint:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">while</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">minRoomArea </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">maxRoomArea </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> noCorridor</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">=</span><span style="color:#EED49F"> Random</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">range</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5">chunkRatio</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">minRoomSize</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">=</span><span style="color:#EED49F"> Random</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">range</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5">chunkRatio</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5">minRoomSize</span><span style="color:#939AB7">;</span></span></code></pre><p>Sizes are multiples of <code>minRoomSize</code> rather than arbitrary, so every room lands on a grid and tiles line up without any snapping logic.</p>
+<p>The <code>noCorridor</code> term is a taste rule expressed as a filter. A room whose aspect ratio exceeds three to one reads as a corridor rather than a room, and corridors are allowed through only occasionally:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> corridorThresh </span><span style="color:#8BD5CA">||</span><span style="color:#CAD3F5"> tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">/</span><span style="color:#CAD3F5"> tmpRoom</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">>=</span><span style="color:#CAD3F5"> corridorThresh</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#8AADF4;font-style:italic">rand</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> %</span><span style="color:#F5A97F"> 100</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#F5A97F"> 5</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        //percentage chance to let it in</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">        noCorridor </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Rejecting ninety-five percent of long thin rooms makes them rare without making them impossible, which is a better result than banning them. A generator that can&#39;t produce a corridor produces a level made entirely of boxes, and the occasional long room is what stops the layout reading as a grid of cells.</p>
+<p>Placement itself is described by its own comment:</p>
+<blockquote>
+<p>slide left until either no longer intersects with bounding box or does not intersect with other rooms, then slide right, then slide up, space invaders style</p>
+</blockquote>
+<p>The room starts at the top center and walks. It&#39;s not a partitioning scheme and it isn&#39;t trying to be optimal. It&#39;s a packing heuristic that terminates, and combined with random sizes it produces layouts that look placed rather than tiled.</p>
+<h2>Every Possible Door, Then Fewer</h2>
+<p>The door pass connects every pair of rooms whose door-safe regions overlap. Not a spanning tree, not a chosen subset. All of them.</p>
+<p>Door-safe regions are authored, not derived. They&#39;re metadata volumes drawn on a room in the editor, marking where a doorway may be cut. A room author decides that a doorway is acceptable along this wall and not that one, and the generator only ever proposes connections that a person already approved.</p>
+<p>The result after this pass is a maximally connected dungeon, which is unplayable. Every room touches every neighbor it possibly can, so there&#39;s no route to find and nothing is ever behind anything else.</p>
+<p>Then the door cull runs, and it&#39;s the pass I&#39;d take to another project unchanged:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#8AADF4;font-style:italic">rand</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> %</span><span style="color:#F5A97F"> 100</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#F5A97F"> 10</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    ...</span></span>
+<span class="line"><span style="color:#CAD3F5">    itd2</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#8AADF4;font-style:italic">pathfindAll</span><span style="color:#939AB7">()){</span></span>
+<span class="line"><span style="color:#CAD3F5">        rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">roomId</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">doors</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">erase</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">itd2</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> it</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">doors</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">erase</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">itd</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd2</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Consider ten percent of doors. For each one, deactivate both sides, run the pathfinder from the entrance to every room, and if everything is still reachable, commit the deletion. If not, put it back.</p>
+<p>That&#39;s maze generation by edge removal, and it has a property that&#39;s hard to get any other way: every intermediate state of the dungeon is valid. There&#39;s no moment during generation where the level is broken and a later pass is relied upon to fix it. A removal either preserves the invariant and is kept, or violates it and never happened.</p>
+<p>It&#39;s also the only formulation of this that stays correct when the connection graph is arbitrary. Carving a maze from a grid can lean on the grid&#39;s structure. These rooms are irregular, differently sized, and connected wherever two authored volumes happened to overlap, so there&#39;s no structure to lean on. Testing each removal against the actual pathfinder makes the graph&#39;s structure irrelevant.</p>
+<p>The pathfinder used for the test is the same A* the game uses to move monsters around. One implementation, two purposes, and the level generator gets its correctness guarantee from code that was going to be written and debugged anyway.</p>
+<h2>Unreachable Rooms Are Deleted Rather Than Connected</h2>
+<p>The room cull runs the same test without the revert:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">for</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5">i</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">rooms</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">size</span><span style="color:#939AB7">();</span><span style="color:#CAD3F5">i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">path_success</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">roomId</span><span style="color:#939AB7">]</span><span style="color:#8BD5CA">!=</span><span style="color:#F5A97F">1</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">        rooms</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">erase</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">rooms</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">begin</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        culled </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span></code></pre><p>Pathfind to every room, delete the first one that couldn&#39;t be reached, and start over. Repeat until a full pass removes nothing.</p>
+<p>Connecting an isolated room is a design problem. It means choosing where a corridor should run, whether it crosses anything, and whether the new connection ruins the pacing that the door cull just produced. Deleting the room is one line and cannot introduce a new failure. The generator already overproduces, so losing a few rooms costs nothing, and the outer retry loop catches the case where it lost too many.</p>
+<p>That&#39;s the whole philosophy stated in one pass. When a generator can overproduce cheaply, repair is a worse tool than deletion.</p>
+<h2>Authored and Generated in the Same Dungeon</h2>
+<p>One line in the driver decides where a room&#39;s interior comes from:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">filename</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">size</span><span style="color:#939AB7">())</span><span style="color:#CAD3F5"> rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#8AADF4;font-style:italic">load</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">filename</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#CAD3F5"> rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">].</span><span style="color:#8AADF4;font-style:italic">pcgContents</span><span style="color:#939AB7">();</span></span></code></pre><p>A room either loads a file somebody made in the dungeon editor, or generates its own contents. Both kinds go through the same placement, the same door generation, and the same culling, because by that point a room is a size, a position, and a list of door-safe volumes regardless of where its insides came from.</p>
+<p>This is the answer that fully procedural dungeon crawlers usually arrive at eventually. Handmade set pieces carry the parts that need authorship, generated filler carries the volume, and the layout algorithm doesn&#39;t know which is which. Getting the interface right, so that an authored room is interchangeable with a generated one, is most of the work, and it&#39;s right here because both kinds have to answer the same three questions.</p>
+<h2>The Generator Draws Itself</h2>
+<p>Between every pass, the driver does this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">window</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">update</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">manicEngine</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">update</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">client</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">render</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#CAD3F5">manicEngine</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">swapBuffers</span><span style="color:#939AB7">();</span></span></code></pre><p>The dungeon renders after room placement, after doors, after the room cull, and after the door cull. Generation is visible while it happens.</p>
+<p>The window keeps pumping messages, so a generation that takes a few seconds doesn&#39;t make the application look frozen to the operating system. And the developer can watch the algorithm work, which is the difference between debugging a level generator and guessing at one. A room cull that removes too much is obvious in one run and nearly invisible in a log.</p>
+<p>There&#39;s a separate <code>pcgRender</code> for this, so the intermediate visualization is a real feature rather than a leftover.</p>
+<h2>Difficulty Comes From the Graph</h2>
+<p>Room contents are seeded per room, and what spawns depends on how deep the room is:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">srand</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">seed</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">...</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">depth </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#F5A97F"> 2</span><span style="color:#939AB7">){</span><span style="color:#CAD3F5"> chanceSlime </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 10</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#C6A0F6"> if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">depth </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#F5A97F"> 4</span><span style="color:#939AB7">){</span><span style="color:#CAD3F5"> chanceSlime </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 5</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> chanceSlime </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 5</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span></code></pre><p><code>depth</code> is distance from the entrance along the room graph, which the pathfinder computed during culling. Using graph distance rather than physical distance is the right call. A room fifty meters from the entrance behind one door is not deep. A room ten meters away behind six doors is, and what the player experiences is the number of doors.</p>
+<p>The weights are placeholders. Three of the four enemy types are set to zero at every depth, and the one that isn&#39;t gets rarer further in, which is backwards. The mechanism is finished and the tuning never happened, which is what a system built ahead of its content looks like.</p>
+<h2>What I&#39;d Change</h2>
+<p>Both cull passes restart from the beginning after every single deletion, re-running the pathfinder across all rooms each time. On dungeons of this size it doesn&#39;t matter. It is still wrong, and collecting the unreachable set in one pass before deleting would be both faster and easier to read.</p>
+<p>Room identifiers are array indices, so deleting a room requires walking every remaining room and every door to decrement any identifier above the deleted one. That hand-written renumbering is exactly the kind of loop that develops an off-by-one under maintenance. Stable identifiers with a lookup would remove the whole category.</p>
+<p>The seed is a literal with its predecessor commented out beside it:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">seed </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 8</span><span style="color:#939AB7">;</span><span style="color:#939AB7;font-style:italic">//5</span></span></code></pre><p>Fixed during development so the dungeon is reproducible, which is correct, and never given a path to being set from anywhere, which means shipping it required editing and rebuilding.</p>
+<p>The enemy spawn loop had no iteration bound, so a room that couldn&#39;t fit its quota of enemies would spin forever. Placement inside it was bounded to ten attempts, so the author clearly knew the failure was possible and guarded the inner loop while leaving the outer one open. I fixed that while reading the code for this post, which felt more useful than describing it.</p>
+<h2>What Transfers</h2>
+<p>When a generator can overproduce cheaply, stop trying to make each step correct. Produce too much, then remove things one at a time while a test confirms each removal is safe. The invariant holds at every intermediate state, no pass depends on a later pass to clean up after it, and the test is usually something the program needed anyway.</p>
+<p>Prefer deleting a failure to repairing one. Repair introduces new decisions and therefore new ways to be wrong. Deletion cannot, as long as something upstream produced a surplus.</p>
+<p>And bound every loop that waits on a random process to succeed. Rejection sampling is a good technique with one failure mode, and the fix is a counter.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

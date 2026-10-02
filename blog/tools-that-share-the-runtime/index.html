@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Tools That Share the Runtime | Matt Edmondson</title>
+  <meta name="description" content="Content tools went from five separate editor executables to a tool framework running inside the game itself. The move removed the export format that could drift, put authoring in the same renderer the player sees, and made tool state something the engine persists rather than something each tool reinvents." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/tools-that-share-the-runtime/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Tools That Share the Runtime | Matt Edmondson" />
+  <meta property="og:description" content="Content tools went from five separate editor executables to a tool framework running inside the game itself. The move removed the export format that could drift, put authoring in the same renderer the player sees, and made tool state something the engine persists rather than something each tool reinvents." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/tools-that-share-the-runtime/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,60 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Tools That Share the Runtime</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-04">December 4, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=tooling">tooling</a>
+        <a class="post-tag" href="/#tag=content-pipeline">content-pipeline</a>
+        <a class="post-tag" href="/#tag=editor">editor</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/tools-that-share-the-runtime.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>Content tooling is the part of engine work that never appears in a portfolio and decides how fast a team can actually make things. A particle effect that takes ten minutes to see in context gets iterated on twice. One that updates while it&#39;s being edited gets iterated on fifty times, and the fiftieth version is better.</p>
+<p>Across my engines the tools went through two shapes. Five separate editor executables, then a tool framework living inside the game. Both were improvements on writing content by hand, and the second one is the arrangement I&#39;d build again.</p>
+<p>This is the fourth post taking one system at a time out of those engines.</p>
+<h2>Shape One: Editors in the Same Solution</h2>
+<p>The second engine had five editors, each a separate executable: animation, GUI, material, particles, and a dungeon designer. Plus an asset packager.</p>
+<p>The decision that made them work wasn&#39;t that they existed. It was that they were projects in the same solution as the engine, built by the same build, linking the same libraries.</p>
+<p>A tool built that way consumes engine types directly. The particle definition the editor manipulates is the struct the runtime simulates, not a copy of it, and not a serialized description of it. When the engine&#39;s definition changes, the editor fails to compile.</p>
+<p>That compile failure is the feature. The alternative arrangement, where a tool is a separate program reading and writing a file format, has a gap in it: the tool&#39;s understanding of the format and the engine&#39;s understanding of the format are two pieces of code that agree by convention. They drift, and the drift shows up as content that loads wrong rather than as a build error. Sharing the type deletes the gap.</p>
+<p>The cost is real. The solution takes longer to build, and a broken tool breaks the build for the game. My opinion is that&#39;s a good trade at this scale, and I&#39;d reconsider it on a team of twenty where a tools programmer&#39;s mistake shouldn&#39;t stop gameplay work.</p>
+<h2>Shape Two: Tools Inside the Game</h2>
+<p>The current engine moved the tools into the game, as classes over a common base:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> Init</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> Draw</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> =</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> SaveSettings</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> settings</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> LoadSettings</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> settings</span><span style="color:#939AB7">);</span></span></code></pre><p>A tile editor, a tile recipe editor, an entity editor, and a gradient editor all derive from that. They run in the game&#39;s process, in the game&#39;s renderer, against the game&#39;s live data.</p>
+<p>Most of this gets better, and one thing gets worse.</p>
+<p>Authoring happens in the renderer that ships. A separate editor draws its own approximation of what the game will look like, and the approximation is always slightly wrong. Lighting, shaders, and post-processing are the parts most likely to differ and the parts most likely to matter to whoever is placing content. In-game editing removes the question of whether the preview is accurate, because the preview is the game.</p>
+<p>Edits are visible immediately, in context, next to everything else. Not a rebuild, not a reload, not a repack.</p>
+<p>And a tool becomes cheap to add. A new editor is a class with two required methods, and it inherits the window management, the input routing, and the settings persistence. Five editors as five executables meant five copies of the shell around each one.</p>
+<p>What gets worse is that tool code ships in the game binary unless it&#39;s compiled out, and tool bugs are game bugs. That&#39;s a genuine cost, and it&#39;s the reason for the compile-time switch that removes the whole framework from a release build.</p>
+<h2>Persisted Tool State</h2>
+<p><code>SaveSettings</code> and <code>LoadSettings</code> on the base class are the detail I&#39;d point at for anyone building a tool framework.</p>
+<p>Every tool remembers where its panels were, what was selected, which mode it was in, and what the last used values were. Not because any single tool needed it enough to build it, but because the base class provides it and the derived tools implement two short methods.</p>
+<p>Tool state is one of those things that never makes a task list and dominates how a tool feels. An editor that forgets everything on restart imposes a small setup tax on every session, and the tax is paid by the person using it most. Putting the mechanism in the base class means the cheap thing to do is also the right thing to do, which is the only reliable way to get a detail like this done consistently.</p>
+<p>The choice of format matters less than the placement. It&#39;s JSON here because the engine already had a JSON dependency. The point is that it&#39;s the framework&#39;s responsibility rather than each tool&#39;s.</p>
+<h2>Loose Files Against the Pack</h2>
+<p>Underneath both shapes is one asset-loading decision that made iteration possible at all.</p>
+<p>The asset manager reads from a compressed pack, and a pack can be flagged to allow unpacked assets. When it is, a lookup that misses the pack index falls back to looking for the file loose on disk beside the pack, and if it finds one it opens it and adds it to the index.</p>
+<p>That means a development build with no pack at all serves everything from loose files. Edit a texture, restart, see the change. No repacking step between making a thing and seeing it.</p>
+<p>I&#39;d change the precedence if I built it again. The pack is checked first and loose files are the fallback, so once a pack exists it wins. The more useful arrangement is the opposite: loose files override the pack, so a developer can drop a single modified asset next to a full pack and have it take priority. That turns &quot;iterate on one asset&quot; from a full unpacked build into one file.</p>
+<h2>What the Tools Actually Changed</h2>
+<p>What to measure is not the tools, it&#39;s what having them did to the content.</p>
+<p>The engine with five editors carried four completed game projects. The engine before it, with no tools, carried one. That&#39;s not entirely attributable to tooling, but the direction is the direction I&#39;d expect: content that&#39;s cheap to author gets authored, and content that requires a programmer gets specified, argued about, and cut.</p>
+<p>A tool converts a request into a task somebody can do themselves. That&#39;s the whole return, and it&#39;s why tooling deserves engine-quality attention rather than the leftover hours.</p>
+<h2>What Transfers</h2>
+<p>Build tools against the same types the runtime uses, in the same build, so a divergence is a compile error rather than a content bug.</p>
+<p>Put authoring in the shipping renderer once that&#39;s possible, because a preview that approximates the game will be wrong in exactly the ways that matter to the person authoring.</p>
+<p>Make tool state the framework&#39;s job. It&#39;s the difference between a tool that&#39;s tolerated and one that&#39;s used.</p>
+<p>And make loose files beat the packed ones, so iterating on a single asset costs one file rather than a full rebuild of the pack.</p>
 
     </article>
   </main>

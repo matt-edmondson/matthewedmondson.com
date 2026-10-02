@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI-Assisted Coding vs Vibe Coding | Matt Edmondson</title>
-  <meta name="description" content="Two fundamentally different ways to use AI for code. In one, the human is the author and AI accelerates the work. In the other, AI is the author and the human accepts output they may not fully understand. Both have a place. The real problem is not knowing which one is happening." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/ai-assisted-coding-vs-vibe-coding/" />
+  <title>Static Analysis Is Not a Weaker Kind of Code Review | Matt Edmondson</title>
+  <meta name="description" content="Before anyone opens a pull request in my open source repositories, 306 static analysis rules have already returned a verdict, 94 of them security rules, every one of them reproducible and free. The habit of asking a language model to review code instead is not a tooling preference, it is a decidable question being re-asked in a form that cannot be decided, and it is most attractive to the operators least equipped to notice what it missed." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/static-analysis-is-not-a-weaker-kind-of-code-review/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="AI-Assisted Coding vs Vibe Coding | Matt Edmondson" />
-  <meta property="og:description" content="Two fundamentally different ways to use AI for code. In one, the human is the author and AI accelerates the work. In the other, AI is the author and the human accepts output they may not fully understand. Both have a place. The real problem is not knowing which one is happening." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/ai-assisted-coding-vs-vibe-coding/" />
+  <meta property="og:title" content="Static Analysis Is Not a Weaker Kind of Code Review | Matt Edmondson" />
+  <meta property="og:description" content="Before anyone opens a pull request in my open source repositories, 306 static analysis rules have already returned a verdict, 94 of them security rules, every one of them reproducible and free. The habit of asking a language model to review code instead is not a tooling preference, it is a decidable question being re-asked in a form that cannot be decided, and it is most attractive to the operators least equipped to notice what it missed." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/static-analysis-is-not-a-weaker-kind-of-code-review/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,54 +558,124 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>AI-Assisted Coding vs Vibe Coding</h1>
+      <h1>Static Analysis Is Not a Weaker Kind of Code Review</h1>
       <div class="post-meta">
-        <time datetime="2025-11-22">November 22, 2025</time>
-        <span class="category-tag">Software Engineering</span>
+        <time datetime="2026-01-29">January 29, 2026</time>
         <span class="category-tag">AI</span>
-        <span class="category-tag">Production</span>
-        <a class="post-tag" href="/#tag=ai-governance">ai-governance</a>
-        <a class="post-tag" href="/#tag=claude-code">claude-code</a>
-        <a class="post-tag" href="/#tag=studio-policy">studio-policy</a>
-        <a class="post-tag" href="/#tag=software-engineering">software-engineering</a>
-        <a class="post-tag" href="/#tag=vibe-coding">vibe-coding</a>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">C#</span>
+        <a class="post-tag" href="/#tag=ai">ai</a>
+        <a class="post-tag" href="/#tag=static-analysis">static-analysis</a>
+        <a class="post-tag" href="/#tag=roslyn">roslyn</a>
+        <a class="post-tag" href="/#tag=code-quality">code-quality</a>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=sonarcloud">sonarcloud</a>
+        <a class="post-tag" href="/#tag=code-review">code-review</a>
       </div>
-      <img class="post-hero" src="/assets-blog/ai-assisted-coding-vs-vibe-coding.png" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/static-analysis-is-not-a-weaker-kind-of-code-review.jpg" alt="" width="1200" height="675" />
 
-<p>There are two fundamentally different ways to use AI for code, and anyone using it should be able to tell which one they&#39;re doing at any given moment. The problem is not which one is &quot;better&quot;, because both have a place. The problem is not knowing which one is happening, because the right answer to &quot;is this safe to commit?&quot; depends entirely on which mode produced the code.</p>
-<p>I wrote this distinction into the AI usage policy for a studio earlier this year, and the vocabulary turned out to be the part of the policy people actually used. Once people had words for the two modes, the conversations about where each one belongs got dramatically easier. This post is the distinction itself, what depends on it, and where each mode fits.</p>
-<h2>The Two Modes</h2>
-<p>AI-assisted coding means the engineer is the author. They understand the problem, direct the AI, and read, evaluate, and own every line of output before it&#39;s committed. The AI speeds up the work, but the engineer could explain and defend the result without it. If someone asked &quot;why does this do X?&quot;, the answer is a technical explanation, not &quot;Claude wrote it.&quot; The AI is a research assistant and a fast-fingered colleague, and the judgment is the engineer&#39;s.</p>
-<p>Vibe coding means the AI is the primary author. The human describes what they want, accepts the output based on whether it appears to work, and may not fully understand the implementation. They direct at the level of intent and outcome, and the AI fills in the how. This is a valid way to build things quickly. It also carries real risk. An author cannot catch bugs they do not understand, cannot maintain code they did not write, and has no way to evaluate whether the output is secure, performant, or architecturally sound.</p>
-<p>These are points on a spectrum more than a binary, but the spectrum has a clear midpoint. If the author couldn&#39;t sit in a code review and walk a colleague through what each block does and why, they have crossed from assisted into vibe. The crossover is the part that matters, because that&#39;s where the risk changes character.</p>
-<h2>The Review Asymmetry</h2>
-<p>Both modes produce code that looks plausible. That property of modern LLMs is what makes them productive and what makes them dangerous in equal measure. The mode the author was in when the code was produced is the thing that tells the team what to do with it next.</p>
-<p>For AI-assisted code, the next step is normal. Review the diff, run the tests, ship the PR. The AI was a tool that compressed the authoring time, but the human is still the author and the usual author-accountability machinery is intact.</p>
-<p>For vibe-coded output, the next step depends on what the output is for. If it&#39;s a personal experiment or a throwaway script, &quot;looks like it works&quot; is the only bar that matters. If it&#39;s anything other people depend on, every assumption baked into the output by an author who didn&#39;t fully understand it is now a hidden risk. The bug class shifts from &quot;the author made a mistake I can find by re-reading the diff&quot; to &quot;the author shipped a structure they never modeled in their head, and the break is in a part of that structure neither of us is looking at.&quot;</p>
-<p>The reason this matters in practice is that vibe-coded output can be reviewed, but it can&#39;t be reviewed the same way. A reviewer looking at vibe-coded code is doing first-author work on someone else&#39;s code, not second-author review on a colleague&#39;s code. That&#39;s a different and much heavier task, and pretending it&#39;s normal review is how vibe-coded code ends up in production without anyone really understanding what landed.</p>
-<h2>Where Each Mode Belongs</h2>
-<p>The policy split I landed on, after iteration, was this. A given studio&#39;s variant will differ, and the structure is what matters.</p>
-<p>Production projects. Anything shipping to players, anything other people depend on, anything in the production engine repo gets AI-assisted only. The person who commits the code owns it and must be able to explain it line by line. AI speeds up the work, it does not author it.</p>
-<p>Internal and experimental projects. Workshop prototypes, internal tools, and exploratory work that may or may not become something can use vibe coding at lead discretion, provided the safeguards below are in place. The bar here is &quot;is this learning, or is this becoming something people will depend on?&quot; If it crosses the second line, the rules of production apply from that point.</p>
-<p>Personal and throwaway projects. No restrictions. Experiment freely. Use whatever produces results fastest. Do not use production credentials, repos, or assets, and do not ship the result anywhere other people will depend on it without re-authoring it under the production rules first.</p>
-<p>The reason for the split is not a value judgment about vibe coding. It&#39;s that the consequences of &quot;code I don&#39;t understand&quot; scale with how many people depend on the code and how long the code lives. A throwaway script is unaffected by whether the author understands it five months from now, because there&#39;s no five months from now. A piece of game code that ships to players has a five-year tail, and &quot;I didn&#39;t really understand this&quot; compounds across every bug, every refactor, every onboarding, every postmortem.</p>
-<h2>Vibe Coding Safeguards</h2>
-<p>Where vibe coding is allowed, the problems that bite hardest aren&#39;t the obvious code-quality ones. They&#39;re the outside-the-code ones, the things that aren&#39;t in the diff at all.</p>
-<p>Source control first. The project must be in a Git repo with a recent commit before a session with a code-writing AI begins. This is non-negotiable. Tools like Claude Code can write, move, rename, and delete files across an entire project at speed. Unlike a normal editor, there&#39;s no universal Undo that covers everything the AI does. A local repo costs nothing, needs no internet, and gives full rollback. Before each session, check for uncommitted changes, commit them, then let the AI work.</p>
-<p>No production credentials. Vibe-coded projects must not have access to production API keys, secrets, encryption keys, or databases. Use isolated environments with their own credentials. The risk isn&#39;t that the AI does something malicious. It&#39;s that an unsupervised author writing code they don&#39;t fully model can ship a credential leak or a destructive operation without ever seeing it on its way out.</p>
-<p>Dependency review. Do not blindly install packages suggested by AI. Verify that packages exist, are actively maintained, and come from legitimate sources. AI hallucinating package names is a known supply-chain vector. An attacker registers a plausible-sounding package the AI invents, and any vibe coder who runs the install command ships the attacker&#39;s code.</p>
-<p>Network isolation. Vibe-coded projects should not run on production infrastructure or have access to internal networks without explicit approval. If a vibe-coded prototype graduates to something that&#39;s actually going to be used, the graduation is the right moment to re-author it under the rules of production.</p>
-<p>Security review before deployment. If a vibe-coded project will be accessible to users, even internally, it gets a basic security review from an engineer covering authentication, data handling, and exposed endpoints before that happens. &quot;Claude said it was secure&quot; is not clearance.</p>
-<p>These aren&#39;t rules against the mode. They&#39;re rules for containing where the mode goes wrong, so the mode itself can be used freely inside the container.</p>
-<h2>The Failure I Keep Seeing</h2>
-<p>The most common breakdown I see, across studios and teams, isn&#39;t engineers vibe-coding production work. Engineers tend to be calibrated about this. They know the difference between exploring and committing, and they instinctively re-author the parts they are going to commit. The breakdown I see is non-engineers vibe-coding things that became production without ever crossing the line back into AI-assisted.</p>
-<p>The sequence is familiar. A producer or designer prototypes a tool for their own use. The tool turns out to be useful. Other people start using it. It accretes features. At some point it stops being a prototype and becomes part of the production workflow, but nothing in the journey flagged the crossover, so the code never went through the re-authoring step. Now there&#39;s a piece of production infrastructure whose author can&#39;t explain it, whose code has had no security review, and whose dependency choices were never audited.</p>
-<p>This is what the distinction is for. It gives the team a vocabulary to flag the crossover. &quot;This is becoming central, it needs to graduate.&quot; Without that vocabulary, the crossover happens silently and the team only notices when the prototype breaks in a way no one knows how to fix.</p>
-<h2>The Standard That Scales</h2>
-<p>The single test that does the most work is this. Could the author defend this code in a room?</p>
-<p>Not &quot;did the AI write it.&quot; Not &quot;is it well-commented.&quot; The question is whether the human author can sit in a code review or a fifteen-person meeting and walk through what the code does, why each significant choice was made, and where it can break. If the answer is yes, the mode was AI-assisted, regardless of how much of the typing the AI did. If the answer is no, the mode was vibe, regardless of how much the human typed.</p>
-<p>That standard scales because it doesn&#39;t try to regulate the tool. It regulates the outcome. Whatever models look like in five years, whatever new categories of generated content emerge, &quot;can the author defend it in a room?&quot; keeps applying.</p>
-<p>What the distinction gave us wasn&#39;t a policy clause. It was a shared question the team could put to each other, &quot;which one are you doing right now?&quot;, and a reason to care about the answer before the code ships rather than after it breaks.</p>
+<p>Before anyone opens a pull request in one of my open source repositories, 306 static analysis rules have already returned a verdict on the change. Ninety-four of them are security rules. They ran at compile time, on every target framework the project builds, and a rule that fires is a build error rather than a comment somebody might read later.</p>
+<p>The whole configuration is four lines of MSBuild:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">AnalysisLevel</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">10.0-all</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">AnalysisLevel</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">CodeAnalysisTreatWarningsAsErrors</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">true</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">CodeAnalysisTreatWarningsAsErrors</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">EnableNETAnalyzers</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">true</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">EnableNETAnalyzers</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">EnforceCodeStyleInBuild</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">true</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">EnforceCodeStyleInBuild</span><span style="color:#8BD5CA">></span></span></code></pre><p>That combination selects a generated configuration file that ships inside the .NET SDK, and the file is not abstract. It lists 307 analyzer rules by identifier, 306 of them set to <code>error</code>, one (<code>CA1516</code>) set to <code>none</code>. Split by category:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Category</th>
+<th align="right">Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Security</td>
+<td align="right">94</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td align="right">64</td>
+</tr>
+<tr>
+<td>Usage</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td>Design</td>
+<td align="right">42</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td align="right">20</td>
+</tr>
+<tr>
+<td>Naming</td>
+<td align="right">14</td>
+</tr>
+<tr>
+<td>Globalization</td>
+<td align="right">9</td>
+</tr>
+<tr>
+<td>Maintainability</td>
+<td align="right">9</td>
+</tr>
+<tr>
+<td>Interoperability</td>
+<td align="right">8</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td align="right">1</td>
+</tr>
+</tbody></table></div>
+<p>Sixty-four repositories share this configuration through a custom SDK, so the number is the same in all of them. Nobody has to remember to switch it on, and no reviewer has to hold 306 rules in their head.</p>
+<p>I am writing this because of a habit I keep running into, which is a team pasting a diff into a language model and asking whether it looks correct, or secure, in a repository where none of the above is turned on.</p>
+<h2>What the Model Is Being Asked to Redo</h2>
+<p>The substitution is not a model standing in for a human reviewer. It is a decidable question being re-asked in a form that cannot be decided.</p>
+<p><em>Does this code dispose the stream on every path</em> is a question with a right answer that a compiler already computes from the syntax tree. <em>Does this comparison use a culture-sensitive overload where an ordinal one is required</em> has an answer, and <code>CA1310</code> is that answer, written down once by people who had the bug. Asking a model instead does not make the question harder to answer. It makes the answer unreliable in ways that are difficult to detect, because the answer arrives fluent either way.</p>
+<p>The rule set has properties a prompt does not. It returns the same verdict on the same input every time, which means a passing build is evidence rather than an impression. Its scope is enumerable, so I can read all 306 rules and know exactly which classes of defect are covered and which are not. And it costs nothing per invocation, which is why it runs on every build instead of when somebody remembers to ask.</p>
+<p>None of that is an argument that models are bad at reading code. My opinion is that they are good at it, and that the goodness is beside the point. A probabilistic reviewer that agrees with the deterministic one 95 percent of the time is not 95 percent of a linter, because the 5 percent is unmarked.</p>
+<h2>Review Is the Principle That Breaks</h2>
+<p>I wrote about the boundaries I hold for my own AI use, and the one this violates is review: the output has to be checkable before it is accepted, and the operator has to be competent to check it. Reading output is not reviewing it.</p>
+<p>Applied here, that gets uncomfortable. Evaluating &quot;the model found no security issues&quot; requires knowing which security issues were possible, which is most of the knowledge the 94 rules encode. An operator who could audit the model&#39;s recall would have configured the analyzers, because they would know the analyzers exist. So the substitution is most attractive exactly where it is least safe, and the failure is silent by construction: a clean report and an unrun check are the same experience from the outside.</p>
+<p>That is a claim about conditions, not about people. Nobody is born knowing that <code>CA2100</code> exists. The conditions are what make the difference between a team that finds out and a team that ships a fluent report.</p>
+<h2>Arguing With a Rule</h2>
+<p>The other property a rule set has is that disagreement with it is recorded.</p>
+<p>Six rules are suppressed in my SDK, each with a written reason sitting next to it. One of them:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8BD5CA">&#x3C;</span><span style="color:#8AADF4">NoWarn</span><span style="color:#8BD5CA">></span><span style="color:#CAD3F5">CA1724;CA1034;CA1000;CA2260;CA1515;IDE0370;</span><span style="color:#8BD5CA">&#x3C;/</span><span style="color:#8AADF4">NoWarn</span><span style="color:#8BD5CA">></span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- IDE0370: Unnecessary suppression operator. Conflicts with multi-targeting: a null-forgiving '!'</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     (e.g. on object.ToString()) is required on modern TFMs where the API is nullable-annotated but is</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     flagged redundant on netstandard2.0/2.1 where the same API is oblivious. No single source edit</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     satisfies all target frameworks, so the rule cannot be enforced on multi-targeted libraries. --></span></span></code></pre><p>That is a position. It is versioned, it names the rule, it explains the conflict, and anyone can disagree with it in a pull request. The standing convention in these repositories is that suppressions are never global, and never wider than the smallest scope that works, and always carry a justification.</p>
+<p>The analysis level is pinned for a related reason:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7;font-style:italic">&#x3C;!-- AnalysisLevel is pinned rather than set to 'latest-all'. With TreatWarningsAsErrors and</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     CodeAnalysisTreatWarningsAsErrors both on below, 'latest' means every new rule that ships</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     in a .NET SDK update becomes a build-breaking error in every consuming repository at once,</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     on the day the runner image updates - with no change on their side and nothing they can do</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">     but pin the SDK. Pinning moves that to a deliberate, reviewable bump here. --></span></span></code></pre><p>A model consulted about a diff leaves none of this behind. There is no artifact to disagree with, no record of what was checked, and nothing that a future change can be measured against. The verdict evaporates the moment the tab closes.</p>
+<h2>The Gate That Blocks the Release</h2>
+<p>The second half of the same idea is that a check nobody is required to pass is a suggestion.</p>
+<p>Test runs in these repositories collect coverage and a test report, both of which are handed to SonarCloud along with the build. The scanner starts with <code>sonar.qualitygate.wait=true</code>, which makes the step fail when the project fails its gate, and the release step is gated on that step succeeding. 47 of the 60 repositories with a CI workflow run it. A package cannot be published past a gate the project did not pass, and no human decides that in the moment.</p>
+<p>One detail in that setup says more than the gate itself. The scanner is passed an explicit version:</p>
+<pre><code>/v:&quot;${{ steps.analysis_version.outputs.version }}&quot;</code></pre>
+<p>with a comment recording why. SonarCloud&#39;s new-code period anchors to recorded version boundaries. Without the version, the scanner reports it as &quot;not provided&quot;, the period widens to the entire history, and the new-code coverage condition quietly starts measuring the whole codebase instead of the change. The gate keeps passing. It just stops meaning what it claims.</p>
+<p>Somebody had to go and check whether a green result still corresponded to the thing it was supposed to measure. That is the faculty being skipped, and it is not a faculty a model can supply on request, because the question is whether the measurement is wired up correctly at all.</p>
+<h2>The Same Mistake, One Scale Up</h2>
+<p>Those 306 rules are a compressed record of other people&#39;s incidents. Each one exists because something went wrong somewhere, repeatedly, and somebody encoded the lesson in a form a compiler can apply for free forever. <code>CA5350</code> is there because weak cryptography shipped. <code>CA2016</code> is there because cancellation tokens were dropped. A rule set is decades of failures anyone can inherit by setting a property.</p>
+<p>The same thing is true one level up, of libraries. The reason not to write a new date-time library, or a new crypto primitive, or a new expression evaluator, is rarely the writing. It is that the mature one has been beaten on by people who had the failures the author has not had yet, and the value of it lives in exactly the edge cases nobody thinks to write down.</p>
+<p>Generation made producing the fifth version cheap. It did not make the fifth version encode anything. Some of what a model writes when asked for a parser or a retry policy or a permissions check is a plausible reconstruction of the shallow parts of a solved problem, with the accumulated corrections absent, and it arrives looking finished. This is the same error as replacing the linter, at a larger scale: declining an artifact that already encodes the knowledge, in favor of one generated fresh that only resembles it.</p>
+<p>I said in an earlier post that the deeper change between two of my own engines was that I stopped writing parsers for things that already had parsers. That was a lesson about knowing the landscape. Generation makes not knowing the landscape cheaper than it has ever been.</p>
+<h2>Where the Model Actually Belongs</h2>
+<p>The inversion is the useful part, and I want to be specific about it rather than end on a prohibition.</p>
+<p>My SDK ships seven analyzers of my own, <code>KTSU0001</code> through <code>KTSU0007</code>, all at error severity, six of them with automatic code fixes. They enforce conventions no shipped rule covers: a missing required package reference, a missing <code>InternalsVisibleTo</code> for the test project, <code>ArgumentNullException.ThrowIfNull</code> used where <code>Ensure.NotNull</code> is required for framework compatibility, a hand-written null check that should be that same call, an orphaned <code>PackageVersion</code> entry, a transitive package used directly without a reference, and a build-time package reference missing <code>PrivateAssets</code>.</p>
+<p>Every one of those started as a comment somebody made in review, more than once. Writing a Roslyn analyzer is a fiddly, well-documented, mechanical task with a test harness and a release-tracking file, which is a precise description of the work a language model is genuinely good at and that most teams never get around to, because the payoff is diffuse and the API is tedious.</p>
+<p>So the model belongs on the side of making the question decidable, not on the side of answering an undecidable version of it in perpetuity. Asked to review a diff, it produces one opinion that helps once. Asked to help write the eighth analyzer, it produces a rule that runs on every build in 64 repositories, forever, for free, with the same answer every time, and with a title and a description that say what it checks.</p>
+<h2>What Transfers</h2>
+<p>Turn the analyzers up before adding anything to the review process. In .NET that is four properties and an afternoon of fixing what they find. Whatever the ecosystem, the equivalent exists and is almost certainly off.</p>
+<p>Check that the checker ran. A configuration that silently covers nothing and a configuration that covers everything produce the same green tick, and the difference is only visible to somebody who went and looked.</p>
+<p>When a review comment repeats, write the rule. The second time is a coincidence and the third time is a missing analyzer.</p>
+<p>And keep the record. A suppression with a reason beside it is a decision the team can revisit. A verdict from a chat window is not, and six months later nobody can reconstruct what was actually checked.</p>
+<p>The question I would ask of any repository before pointing a model at its code: what does the build already know, and is it switched on?</p>
 
     </article>
   </main>

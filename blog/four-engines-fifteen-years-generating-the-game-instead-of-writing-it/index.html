@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Four Engines, Fifteen Years (Part 4 of 5) | Matt Edmondson</title>
+  <meta name="description" content="A decade after it shipped a mobile puzzle game, the same engine now runs a dungeon crawler where 9,315 lines of C++ are generated from 35 JSON files, entity behavior lives in a custom scripting language, and the engine is a submodule rather than a folder." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/four-engines-fifteen-years-generating-the-game-instead-of-writing-it/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Four Engines, Fifteen Years (Part 4 of 5) | Matt Edmondson" />
+  <meta property="og:description" content="A decade after it shipped a mobile puzzle game, the same engine now runs a dungeon crawler where 9,315 lines of C++ are generated from 35 JSON files, entity behavior lives in a custom scripting language, and the engine is a submodule rather than a folder." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/four-engines-fifteen-years-generating-the-game-instead-of-writing-it/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <p class="series-part">Part 4 of 5</p>
+      <h1>Four Engines, Fifteen Years</h1>
+      <p class="post-subtitle">Generating the Game Instead of Writing It</p>
+      <div class="post-meta">
+        <time datetime="2025-11-28">November 28, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=code-generation">code-generation</a>
+        <a class="post-tag" href="/#tag=ecs">ecs</a>
+        <a class="post-tag" href="/#tag=scripting">scripting</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/four-engines-fifteen-years-generating-the-game-instead-of-writing-it.png" alt="" width="1200" height="675" />
+<p>The engine from the previous post is still in use. Carbon Monoxide shipped a mobile puzzle game in 2014, and it currently runs a dungeon crawler that looks nothing like that game and is built in a way the 2014 codebase would not recognize.</p>
+<p>Three things changed, and all three point the same direction: away from writing C++ for every new piece of content.</p>
+<h2>The Engine Finally Left the Building</h2>
+<p>The change that mattered most is the least interesting to look at. The engine is a git submodule now. The game repository contains game code, and the engine lives in its own repository underneath it.</p>
+<p>Every engine in this series has had a prefix marking the boundary. <code>engine_</code> in the first, <code>Manic</code> in the second, <code>cm</code> in the third. All three were conventions inside one tree, which meant the boundary held exactly as long as nobody was in a hurry.</p>
+<p>A submodule is the same boundary with a version number attached. The game pins an engine commit, the engine can&#39;t reach into the game at all, and a change that would have been a two-line convenience across the boundary is now a change to a different repository with its own history. That friction is the feature. It&#39;s the same lesson as the linker enforcing the dependency graph in the second engine, applied one level up.</p>
+<h2>Content Is Data, and the Code Comes From It</h2>
+<p>There are 35 JSON files describing schemas and data, and they produce 9,315 lines of C++ across 96 generated files.</p>
+<p>A schema is unremarkable to look at. It names a class and lists typed members:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">{</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Classes</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> [</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "AdventuringGear"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">Members</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> [</span><span style="color:#939AB7"> {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "name"</span><span style="color:#939AB7">,</span><span style="color:#939AB7">  "</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "string"</span><span style="color:#939AB7"> },</span></span>
+<span class="line"><span style="color:#939AB7">                 {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "cost"</span><span style="color:#939AB7">,</span><span style="color:#939AB7">  "</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "int"</span><span style="color:#939AB7"> },</span></span>
+<span class="line"><span style="color:#939AB7">                 {</span><span style="color:#939AB7"> "</span><span style="color:#8AADF4">Name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "weight"</span><span style="color:#939AB7">,</span><span style="color:#939AB7">"</span><span style="color:#8AADF4">Typename</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "float"</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> ]</span><span style="color:#939AB7"> }</span><span style="color:#939AB7"> ]</span><span style="color:#939AB7"> }</span></span></code></pre><p>The generator turns that into the C++ class and the data source that loads it. Adding a new content type means editing JSON and running the generator, not writing a class, a loader, a validator, and the code that wires them together.</p>
+<p>The ratio is the argument. Thirty-five files of declaration produce nine thousand lines of implementation, and none of those nine thousand lines can drift from the declaration, because they don&#39;t survive the next generation run. The generated directories carry an instruction not to hand-edit them, which is the one place this approach reliably goes wrong.</p>
+<p>What this really buys isn&#39;t typing speed. It&#39;s that the data has exactly one definition. In the first engine, a content type existed as a struct, a loader, an editor&#39;s understanding of it, and a file format, and those four could disagree. Here there&#39;s one source and everything else is derived.</p>
+<h2>How the Generator Arrived</h2>
+<p>Two dates set the sequence.</p>
+<p>The engine became a submodule on 2019-09-28, in a commit called &quot;Add gitignore, gitmodules, and jenkinsfile&quot;, which is the migration from Subversion to git. That commit is a translation rather than a decision. The engine was already a separate repository mounted into the game through <code>svn:externals</code>, set up on 2018-12-15 in a commit called &quot;dungeoneer extern&quot;.</p>
+<p>The evidence for that survives the conversion by accident. git-svn drops externals, so in the pre-2019 history there is a <code>CarbonMonoxideBase.sln</code> referring to <code>carbonmonoxide\carbonmonoxide</code> and no directory of that name anywhere in the tree. The solution file is pointing at something the version control system used to supply and the conversion threw away.</p>
+<p>So the separation is a year older than the submodule, and the intent is older than that again. The boundary starts in 2014 as a <code>cm</code> prefix on filenames, becomes a mounted external in 2018, and becomes a submodule in 2019. Each step hands the same rule to something that enforces it a little harder, and none of them changed a line of engine code.</p>
+<p>The generator took longer and went through a dead end. Serialisation starts as macros on 2021-09-29, in a commit adding &quot;new smart enum macros&quot; and &quot;new json serialisation macros&quot;. On 2021-10-04 it becomes real code generation, and the commit says exactly how: &quot;Adding flatbuffers lib &amp; setting up a schema for cmVector3 (they run as a custom build step before compile to produce the serialise/deserialise code)&quot;. There is no FlatBuffers in the tree today. Six days later comes &quot;make packing json less macroish&quot;, which is the macro layer being unwound rather than extended.</p>
+<p>So the arrangement I described, one declaration producing everything derived from it, is the third answer rather than the first. Macros were the second, and they are the interesting failure. A macro puts the generation at the point of use and keeps it inside the compiler, which feels lighter than a build step and a tool. What it cannot do is produce a file a person can open and read, which turns out to be most of why generated code is tolerable to work with.</p>
+<p>What settled is the schema tools, and they are a submodule of the engine, which is itself a submodule of the game. Three repositories, each pinned to a commit, the generator held at <code>533af64</code>. The commits updating it are all called &quot;Taking latest schema tools&quot;, and they are identical because a batch file in the repository writes the message.</p>
+<p>One seam is still open. <code>run_code_gen.bat</code> calls into <code>tools/schemer-tools/bin/Release/</code>, which is a build output and is not in version control. A fresh clone gets the generator&#39;s C# source and no generator, and nothing in the game&#39;s build compiles it. That gap stays small right until somebody new tries to add a content type.</p>
+<h2>Components Classified at Compile Time</h2>
+<p>The entity system is a C++20 template ECS, and it uses concepts to sort components rather than inheritance.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">template</span><span style="color:#939AB7"> &#x3C;</span><span style="color:#C6A0F6">typename</span><span style="color:#EED49F;font-style:italic"> C</span><span style="color:#939AB7">></span></span>
+<span class="line"><span style="color:#C6A0F6">concept</span><span style="color:#CAD3F5"> base_component </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> requires </span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    requires </span><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">is_same_v</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#EED49F">std</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">remove_cv_t</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#C6A0F6">decltype</span><span style="color:#939AB7">(</span><span style="color:#EED49F">C</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Config</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA">></span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> ComponentConfig</span><span style="color:#8BD5CA">></span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">template</span><span style="color:#939AB7"> &#x3C;</span><span style="color:#C6A0F6">typename</span><span style="color:#EED49F;font-style:italic"> C</span><span style="color:#939AB7">></span></span>
+<span class="line"><span style="color:#C6A0F6">concept</span><span style="color:#CAD3F5"> component </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> base_component</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">C</span><span style="color:#8BD5CA">></span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#EED49F"> C</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Config</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">Type </span><span style="color:#8BD5CA">==</span><span style="color:#EED49F"> ComponentType</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Entity</span><span style="color:#939AB7">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C6A0F6">template</span><span style="color:#939AB7"> &#x3C;</span><span style="color:#C6A0F6">typename</span><span style="color:#EED49F;font-style:italic"> C</span><span style="color:#939AB7">></span></span>
+<span class="line"><span style="color:#C6A0F6">concept</span><span style="color:#CAD3F5"> singleton_component </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> base_component</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">C</span><span style="color:#8BD5CA">></span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#EED49F"> C</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Config</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">Type </span><span style="color:#8BD5CA">==</span><span style="color:#EED49F"> ComponentType</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Singleton</span><span style="color:#939AB7">;</span></span></code></pre><p>A component declares a static <code>Config</code>, and the concepts read it to decide what kind of component it is. Whether something is a per-entity component or a singleton is answered during compilation, from a value the type carries, with no base class and no runtime check.</p>
+<p>The contrast with the second engine is the whole point of this series in one comparison. There, a subsystem was a manager: a singleton object, reachable from anywhere, with lifetime managed by convention. Here, a singleton component is a compile-time classification that the storage layer acts on. Both express &quot;there is one of these.&quot; Only one of them is checkable before the program runs.</p>
+<p>The engine also compiles with warnings as errors under the latest C++ standard, which is the same instinct in a different place. A rule that the build enforces is a rule.</p>
+<h2>There Is a Pong in the Dungeon Crawler</h2>
+<p>Alongside the monsters and the tile editor sits a complete implementation of Pong: its own components, physics, state, and systems, in its own namespace, built on the same <code>DungeonEcs.h</code> the dungeon game uses.</p>
+<p>It isn&#39;t an easter egg. It&#39;s a proving harness. An entity system written for one game will quietly grow assumptions about that game until it can only express that game, and the assumptions are invisible from inside because everything they&#39;d block is something nobody tried. A second game that shares nothing with the first, a paddle and a ball instead of monsters and dungeons, makes them visible immediately.</p>
+<p>Pong is a good choice for it too, because it&#39;s small enough to keep working and different enough to be a real test. If the ECS can express it without a special case, the ECS is about entities rather than about dungeons.</p>
+<p>That&#39;s a discipline the earlier engines had no equivalent of. Manic Engine had four games on it, which is the same idea arrived at by accident: the second and third game are what find the places the first one shaped. Doing it deliberately, with a game small enough to live inside the repository, is cheaper than discovering it a year later.</p>
+<h2>A Language for Entity Behavior</h2>
+<p>Entity behavior lives in script files rather than C++. A monster looks like this:</p>
+<pre><code>function OnInit()
+{
+    player = FindEntityByName('player')
+    aggroRadius = 3
+    roamRadius = 1
+    speedNormal = 1
+    speedAggro = 2
+    homePosition = GetPosition(this)
+    aggro = false
+}</code></pre>
+<p>The scripting system has more in it than that suggests. Scripts support includes, control flow, typed function bindings, and wait states, so a behavior can say wait two seconds or wait until a condition holds and resume where it left off. Execution contexts are scoped as system, game, entity, trigger, or UI, with child scopes inheriting from parents.</p>
+<p>Wait states are the feature that justifies the language. Expressing &quot;walk over there, pause, then turn around&quot; in C++ means a state machine, an accumulator, and a switch that runs every frame. In a language with coroutine-like waits, it&#39;s four sequential lines. Behavior code is overwhelmingly sequential in intent and awkwardly parallel in implementation, and closing that gap is worth a lot.</p>
+<h2>Whether Owning a Language Is Defensible</h2>
+<p>Writing a scripting language is the decision in this series most likely to be a mistake.</p>
+<p>Owning a language means owning its parser, its error messages, its scoping rules, and its debugging story forever. Lua exists. Embedding it is a solved problem with documentation, editor support, and people who already know it. Every hour spent on a bespoke parser is an hour not spent on the game, and the resulting language will be worse than Lua at everything except the two or three things it was shaped for.</p>
+<p>My opinion is that it paid off here and wouldn&#39;t on a team. The things it&#39;s shaped for, wait states and scoped contexts that match the engine&#39;s own entity model, are exactly the friction points of embedding a general-purpose language, and the audience is one person who already knows every rule. On a project with five programmers, the calculation inverts completely: the cost of everyone learning an undocumented language exceeds the cost of adapting to Lua&#39;s model.</p>
+<p>It&#39;s a defensible choice for a specific and narrow set of circumstances, and an indefensible default.</p>
+<h2>What the Progression Actually Was</h2>
+<p>Four engines, and the direction is consistent once the numbers are laid next to each other.</p>
+<p>The first kept its state in 603 globals and averaged 475 lines a file. The second enforced boundaries with the linker and got to 73. The third let a constrained platform dictate structure. This one moves most of the game out of C++ entirely: content into JSON that generates code, behavior into scripts, component classification into the type system.</p>
+<p>Each step moved something from convention into enforcement. Prefixes became libraries, libraries became a submodule, manager singletons became compile-time concepts, hand-written content became generated code. That&#39;s one idea applied at four different levels over about fifteen years.</p>
+<p>The last post in this series is what I&#39;d tell someone starting an engine now, including the part where I argue they probably shouldn&#39;t.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

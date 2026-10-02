@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Best-Fit Atlas Packing and the Cost of the Free List | Matt Edmondson</title>
+  <meta name="description" content="A texture atlas allocator is a memory allocator in two dimensions, and the same choices apply. Best-fit packing with an early exit on an exact match, a one-pixel border that exists for a reason nobody guesses first, and a free list that was a linear scan for years longer than it should have been." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/best-fit-atlas-packing-and-the-cost-of-the-free-list/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Best-Fit Atlas Packing and the Cost of the Free List | Matt Edmondson" />
+  <meta property="og:description" content="A texture atlas allocator is a memory allocator in two dimensions, and the same choices apply. Best-fit packing with an early exit on an exact match, a one-pixel border that exists for a reason nobody guesses first, and a free list that was a linear scan for years longer than it should have been." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/best-fit-atlas-packing-and-the-cost-of-the-free-list/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,61 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Best-Fit Atlas Packing and the Cost of the Free List</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-02">December 2, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=opengl">opengl</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=algorithms">algorithms</a>
+        <a class="post-tag" href="/#tag=performance">performance</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
+      <img class="post-hero" src="/assets-blog/best-fit-atlas-packing-and-the-cost-of-the-free-list.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>A texture atlas exists because changing textures between draws is expensive. Put many images in one texture, and everything using that texture can be drawn together. The whole benefit is batching, and the atlas is the mechanism.</p>
+<p>Which turns the interesting part into a packing problem: given a rectangle of fixed size and a stream of smaller rectangles arriving at unpredictable times, where does each one go?</p>
+<p>This is the second post taking one system out of my custom engines. The allocator here is the one piece of code that survived a full engine rewrite nearly unchanged.</p>
+<h2>It&#39;s an Allocator, in Two Dimensions</h2>
+<p>The framing that makes the problem manageable is that this is <code>malloc</code> with an extra axis. The same vocabulary applies: free space, fit strategy, fragmentation, coalescing.</p>
+<p>And the same fit strategies are available. First fit takes the first free space large enough, which is fast and wastes space. Worst fit takes the largest, which keeps big holes available and fragments quickly. Best fit takes the smallest space that still works, which packs tightest and costs a full search.</p>
+<p>The implementation picks best fit, and tracks the smallest waste seen so far:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> over </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> chunk</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">*</span><span style="color:#CAD3F5"> chunk</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">size</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">-</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">needed</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">x </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> border</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> *</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">needed</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">y </span><span style="color:#8BD5CA">+</span><span style="color:#CAD3F5"> border</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">over </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> smallestSize</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span><span style="color:#CAD3F5"> smallestIndex </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> i</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> smallestSize </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> over</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span>
+<span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">over </span><span style="color:#8BD5CA">==</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> return</span><span style="color:#CAD3F5"> i</span><span style="color:#939AB7">;</span></span></code></pre><p>Keep the early return on an exact fit. A perfect match can&#39;t be improved on, so there&#39;s no reason to finish the search, and in practice exact matches are common because games have a lot of same-sized art. One line turns the common case from a full scan into an early exit.</p>
+<p>Best fit suits atlases for a reason that doesn&#39;t apply to heap memory. Unlike heap memory, an atlas can&#39;t grow, and a failed allocation means a whole extra texture and a whole extra draw call. Packing density converts directly into frame time, so a search to get it pays for itself.</p>
+<h2>The Border Nobody Guesses First</h2>
+<p>Every allocation reserves one pixel more than it needs in each dimension.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> border </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">;</span></span></code></pre><p>That&#39;s not defensive rounding. When the GPU samples a texture with bilinear filtering, it reads the four texels around the sample point and blends them. At the edge of a packed image, one or more of those texels belongs to whatever was packed next door. The result is a thin fringe of the neighboring image bleeding along the edge, and it gets worse at smaller mip levels, where the filter reaches further in texture space.</p>
+<p>The one-pixel gap gives the filter something harmless to blend with. Nobody arrives at this from first principles. It arrives as a bug report about a strange colored line at the edge of a sprite, and once seen it&#39;s never forgotten.</p>
+<p>The first version of my allocator had no border, and the second one did. That difference is the entire visible record of an afternoon spent working out where a magenta line was coming from.</p>
+<h2>The Free List Was a Linear Scan for Years</h2>
+<p>What I got wrong, twice, is how free space was found.</p>
+<p>The original identified an unused chunk by testing whether its filename string was empty, then walked every chunk on every allocation. So each allocation was a linear scan doing string inspection. The rewrite dropped the string test but kept the linear walk.</p>
+<p>For an atlas with a few dozen chunks that&#39;s genuinely fine. No performance disaster ever happened, and the problem isn&#39;t the cost. It&#39;s that the data structure encodes no knowledge the algorithm could use.</p>
+<p>A real allocator keeps free space in a structure that answers the fit question directly: a size-bucketed free list, or a tree ordered by area, so best fit is a lookup near the right size rather than a scan of everything including allocated space. That change makes the search proportional to the number of free chunks rather than to all chunks, and it makes the common case a couple of pointer hops.</p>
+<p>I made this mistake in several places across these engines. Choosing the right algorithm and then storing its data in whatever container was nearest is a specific and repeatable failure. Best fit expresses an intent about free space, and a flat array of everything is a structure that has no opinion about free space at all. The algorithm and the structure have to agree, or the algorithm is decorative.</p>
+<h2>Coalescing, or the Absence of It</h2>
+<p>The other thing a mature allocator does is merge adjacent free space so that two freed neighbors become one usable larger hole. Mine never did.</p>
+<p>The consequence is predictable. Load and unload enough differently sized textures and the atlas ends up as a mosaic of small free chunks with no single space large enough for anything useful, while reporting plenty of free area in total. Classic external fragmentation, in two dimensions, where it&#39;s harder to fix because merging rectangles only works when they share a full edge.</p>
+<p>I avoided the problem rather than solving it. Atlases were largely populated once and used, rather than continuously churned, so fragmentation never had time to develop. That&#39;s a legitimate engineering answer as long as it&#39;s a decision. Mine was an accident that happened to hold.</p>
+<p>If I were building this again for a workload with real churn, I&#39;d either implement rectangle merging with the edge-matching constraint spelled out, or sidestep it by making chunks uniform, giving up density in exchange for never fragmenting. Which one is right depends entirely on whether the content has a natural size distribution or not, and that&#39;s knowable in advance.</p>
+<p>The commit history makes that accident concrete. Atlasing landed on 2011-07-28. The same day,
+the background eviction path picked up an unconditional <code>return</code> at the top of its body, and
+the general texture eviction policy had already been switched off seven weeks before that. So
+from the day the atlas existed, nothing in the shipped build ever took a texture back out of
+it.</p>
+<p>The allocator was safe because of a property of the system around it, and nothing in the allocator recorded that it depended on that property. Turn eviction back on two years later and
+the fragmentation shows up with no note attached explaining where it came from. A design that
+survives because of an assumption should say so somewhere the next person will read.</p>
+<h2>What Transfers</h2>
+<p>None of it is about textures.</p>
+<p>Treat a bounded resource as an allocator and the whole existing vocabulary becomes available. Fit strategy, fragmentation, and coalescing are the questions to ask about any fixed pool, and knowing they&#39;re the questions is most of the work.</p>
+<p>Add an early exit for the case that can&#39;t be improved. It&#39;s usually one line and it usually covers the common path.</p>
+<p>And make the structure hold the knowledge the algorithm needs. If the search is scanning things it will always reject, the container is the thing to change, not the search.</p>
 
     </article>
   </main>

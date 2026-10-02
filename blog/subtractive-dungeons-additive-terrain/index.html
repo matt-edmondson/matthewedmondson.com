@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subtractive Dungeons, Additive Terrain | Matt Edmondson</title>
+  <meta name="description" content="Every generator I've written turns out to be doing one of the two things a synthesizer does: starting with too much and filtering it down, or starting with nothing and summing contributions. In one case the correspondence isn't an analogy at all, because fractal terrain and additive synthesis use the same word for the same arithmetic." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/subtractive-dungeons-additive-terrain/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Subtractive Dungeons, Additive Terrain | Matt Edmondson" />
+  <meta property="og:description" content="Every generator I've written turns out to be doing one of the two things a synthesizer does: starting with too much and filtering it down, or starting with nothing and summing contributions. In one case the correspondence isn't an analogy at all, because fractal terrain and additive synthesis use the same word for the same arithmetic." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/subtractive-dungeons-additive-terrain/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Subtractive Dungeons, Additive Terrain</h1>
+      <div class="post-meta">
+        <time datetime="2026-01-02">January 2, 2026</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">Architecture</span>
+        <a class="post-tag" href="/#tag=procedural-generation">procedural-generation</a>
+        <a class="post-tag" href="/#tag=audio">audio</a>
+        <a class="post-tag" href="/#tag=dsp">dsp</a>
+        <a class="post-tag" href="/#tag=synthesis">synthesis</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/subtractive-dungeons-additive-terrain.jpg" alt="" width="1200" height="675" />
+
+<p>There are two classical ways to make a sound from nothing. Subtractive synthesis starts with something harmonically overloaded, a sawtooth or a burst of noise, and removes what isn&#39;t wanted with filters. Additive synthesis starts with silence and sums sine waves until the desired shape exists.</p>
+<p>I&#39;ve written a modular synthesizer with eighteen modules, and separately a pile of procedural generators across four game engines. Going back through the generators after writing about the synth, the same two shapes are in all of them, and in one case the correspondence isn&#39;t a comparison at all. It&#39;s the same arithmetic with the same name.</p>
+<h2>Subtractive: Make Too Much, Then Filter</h2>
+<p>The dungeon generator in my second engine is subtractive in the strict sense. It places more rooms than it needs, connects every pair of rooms that could possibly be connected, and then removes things.</p>
+<p>The door pass generates a connection between every pair of rooms whose authored door regions overlap. The result is a maximally connected dungeon, which is unplayable, and is the level design equivalent of a sawtooth wave. A sawtooth is unpleasant on its own and useful because it contains every harmonic, so a filter has material to work with. The all-doors dungeon contains every possible route for the same reason.</p>
+<p>Then the filter:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#8AADF4;font-style:italic">rand</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> %</span><span style="color:#F5A97F"> 100</span><span style="color:#8BD5CA"> &#x3C;</span><span style="color:#F5A97F"> 10</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">    ...</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#8AADF4;font-style:italic">pathfindAll</span><span style="color:#939AB7">()){</span></span>
+<span class="line"><span style="color:#CAD3F5">        rooms</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">roomId</span><span style="color:#939AB7">].</span><span style="color:#CAD3F5">doors</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">erase</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">itd2</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> it</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">doors</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">erase</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">itd</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#C6A0F6">    else</span><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#CAD3F5">        itd2</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">active </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Consider ten percent of doors, remove each tentatively, keep the removal if the dungeon is still fully connected and revert it otherwise.</p>
+<p>The erosion in the terrain experiments is subtractive in exactly the same way. A heightmap is generated at full material, water is run over it, and the terrain is lowered only where the water was moving. Channels appear because material is taken away, not because channels were placed.</p>
+<p>Both have the property that defines subtractive synthesis: <strong>the output is bounded by what the source contained</strong>. A filter can only remove harmonics the oscillator generated, and no filter setting turns a sine into a brass sound because there&#39;s nothing in a sine to bring forward. The door cull can only produce topologies that were present in the maximally connected graph, and the erosion can only carve valleys where the diamond-square pass put slopes. Overproduction isn&#39;t waste, it&#39;s the harmonic content the later stage works on.</p>
+<h2>The Filter Needs Something It Can&#39;t Remove</h2>
+<p>The interesting difference is that a resonant filter left unchecked will self-oscillate, and a door cull left unchecked will disconnect the dungeon. Both need a constraint that stops the removal going too far.</p>
+<p>In the generator that constraint is explicit and exact. <code>pathfindAll()</code> runs after every tentative removal, and connectivity is the thing that cannot be filtered out. The dungeon is allowed to lose any door whose loss doesn&#39;t cost reachability, and that single invariant is what makes an aggressive cull safe.</p>
+<p>That&#39;s a better arrangement than a synthesizer usually gets, because a filter has no way to ask whether the note is still recognizable. It&#39;s the advantage of generating content rather than signal: the output can be tested against a definition of correct before the removal is committed, and every intermediate state stays valid.</p>
+<h2>Additive: Octaves, and the Word Is Not a Metaphor</h2>
+<p>The terrain generator itself is additive, and here the correspondence stops being an analogy.</p>
+<p>Diamond-square starts with four corners and repeatedly adds displacement at the midpoints, halving the displacement range at each level of subdivision:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> heightrange </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> initialheight</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">for</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i</span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F">0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5">i</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">seg</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">depth</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5">i</span><span style="color:#8BD5CA">++</span><span style="color:#939AB7">){</span></span>
+<span class="line"><span style="color:#CAD3F5">    heightrange </span><span style="color:#8BD5CA">/=</span><span style="color:#F5A97F"> 2.0f</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Each level doubles the spatial frequency of the detail and halves its amplitude.</p>
+<p>Additive synthesis builds a waveform by summing partials at multiples of the fundamental, with amplitude falling as frequency rises. A sawtooth is every harmonic at 1/n. Pink noise is amplitude falling as 1/f.</p>
+<p>These are the same construction. Terrain people and audio people both call the layers <strong>octaves</strong>, both mean a doubling of frequency, and both halve the amplitude across one. When a shader samples noise four times at doubling frequencies and halving weights, the code is identical to summing four partials, and the only difference is whether the sum is interpreted as a height or a voltage.</p>
+<p>The vignette in one of my testbeds is a two-partial additive synth that happens to output brightness:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">float</span><span style="color:#CAD3F5"> fVignetteAlpha </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0.75f</span><span style="color:#8BD5CA"> +</span><span style="color:#939AB7"> ((</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">m_perlin</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">noise</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_fPerlinTimer</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#8BD5CA">                              +</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">float</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">m_perlin</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">noise</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_fPerlinTimer </span><span style="color:#8BD5CA">/</span><span style="color:#F5A97F"> 5.0f</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#939AB7">,</span><span style="color:#F5A97F"> 1.0f</span><span style="color:#939AB7">))</span><span style="color:#8BD5CA"> *</span><span style="color:#F5A97F"> 0.25f</span><span style="color:#939AB7">;</span></span></code></pre><p>Two samples of one noise field at rates five apart, summed, scaled, and offset. A fast term for flicker and a slow term for drift. 0.75 is the DC offset, 0.25 is the output gain, and the two noise calls are the partials. Written as audio it&#39;s a two-oscillator patch. Written as graphics it&#39;s a flickering light.</p>
+<p>The particle system is additive too, in the plainer sense: forces accumulate onto a velocity, each contributing independently, and the visible result is the sum. Nothing is filtered out, and complexity comes from stacking terms.</p>
+<h2>The Oscillator Decides What Can Come Out</h2>
+<p>The rhythm game I wrote in twelve hours picks notes like this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#CAD3F5">pitch </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> Random</span><span style="color:#8BD5CA">.</span><span style="color:#8AADF4;font-style:italic">Range</span><span style="color:#939AB7">(</span><span style="color:#F5A97F">0</span><span style="color:#939AB7">,</span><span style="color:#CAD3F5"> spawnerArray</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Length</span><span style="color:#939AB7">);</span></span></code></pre><p>No scale, no constraint, no correction. It&#39;s listenable because the five available sounds are <code>e</code>, <code>g</code>, <code>b</code>, <code>g2</code>, and <code>b2</code>, an E minor triad plus two octaves, so every note is consonant with every other by construction.</p>
+<p>In synthesis terms that&#39;s oscillator selection, and it&#39;s the decision subtractive synthesis makes first and least reversibly. Choosing a square wave rather than a sawtooth removes the even harmonics before any filter is touched. Choosing five notes from one chord removes every dissonant interval before any selection logic runs.</p>
+<p>It&#39;s the opposite strategy to the dungeon generator, and both are right for their situation. The dungeon overproduces because it can test the result and delete what fails, so a rich source is an advantage. The rhythm game can&#39;t test the result, because there&#39;s no cheap definition of a bad melody to check against, so it constrains the source until no bad output exists to produce. Generate and reject needs a test. Constrain the alphabet doesn&#39;t.</p>
+<p>The tell for which one a problem needs is whether correctness is easy to measure. Connectivity is trivial to measure and hard to construct, so the dungeon builds too much and filters. Musical consonance is awkward to measure and easy to guarantee up front, so the rhythm game picks its five notes and stops worrying.</p>
+<h2>Envelopes, Modulation, and Sample and Hold</h2>
+<p>Once the two frames are in place, the rest of the synthesizer&#39;s parts turn up in the generators too, and some of them are already wearing their audio names.</p>
+<p>The GUI motion system gives every component a delay, a duration, a target, and a curve, on each of three channels. That&#39;s an envelope generator with a delay stage, and one of its curves is called <code>AttackEaseOut</code>, borrowing the word for the initial rise straight from audio envelopes. The naming wasn&#39;t a joke. The system does what an envelope does: produce a scalar over time from a small set of parameters, and let something else decide what that scalar drives.</p>
+<p>The character animation in the fruit game is low frequency modulation with a depth control. Head wobble, hat wobble and a speed wiggle each keep their own phase accumulator and advance it by <code>delta * frequency</code>, which is exactly how an LFO is implemented, and the hat&#39;s motion is the head&#39;s multiplied by 0.9. In a synth that multiplier is called modulation depth. Here it makes a hat look like it&#39;s resting on a head rather than painted onto one.</p>
+<p>The particle system&#39;s two stored seeds are a sample and hold. A sample and hold module reads a noise source at a trigger and holds that value until the next trigger, which is how a synth gets a random but stable pitch per note rather than a value that hisses. The particle samples randomness once at spawn and holds it for its lifetime, so its variation is stable and reproducible instead of jittering per frame. The starfield does the same thing with position rather than time as the trigger: sample the generator once per chunk, hold for as long as the chunk is in view, and get the same stars back on return.</p>
+<p>The particle ring buffer is voice allocation. A fixed pool, oldest reused when the pool is exhausted, which is voice stealing under another name, and it&#39;s the same problem a polyphonic synth solves when a seventeenth key goes down on a sixteen voice instrument.</p>
+<p>And the glitch shader is a noise gate. Sample noise, discard everything below a threshold, rescale what&#39;s left so it starts from zero:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7"> (</span><span style="color:#CAD3F5">intensity </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5"> threshold</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5"> intensity </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0.0</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">else</span><span style="color:#CAD3F5"> intensity </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> intensity </span><span style="color:#8BD5CA">-</span><span style="color:#CAD3F5"> threshold</span><span style="color:#939AB7">;</span></span></code></pre><p>That&#39;s a gate with the threshold subtracted rather than a hard cut, which is what stops the effect snapping on at full strength. A gate that removes its threshold from the signal instead of just muting below it is a standard trick for exactly the same reason.</p>
+<h2>Where the Comparison Stops</h2>
+<p>Two of my generators have no clean synthesis counterpart, and the reason is instructive.</p>
+<p>The dungeon&#39;s outer loop builds a complete dungeon, measures its depth and room count, discards it and starts again if it falls short, up to a hundred times. Nothing in a synthesizer does that, because audio is realtime and there is no opportunity to hear a note, decide it was wrong, and play a different one before it reaches the speaker. Rejection sampling is available to a generator that runs ahead of consumption, and not to one that runs against a deadline. It&#39;s the same reason the strictest rules in real-time audio are about never doing work of unpredictable duration.</p>
+<p>The autotiler is the other one. It hashes a tile&#39;s eight neighbors and looks up a replacement, so its output depends on spatial context rather than on a signal path. The closest audio idea is a waveshaper, a lookup that maps input to output, but a waveshaper reads one sample and the autotiler reads a neighborhood. Context-sensitive substitution is a grammar, and grammars are what synthesis doesn&#39;t have.</p>
+<h2>What Transfers</h2>
+<p>Decide early whether a generator will overproduce and filter or constrain and accumulate, because it settles almost everything else. Overproduction needs a test that&#39;s cheap to run and safe to fail, and it buys richness the constrained approach can&#39;t reach. Constraint needs no test at all and can&#39;t produce anything interesting that wasn&#39;t anticipated in the alphabet.</p>
+<p>Halve the amplitude when doubling the frequency, whatever the domain. Terrain, noise, animation detail, and audio all end up at the same 1/f relationship, and the reason is the same in each: it&#39;s the distribution that reads as natural rather than as either uniform or arbitrary.</p>
+<p>Look for a stored seed wherever a value should be random but stable. Sample and hold is one of the oldest modules on a synthesizer and an idea procedural generation reuses constantly, and it&#39;s the same operation both times.</p>
+<p>And take the vocabulary seriously. When two fields have independently arrived at the word octave for the same halving, the borrowing usually runs deeper than the term. The rest of the shared vocabulary then reads as a map of which techniques crossed over with it.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

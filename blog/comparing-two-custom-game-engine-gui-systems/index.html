@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparing Two Custom Game Engine GUI Systems | Matt Edmondson</title>
+  <meta name="description" content="A follow-up to the tour of my second engine's GUI: the same problems, solved again two years later in the Carbon Monoxide engine, and then refined for a decade. Where the old system managed slicing, reentrancy, and mouse capture with discipline, the new one manages them with structure, and the comparison shows which ideas survived by being copied and which survived by being re-learned." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/comparing-two-custom-game-engine-gui-systems/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Comparing Two Custom Game Engine GUI Systems | Matt Edmondson" />
+  <meta property="og:description" content="A follow-up to the tour of my second engine's GUI: the same problems, solved again two years later in the Carbon Monoxide engine, and then refined for a decade. Where the old system managed slicing, reentrancy, and mouse capture with discipline, the new one manages them with structure, and the comparison shows which ideas survived by being copied and which survived by being re-learned." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/comparing-two-custom-game-engine-gui-systems/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Macchiato */
+      --ctp-mauve: #c6a0f6;
+      --ctp-blue: #8aadf4;
+      --ctp-sapphire: #7dc4e4;
+      --ctp-sky: #91d7e3;
+      --ctp-green: #a6da95;
+      --ctp-peach: #f5a97f;
+      --ctp-red: #ed8796;
+      --ctp-yellow: #eed49f;
+      --ctp-lavender: #b7bdf8;
+      --ctp-text: #cad3f5;
+      --ctp-subtext1: #b8c0e0;
+      --ctp-subtext0: #a5adcb;
+      --ctp-overlay1: #8087a2;
+      --ctp-overlay0: #6e738d;
+      --ctp-surface1: #494d64;
+      --ctp-surface0: #363a4f;
+      --ctp-base: #24273a;
+      --ctp-mantle: #1e2030;
+      --ctp-crust: #181926;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(60rem 40rem at 80% -10%, rgba(198, 160, 246, 0.10), transparent 60%),
+        radial-gradient(50rem 40rem at -10% 10%, rgba(138, 173, 244, 0.10), transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(3rem, 8vw, 6rem) 1.5rem 2rem;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin-bottom: 0.9rem;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--ctp-lavender);
+      margin-bottom: 0.6rem;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--ctp-subtext1);
+      margin-bottom: 1.5rem;
+    }
+
+    .tagline .dot { color: var(--ctp-overlay0); padding: 0 0.4rem; }
+
+    section { margin-bottom: 2rem; }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ctp-sapphire);
+      margin-bottom: 0.5rem;
+    }
+
+    p { color: var(--ctp-subtext1); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    a { color: var(--ctp-sapphire); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--ctp-sky); }
+
+    .intro p { color: var(--ctp-text); }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      color: var(--ctp-text);
+      font-size: 0.92rem;
+      font-weight: 500;
+      background-color: var(--ctp-surface0);
+      transition: border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .links a:hover {
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-text);
+      transform: translateY(-2px);
+    }
+
+    .links a.primary {
+      background-color: var(--ctp-lavender);
+      border-color: var(--ctp-lavender);
+      color: var(--ctp-crust);
+      font-weight: 600;
+    }
+
+    .links a.primary:hover { background-color: var(--ctp-blue); border-color: var(--ctp-blue); }
+
+    footer {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem 1.5rem 3rem;
+      border-top: 1px solid var(--ctp-surface0);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ctp-overlay0);
+    }
+
+    .note .blink { color: var(--ctp-green); }
+
+    .copy { font-size: 0.8rem; color: var(--ctp-overlay0); }
+  
+    .breadcrumb { margin-bottom: 2rem; font-size: 0.9rem; }
+    .breadcrumb a { color: var(--ctp-overlay1); }
+    .breadcrumb a:hover { color: var(--ctp-sapphire); }
+
+    article h1 { margin-bottom: 0.3em; }
+    article h2 {
+      font-size: 1.5rem;
+      color: var(--ctp-sapphire);
+      margin: 2.5rem 0 0.75rem;
+    }
+    article h3 {
+      font-size: 1.15rem;
+      color: var(--ctp-sky);
+      margin: 2rem 0 0.6rem;
+    }
+
+    /* Series posts share one title, so the part number leads and the subtitle
+       carries what this instalment is actually about. */
+    .series-part {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.5rem;
+    }
+    .post-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.4;
+      color: var(--ctp-subtext0);
+      margin: -0.2rem 0 1.4rem;
+    }
+    .card-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--ctp-overlay1);
+      margin: 0;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .post-meta time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--ctp-overlay1);
+    }
+    .category-tag {
+      font-size: 0.75rem;
+      color: var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+    }
+    /* Tags sit beside the categories but read quieter, because a post has one or
+       two categories and can have six tags. */
+    .post-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-subtext0);
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* Index filters. A wrapping bar of pills was unreadable at 14 categories and
+       200 tags, so the controls live in a sidebar where each option gets its own
+       line and its count sits in a column. Below 900px the sidebar slides in. */
+    .writing-layout {
+      display: grid;
+      grid-template-columns: 13.5rem minmax(0, 1fr);
+      gap: 2.2rem;
+      align-items: start;
+    }
+    /* The sidebar sticks and scrolls as one column. Scrolling a single list
+       inside it put a native scrollbar in the middle of the tag section, which
+       cut the list off mid-word and looked like a rendering fault. */
+    .filter-drawer {
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-surface1) transparent;
+    }
+    .filter-drawer::-webkit-scrollbar { width: 7px; }
+    .filter-drawer::-webkit-scrollbar-track { background: transparent; }
+    .filter-drawer::-webkit-scrollbar-thumb {
+      background-color: var(--ctp-surface1);
+      border-radius: 4px;
+    }
+    .filter-drawer:hover::-webkit-scrollbar-thumb { background-color: var(--ctp-surface2); }
+    .drawer-head { display: none; }
+    .filter-group { margin-bottom: 1.15rem; }
+    .filter-group h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .filter-list { display: flex; flex-direction: column; gap: 1px; }
+    /* No inner scroll: the sidebar as a whole is the scroll container. */
+    .filter-opt {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 0.22rem 0.5rem;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--ctp-subtext0);
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .filter-opt > span:first-child { overflow-wrap: anywhere; }
+    .filter-opt:hover { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    .filter-opt[aria-pressed="true"] {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-sapphire);
+      font-weight: 600;
+    }
+    .filter-opt .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ctp-overlay0);
+      flex-shrink: 0;
+    }
+    .filter-opt[aria-pressed="true"] .n { color: var(--ctp-sapphire); }
+    .filter-opt.extra { display: none; }
+    .filter-drawer.expanded .filter-opt.extra { display: flex; }
+    .filter-more {
+      align-self: flex-start;
+      margin-top: 0.35rem;
+      padding: 0.25rem 0.5rem;
+      border: 0;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-sapphire);
+      cursor: pointer;
+    }
+    .filter-more:hover { text-decoration: underline; }
+    .filter-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ctp-overlay0);
+      margin: 0;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+    .drawer-toggle { display: none; }
+    .drawer-scrim { display: none; }
+    /* .post-card sets display:flex, which would win over the hidden attribute. */
+    .post-card[hidden] { display: none; }
+    .filter-empty { color: var(--ctp-subtext0); margin: 1rem 0 0; }
+
+    @media (max-width: 900px) {
+      .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .drawer-toggle {
+        display: inline-block;
+        margin: 0 0 1.2rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--ctp-surface1);
+        background-color: var(--ctp-surface0);
+        color: var(--ctp-subtext1);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+      .drawer-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(24, 25, 38, 0.7);
+      }
+      .drawer-scrim[hidden] { display: none; }
+      .filter-drawer {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 16.5rem;
+        z-index: 45;
+        overflow-y: auto;
+        padding: 1.1rem 1.2rem 2rem;
+        background-color: var(--ctp-mantle);
+        border-right: 1px solid var(--ctp-surface0);
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .filter-drawer.open { transform: none; }
+      .drawer-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--ctp-text);
+      }
+      .filter-drawer { max-height: none; }
+    }
+
+    article ul, article ol { margin: 0 0 1rem 1.4rem; color: var(--ctp-subtext1); }
+    article li { margin-bottom: 0.4rem; }
+    article strong { color: var(--ctp-text); }
+    article hr { border: 0; border-top: 1px solid var(--ctp-surface0); margin: 2.5rem 0; }
+
+    article blockquote {
+      border-left: 3px solid var(--ctp-surface1);
+      padding: 0.2rem 0 0.2rem 1rem;
+      margin: 1.5rem 0;
+      color: var(--ctp-subtext0);
+    }
+    article blockquote p:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background-color: var(--ctp-surface0);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      color: var(--ctp-peach);
+    }
+    pre {
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--ctp-text);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td {
+      border: 1px solid var(--ctp-surface0);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background-color: var(--ctp-surface0); color: var(--ctp-text); }
+    td { color: var(--ctp-subtext1); }
+
+    /* Index cards. The whole card is clickable through a stretched title link,
+       so the thumbnail needs no anchor of its own. */
+    /* The index is a gallery, so it gets more room than an article measure. */
+    main.wide { max-width: 1320px; }
+
+    .post-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 1.4rem;
+    }
+    .post-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--ctp-mantle);
+      border: 1px solid var(--ctp-surface0);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .post-card:hover,
+    .post-card:focus-within {
+      border-color: var(--ctp-surface1);
+      transform: translateY(-2px);
+    }
+    .post-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: var(--ctp-crust);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+    .post-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      padding: 0.95rem 1.05rem 1.15rem;
+    }
+    .post-card time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--ctp-overlay0);
+    }
+    .post-card h3 { font-size: 1rem; line-height: 1.35; margin: 0; }
+    .post-card h3 a { color: var(--ctp-text); }
+    .post-card:hover h3 a,
+    .post-card h3 a:focus-visible { color: var(--ctp-sapphire); }
+    /* Stretch the title link over the card without nesting interactive elements. */
+    .post-card h3 a::after { content: ""; position: absolute; inset: 0; }
+    .post-card p {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--ctp-subtext0);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .post-hero {
+      display: block;
+      margin-top: 0.4rem;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--ctp-surface0);
+      background-color: var(--ctp-mantle);
+      margin-bottom: 1.8rem;
+    }
+
+    .all-posts { margin-top: 1.5rem; font-size: 0.92rem; }
+
+    .lede {
+      color: var(--ctp-subtext0);
+      margin: 0 0 2.6rem;
+    }
+    .lede a { color: var(--ctp-sapphire); white-space: nowrap; }
+    .writing-heading {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ctp-overlay1);
+      margin: 0 0 0.9rem;
+    }
+
+    .draft-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--ctp-crust);
+      background-color: var(--ctp-peach);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .draft-banner {
+      border: 1px solid var(--ctp-peach);
+      background-color: var(--ctp-surface0);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.88rem;
+      color: var(--ctp-peach);
+    }
+</style>
+</head>
+<body>
+  <main>
+    <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
+    <article>
+      <h1>Comparing Two Custom Game Engine GUI Systems</h1>
+      <div class="post-meta">
+        <time datetime="2026-01-30">January 30, 2026</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">Game Development</span>
+        <span class="category-tag">C++</span>
+        <a class="post-tag" href="/#tag=cpp">cpp</a>
+        <a class="post-tag" href="/#tag=game-engine">game-engine</a>
+        <a class="post-tag" href="/#tag=ui">ui</a>
+        <a class="post-tag" href="/#tag=gui">gui</a>
+        <a class="post-tag" href="/#tag=architecture">architecture</a>
+        <a class="post-tag" href="/#tag=mobile">mobile</a>
+        <a class="post-tag" href="/#tag=game-development">game-development</a>
+      </div>
+      <img class="post-hero" src="/assets-blog/comparing-two-custom-game-engine-gui-systems.jpg" alt="" width="1200" height="675" />
+
+<p>The last post walked through my second engine&#39;s GUI, and the center of that design was one line, the entire style engine implemented as the compiler-generated assignment operator:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guiManager</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">styleExists</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">line</span><span style="color:#939AB7">))</span><span style="color:#8BD5CA"> *</span><span style="color:#CAD3F5">control </span><span style="color:#8BD5CA">=</span><span style="color:#8BD5CA"> *</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">guiManager</span><span style="color:#939AB7">.</span><span style="color:#CAD3F5">styles</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">line</span><span style="color:#939AB7">]);</span></span></code></pre><p>The engine that came after it (Carbon Monoxide, the third one, the mobile rewrite) declares its GUI base class like this:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">class</span><span style="color:#EED49F;font-style:italic"> cmGUIComponent</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#939AB7">:</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    cmGUIComponent</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> cmGUIComponent</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#939AB7">)</span><span style="color:#8BD5CA"> =</span><span style="color:#C6A0F6"> delete</span><span style="color:#939AB7">;</span></span></code></pre><p>The exact operation the old library stands on is a compile error in the new one. Every widget class repeats the deletion: the button, the label, the image, the scroller all open by outlawing the copy. If a single line summarizes what two more years of writing GUIs taught me, it&#39;s that one.</p>
+<p>This continues the series taking one system at a time out of my custom engines, except this time it&#39;s two systems held next to each other. The layout post and the arrival-animations post each pulled one idea out of the Carbon Monoxide GUI on its own. This post reads it against its predecessor, because the same person solving the same problems twice is a controlled experiment, and the diff is more instructive than either version alone. It is also consistent enough to state its conclusion up front: everywhere the old system managed a hazard with discipline, the new one manages it with structure.</p>
+<h2>Half the Widgets, a Different Job</h2>
+<p>The old library is 4,439 lines with sixteen control types. The new one is about 3,200 lines (components plus the screen system) and its factory constructs seven: component, label, scaled label, button, option button, image, scroller.</p>
+<p>The missing nine are the tool controls, which is what actually changed. The color picker, the gradient slider, the thumbnail file browser, the viewport, the draggable window, all the controls that existed because the particle editor was the real user, have no descendants here. By the Carbon Monoxide era, tool interfaces didn&#39;t need a homemade web browser any more, because they used Dear ImGui. The engine&#39;s texture browser today is <code>class TextureBrowser : public ImGuiModalPopup&lt;TextureBrowser&gt;</code>, a hundred-odd lines of immediate-mode calls, and the retained GUI never hears about it.</p>
+<p>That&#39;s the first evolution, and it isn&#39;t a technique. It&#39;s a scope. The 2012 system carried editors and games on one tree. The successor let somebody else&#39;s library carry the editors, and a GUI that only has to be a game GUI gets to be smaller than the one it replaced while doing its actual job better.</p>
+<p>The one place the widget set grew is the control desktop never asked for: the scroller. It has a drag threshold, an inertia decay constant, a release velocity taken as the last frame&#39;s offset over the frame time, and snap-to-target seeking with its own interpolation. Nothing in the old engine needed any of that, because desktops have scroll wheels and tools have patience. Fingers have neither.</p>
+<h2>The God Object Dissolved</h2>
+<p>The strangest thing in the old library was the base class: two hundred lines of public fields, the union of every field any control needs, so that every button carries the color picker&#39;s hue and a GL texture handle for a gradient it will never draw. I defended it in the last post, and I still do. Uniform state was the precondition for the trivial parser and the assignment-operator style engine. It was a price, paid knowingly, in one place.</p>
+<p>The successor stopped paying it. <code>cmGUIComponent</code> carries only what every component genuinely has: name, geometry, the two anchors, scale and layout modes, visibility, children, and the animation channels. The button&#39;s textures, label text and font size live in <code>cmGUIButton</code>. The label&#39;s stroke, shadow and wrapping live in the label. The option button adds its checked state and nothing else. Fields are protected, and the outside goes through setters.</p>
+<p>What bought back the parser the god object used to pay for is that parsing went virtual. Each class reads its own members:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">void</span><span style="color:#EED49F"> cmGUIButton</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">FromJson</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> jsonObj</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#EED49F">    cmGUIComponent</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">FromJson</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">jsonObj</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    UNPACK_JSON_MEMBER</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">jsonObj</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">*</span><span style="color:#ED8796">this</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> m_textureOff</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    UNPACK_JSON_MEMBER</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">jsonObj</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">*</span><span style="color:#ED8796">this</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> m_textureOn</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    UNPACK_JSON_MEMBER</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">jsonObj</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">*</span><span style="color:#ED8796">this</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> m_text</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#8AADF4;font-style:italic">    UNPACK_JSON_MEMBER</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">jsonObj</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> (</span><span style="color:#8BD5CA">*</span><span style="color:#ED8796">this</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> m_color</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    ...</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The macro stringifies the member name and strips the <code>m_</code>, and that becomes the JSON key. The old system&#39;s parser was one function with an 83-comparison else-if ladder, every key a hand-typed string that had to match a field somewhere else in the file. The new system&#39;s entire property vocabulary is 37 of those one-line declarations, spread across the classes that own the fields, and a key cannot drift from its member because it is generated from the member. Colors serialize as hex strings, vectors as <code>{x, y}</code> objects, and the serialization contract itself is compile-checked. A <code>static_assert(cm::json::Jsonable&lt;cmColor&gt;)</code> sits in the color header like a unit test that runs at build time. The old parser knew every property of every control. The new one knows nothing except how to dispatch <code>&quot;type&quot;</code> through a factory, and that ignorance is the design.</p>
+<h2>Copying Got a Name</h2>
+<p>So if the copy constructor is deleted, what happened to prototypes? They kept working. They stopped being implicit:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> CloneInto</span><span style="color:#939AB7">(</span><span style="color:#EED49F;font-style:italic">cmGUIComponent</span><span style="color:#C6A0F6">*</span><span style="color:#EE99A0;font-style:italic"> other</span><span style="color:#939AB7">)</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#EED49F;font-style:italic"> cmGUIComponent</span><span style="color:#C6A0F6">*</span><span style="color:#8AADF4;font-style:italic"> CloneComponent</span><span style="color:#939AB7">()</span><span style="color:#C6A0F6"> const</span><span style="color:#939AB7"> {</span><span style="color:#C6A0F6"> return</span><span style="color:#8AADF4;font-style:italic"> Clone</span><span style="color:#939AB7">&#x3C;</span><span style="color:#EED49F;font-style:italic">cmGUIButton</span><span style="color:#939AB7">>();</span><span style="color:#939AB7"> }</span></span></code></pre><p><code>CloneInto</code> is virtual and per-class: the button&#39;s override casts, copies the button&#39;s own fields, delegates the base&#39;s to the base, and clones children through their own <code>CloneComponent</code>. A component can still be built once and stamped out in copies, which is the whole prototype idea. But a clone is now a statement each class signs, with the slicing hazard removed by construction, instead of a bitwise habit that only worked because all state had been flattened into one class in advance.</p>
+<p>What did not survive is the stylesheet. There is no <code>java.style</code> in the new engine, no class blocks, no cascade, no restyling every button in the project from one file. Skinning a Carbon Monoxide interface means touching components one at a time, in data or in code, which is exactly the complaint I raised in the arrival-animations post about easing curves being set per call site. The old system remains genuinely better at this one thing. The evolution deleted a hazard and a superpower that were the same mechanism, and only the hazard&#39;s replacement got built. If I ever write a fourth GUI, the cascade is the piece I&#39;d steal back from 2012.</p>
+<h2>The Text Format Died and Came Back</h2>
+<p>The old GUI was data all the way down: 8,451 lines of <code>.gui</code> text, close to two lines of interface for every line of C++ that interpreted it. The mobile rewrite launched without any of that. The 2014 game&#39;s screens are C++ classes, fifteen of them, wired up in code. Whatever the reason at the time (schedule, or the text format being tangled up with the tool controls it existed to serve), the rewrite threw away what had most distinguished its predecessor.</p>
+<p>Then it grew back. The engine that stayed alive taught its screens <code>LoadFromJson</code>: a screen file is a JSON array of typed component objects, children nested inside parents, anchors by name. Here is one of the main menu&#39;s buttons from Dungeoneer, the dungeon game built on the engine today:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">name</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "btnGame"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">type</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "button"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">text</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "Launch Game"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">textureOff</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "button.tga"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">position</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">        "</span><span style="color:#8AADF4">x</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">        "</span><span style="color:#8AADF4">y</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "0.125 * 1"</span></span>
+<span class="line"><span style="color:#939AB7">    },</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">size</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#939AB7">        "</span><span style="color:#8AADF4">x</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#F5A97F"> 1</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">        "</span><span style="color:#8AADF4">y</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#F5A97F"> 0.1</span></span>
+<span class="line"><span style="color:#939AB7">    },</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">anchorParent</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "Center"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">anchorSelf</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "Center"</span><span style="color:#939AB7">,</span></span>
+<span class="line"><span style="color:#939AB7">    "</span><span style="color:#8AADF4">scaleMode</span><span style="color:#939AB7">"</span><span style="color:#939AB7">:</span><span style="color:#A6DA95"> "RelativeToHeightAspect"</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The same game&#39;s screens also settle an old account from this series. Its inventory panel is a container with <code>&quot;layoutMode&quot;: &quot;Flow&quot;</code> and a padding value, the layout container whose absence I called out when I wrote about the anchor system. True of the 2014 snapshot, no longer true of the engine that kept living: the container exists, and the shipped data uses it.</p>
+<p>Look again at that button&#39;s position, because <code>&quot;y&quot;: &quot;0.125 * 1&quot;</code> is a string, and its siblings sit at <code>&quot;0.125 * 0&quot;</code> and <code>&quot;0.125 * 2&quot;</code>. The menu spaces its rows by handing the loader a multiplication per entry.</p>
+<p>That works because of the quiet resolution of my favorite bug from the last post. The old size converter was a homemade <code>calc()</code> that accepted <code>100%-32</code> and computed nonsense if the percentage appeared on the right of the operator, a bug that never fired only because I wrote all 8,451 lines of the data as well as the parser. The new system&#39;s rule is one branch:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">inline</span><span style="color:#C6A0F6"> void</span><span style="color:#8AADF4;font-style:italic"> FromToken</span><span style="color:#939AB7">(</span><span style="color:#EED49F">Json</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">Value</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> token</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> float</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> value</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">token</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">isString</span><span style="color:#939AB7">())</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        value </span><span style="color:#8BD5CA">=</span><span style="color:#EED49F"> cm</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Script</span><span style="color:#939AB7">::</span><span style="color:#CAD3F5">Expression</span><span style="color:#939AB7">::</span><span style="color:#8AADF4;font-style:italic">EvaluateFloat</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">token</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">asString</span><span style="color:#939AB7">());</span></span>
+<span class="line"><span style="color:#C6A0F6">        return</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#CAD3F5">    value </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> token</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">asFloat</span><span style="color:#939AB7">();</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>Any numeric property may be a string, and strings go to a real expression evaluator: cparse, a shunting-yard library, bound to the same scope the engine&#39;s scripting language uses. The homemade converter with the latent bug became a grammar with operator precedence, and the deeper change is who wrote it. The 2012 system hand-parsed its layout format and hand-parsed its expressions, and the successor parses JSON with jsoncpp and expressions with cparse. Somewhere in those two years I stopped writing parsers for things that already had parsers.</p>
+<h2>Navigation Grew a Stack, and the Tripwire Retired</h2>
+<p>Old navigation was web navigation: a button&#39;s <code>link=</code> property loads another page, total-replace, with a 404 page for broken links. It also produced the most dangerous code path in the library. The click handler destroys every control including the button currently executing its own member function, and the system survived that through a <code>controlReset</code> flag checked by the dispatch loop. A tripwire, plus discipline.</p>
+<p>The successor&#39;s navigation is a stack. Screens are registered objects (<code>RegisterScreen&lt;T&gt;()</code> derives the screen&#39;s JSON filename from the class&#39;s own static name) and movement is <code>TransitionTo(screen, pops, clearStack)</code> or <code>TransitionPop()</code>. Pushing is entering a menu, and popping is the back gesture. But the structural fix is <em>when</em> any of that happens. <code>TransitionTo</code> only sets flags and starts every component&#39;s out-animation. The actual teardown lives in the screen&#39;s update:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_bTransitioning</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#C6A0F6">    bool</span><span style="color:#CAD3F5"> bFinished </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> true</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">    for</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">int</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> 0</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> i </span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#939AB7"> (</span><span style="color:#C6A0F6">int</span><span style="color:#939AB7">)</span><span style="color:#CAD3F5">m_components</span><span style="color:#939AB7">.</span><span style="color:#8AADF4;font-style:italic">size</span><span style="color:#939AB7">();</span><span style="color:#8BD5CA"> ++</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#C6A0F6">        if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_components</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">]-></span><span style="color:#8AADF4;font-style:italic">IsVisible</span><span style="color:#939AB7">()</span><span style="color:#8BD5CA"> &#x26;&#x26;</span><span style="color:#8BD5CA"> !</span><span style="color:#CAD3F5">m_components</span><span style="color:#939AB7">[</span><span style="color:#CAD3F5">i</span><span style="color:#939AB7">]-></span><span style="color:#8AADF4;font-style:italic">IsTransitionFinished</span><span style="color:#939AB7">())</span></span>
+<span class="line"><span style="color:#939AB7">        {</span></span>
+<span class="line"><span style="color:#CAD3F5">            bFinished </span><span style="color:#8BD5CA">=</span><span style="color:#F5A97F"> false</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#C6A0F6">            break</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">        }</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">bFinished</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#939AB7;font-style:italic">        // pop, clear, OnExit, push the next screen</span></span></code></pre><p>One deferral buys two things. The click handler that triggers navigation returns long before anything is deleted, so the reentrancy hazard the old system tripwired is unreachable by construction. There is no flag because there is nothing for a flag to guard. And the out-animations always get to finish, because finishing them is what releases the navigation. When I wrote about the animation system in August I said the 2014 snapshot had no clean way to say &quot;when the out animation completes, change screen,&quot; and that every screen wrote it by hand. The engine that kept living grew exactly that signal, and it grew it as the navigation system rather than as a callback. The completion check <em>is</em> the screen change.</p>
+<p>As for the 404 page: its descendant is <code>gPlatform-&gt;DebugLog(&quot;Screen not registered: &quot; + strName)</code>. That looks like a downgrade until the typed path comes into view. <code>Push&lt;ScreenMainMenu&gt;()</code> cannot name a screen that doesn&#39;t exist, because the type is the name and registering it is what constructs it. The missing-page state didn&#39;t get a better renderer. For most of the API it stopped being expressible. A 404 page that becomes a compile error never has to render at all, though I&#39;ll grant the old system was more charming about it.</p>
+<h2>Input Stopped Speaking Win32</h2>
+<p>The old entry point, fourteen years running:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">void</span><span style="color:#8AADF4;font-style:italic"> message</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> message</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> wParam</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> unsigned</span><span style="color:#C6A0F6"> int</span><span style="color:#EE99A0;font-style:italic"> lParam</span><span style="color:#939AB7">);</span></span></code></pre><p>The new ones:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> OnMouseDown</span><span style="color:#939AB7">(</span><span style="color:#EED49F">cm</span><span style="color:#939AB7">::</span><span style="color:#EED49F;font-style:italic">MouseButton</span><span style="color:#EE99A0;font-style:italic"> button</span><span style="color:#939AB7">,</span><span style="color:#C6A0F6"> const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vPos</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> OnDrag</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">const</span><span style="color:#EED49F;font-style:italic"> Vector3</span><span style="color:#8BD5CA">&#x26;</span><span style="color:#EE99A0;font-style:italic"> vMousePos</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#C6A0F6">virtual</span><span style="color:#C6A0F6"> bool</span><span style="color:#8AADF4;font-style:italic"> OnKeyDown</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">int</span><span style="color:#EE99A0;font-style:italic"> nKeyCode</span><span style="color:#939AB7">);</span></span></code></pre><p>The SDL2 port of the old engine could keep the Win32 dialect by renaming constants, because every consumer already spoke it. The mobile engine never had that option, because a finger does not pack its coordinates into <code>lParam</code>, so input became typed parameters on named methods, and the dialect died at the platform boundary where it should have lived all along.</p>
+<p>Mouse capture is the cleanest before-and-after in the whole comparison. The old system&#39;s capture was the four-thousand-pixel hitbox: while a window is being dragged, its hit test inflates by 2000 pixels in every direction so the cursor can&#39;t outrun it. Indefensible in principle, never failed in practice. The new system remembers which component the press landed on:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#C6A0F6">if</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">m_pActiveComponent</span><span style="color:#939AB7">)</span></span>
+<span class="line"><span style="color:#939AB7">{</span></span>
+<span class="line"><span style="color:#CAD3F5">    m_pActiveComponent</span><span style="color:#939AB7">-></span><span style="color:#8AADF4;font-style:italic">OnSoftRelease</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">vPos</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#CAD3F5">    m_pActiveComponent </span><span style="color:#8BD5CA">=</span><span style="color:#ED8796"> NULL</span><span style="color:#939AB7">;</span></span>
+<span class="line"><span style="color:#939AB7">}</span></span></code></pre><p>The screen tracks the active component from the press, and a release or a drag that lands somewhere else is delivered to the component that owns the gesture as a soft event. The scroller uses the same channel in reverse. The default handlers bubble unclaimed touches up the tree, which is how a drag that begins on a button is legally inherited by the scrolling container above it. The maneuver the old windows could only perform by being four thousand pixels wide is ordinary bookkeeping now.</p>
+<p>One rule crossed the gap untouched: in both systems, a click only counts if the press and the release land on the same control. Some decisions are correct outright, and the tell is that rewrites don&#39;t touch them.</p>
+<h2>The Switchboard Became Closures</h2>
+<p>Everything the old GUI did was reported to one function pointer as <code>(name, action, button, position)</code>, and the game&#39;s side was a switchboard. The particle editor&#39;s ran to 551 lines servicing 242 controls. One breakpoint gave a transcript of the entire interface. One renamed control silently disconnected from the game.</p>
+<p>The successor types all three channels. Screens are classes, so per-screen logic lives in <code>OnInit</code>, <code>OnUpdate</code>, and an <code>OnEvent(EventClick, pComponent)</code> that hands over the component pointer rather than a name to compare. And buttons carry their handler with them, a <code>std::function&lt;void(cmGUIButton*)&gt;</code> riding on the button itself. Here is the <code>btnGame</code> from the JSON above being wired in Dungeoneer&#39;s main menu screen:</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#8AADF4;font-style:italic">SetButtonOnClick</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"btnGame"</span><span style="color:#939AB7">,</span><span style="color:#939AB7"> [</span><span style="color:#EE99A0;font-style:italic">stateManager</span><span style="color:#939AB7">](</span><span style="color:#C6A0F6">auto</span><span style="color:#939AB7">)</span><span style="color:#939AB7"> {</span></span>
+<span class="line"><span style="color:#C6A0F6">    if</span><span style="color:#939AB7">(</span><span style="color:#C6A0F6">auto</span><span style="color:#CAD3F5"> playState </span><span style="color:#8BD5CA">=</span><span style="color:#CAD3F5"> stateManager</span><span style="color:#939AB7">-></span><span style="color:#CAD3F5">PushGameState</span><span style="color:#8BD5CA">&#x3C;</span><span style="color:#CAD3F5">StatePlay</span><span style="color:#8BD5CA">></span><span style="color:#939AB7">())</span></span>
+<span class="line"><span style="color:#939AB7">    {</span></span>
+<span class="line"><span style="color:#CAD3F5">        playState</span><span style="color:#939AB7">-></span><span style="color:#8AADF4;font-style:italic">LoadMap</span><span style="color:#939AB7">(</span><span style="color:#A6DA95">"assets</span><span style="color:#F5BDE6">\\</span><span style="color:#A6DA95">dungeons</span><span style="color:#F5BDE6">\\</span><span style="color:#A6DA95">ranch.json"</span><span style="color:#939AB7">);</span></span>
+<span class="line"><span style="color:#939AB7">    }</span></span>
+<span class="line"><span style="color:#939AB7">});</span></span></code></pre><p>What didn&#39;t improve: the join is still a string. Rename a component in the JSON and <code>SetButtonOnClick</code> quietly returns a null pointer that may or may not be checked, which is the same disease with a better prognosis. And the transcript property is genuinely gone. Handlers are distributed across screens and closures now, and there is no single function to breakpoint and watch the whole interface think. I&#39;d make the same trade again, but it is a trade, not a gift.</p>
+<p>Two smaller changes mark the same shift in who the interface answers to. <code>SetText</code> routes through a string table, so text in the old engine was the display string and text in the new one is a key into <code>strings_en.txt</code>, because a commercially published mobile game localizes. And every screen&#39;s <code>Init</code> records <code>View_</code> plus its name to telemetry, because every screen view is an analytics event now. Nothing in the 2012 engine ever phoned home. Both lines are fingerprints of the fact from the rewrite post: part of the codebase belongs to somebody else.</p>
+<h2>Hot Reload Moved Into the Engine</h2>
+<p>My favorite program in the old tree was the &quot;GUI editor&quot;: 228 lines, no editing features, a loop that polls the modification time of every file on screen and reloads what changed. The refresh button, held down.</p>
+<p>The new engine doesn&#39;t have that program because every screen <em>is</em> that program. In development, a screen polls its own file&#39;s modification time once a second, copies the source-tree version over the packaged copy when it changes, and rebuilds itself in place, tearing down, reloading and re-initializing while the game runs. Pressing F2 opens the screen&#39;s JSON in a file browser, in case the text editor that was supposed to already be open wasn&#39;t.</p>
+<p>Same idea, third home. It came across because it was never really a feature of either system. It&#39;s a property that falls out of cheap total-replace loading of a text format, and it beats any editing UI I would have built instead. I said that in the last post about 2012. The 2014 engine losing the text format and then re-growing it is the strongest evidence I have that it&#39;s true.</p>
+<h2>The Ghosts Continue</h2>
+<p>The old post ended with the absences, reserved menu-bar type codes with no menu classes, a <code>holdfocus</code> flag read by nothing. For symmetry I went looking in the new library, and the room is furnished there too. The screen event enum declares <code>EventMouseDown</code>, <code>EventMouseUp</code> and <code>EventMouseDrag</code>, and only <code>EventClick</code> is ever fired. Screens have an <code>OnEnter</code> that nothing calls. A fade member is declared, initialized to null, and its update sits fully commented out next to a <code>k_fFadeTime</code> constant of 500 milliseconds that has been waiting a very long time. Every button builds a translucent red debug quad over its touch rect every frame, with the one line that would draw it commented out. Even the scroller has one: the line that would have recorded the previous frame&#39;s scroll amount is commented out directly under the assignment that computes the release velocity, so the inertia the finger gets is whatever the final frame happened to measure.</p>
+<p>I no longer read these as untidiness. Two libraries, written two years apart and groomed for very different lengths of time, carrying the same density of scaffolding and reserved intentions, is what a system looks like while somebody is still thinking about it.</p>
+<h2>What Didn&#39;t Need to Evolve</h2>
+<p>The comparison is mostly a story of change, which makes the pieces that crossed unchanged the interesting ones:</p>
+<p>The nine anchor points. The old system called them <code>anchor</code> and <code>clamp</code>. The new one calls them <code>anchorSelf</code> and <code>anchorParent</code>. They are the same nine points, and in the current engine the enum is generated by machinery that also round-trips it through strings for the JSON. Three representations across fourteen years, one idea.</p>
+<p>Query-time geometry. Neither system stores a screen rectangle, ever. Both resolve layout on demand against the live window size, which is why window resizing and device rotation were never features in either. They were properties the systems had by construction. Learned in 2012, never unlearned.</p>
+<p>The unit quad. Every textured rectangle in both engines is the same quad in a VBO drawn under a transform: in the old one through immediate-mode GL 1.x, in the new one behind a renderer interface with desktop, mobile and null backends. The habit outlived the entire graphics API it was formed on.</p>
+<p>And names as identity: both systems register controls in a map by name and let the game reach in. The new one adds typed lookup through <code>dynamic_cast</code> and prefix queries, but the string-keyed heart is the same, weaknesses included.</p>
+<p>None of this survived by being copied. The two libraries share no code, and the field names show the second was written from a memory, not a paste. What survived was conclusions. Code is apparently the least durable form a decision can take.</p>
+<h2>The Direction of the Arrow</h2>
+<p>Line the changes up and they all point the same way. The slicing hazard became a deleted constructor. The reentrancy tripwire became a deferred transition that cannot re-enter. The capture hack became bookkeeping. The hand-typed key ladder became keys generated from the members they bind. The hand-written parsers became libraries. The serialization contract became a concept the compiler checks. It&#39;s the same shift the engine series kept finding at larger scale (convention becoming enforcement) happening inside one subsystem, one hazard at a time.</p>
+<p>The arrow isn&#39;t purely forward, and I&#39;ve tried to say so where it isn&#39;t: the cascade died, the switchboard transcript died, a 404 page became a log line, and I miss two of those three. But the summary holds. The 2012 GUI worked because I was careful with it: the percent sign on the correct side, the include at the top of every frame, the flag checked before touching a member. The 2014 GUI, and the decade of refinement it got, work whether or not I&#39;m careful, because the care was moved out of my habits and into the types. Between two systems that both work, the one that no longer needs me on my best behavior is the one to keep, and it is, in fact, the one that&#39;s still alive.</p>
+
+    </article>
+  </main>
+
+
+  <footer>
+    <span class="note"><span class="blink">&#9679;</span> New site in progress</span>
+    <span class="copy">&copy; 2026 Matt Edmondson</span>
+  </footer>
+
+</body>
+</html>

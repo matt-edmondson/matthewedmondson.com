@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson</title>
-  <meta name="description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <link rel="canonical" href="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <title>Why JsonRequired Can't Depend on Another Property | Matt Edmondson</title>
+  <meta name="description" content="System.Text.Json decides whether a property is required before it reads any JSON, which is why a requirement conditional on a sibling value can't be expressed with the built-in attribute. Working around it means a converter, and the converter has to buffer, re-materialize, and take its member model from the serializer rather than from reflection." />
+  <link rel="canonical" href="https://matthewedmondson.com/blog/why-jsonrequired-cant-depend-on-another-property/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Documents as Bridges: Turning Pressure Into Structure | Matt Edmondson" />
-  <meta property="og:description" content="External pressure plus internal disagreement is the most common situation a producer faces. The approach I trust most is to turn it into a written document that frames the urgency and preserves the plan, so the argument happens against the document rather than against each other." />
-  <meta property="og:url" content="https://matthewedmondson.com/blog/documents-as-bridges-turning-pressure-into-structure/" />
+  <meta property="og:title" content="Why JsonRequired Can't Depend on Another Property | Matt Edmondson" />
+  <meta property="og:description" content="System.Text.Json decides whether a property is required before it reads any JSON, which is why a requirement conditional on a sibling value can't be expressed with the built-in attribute. Working around it means a converter, and the converter has to buffer, re-materialize, and take its member model from the serializer rather than from reflection." />
+  <meta property="og:url" content="https://matthewedmondson.com/blog/why-jsonrequired-cant-depend-on-another-property/" />
   <meta name="twitter:card" content="summary" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -558,45 +558,67 @@
   <main>
     <nav class="breadcrumb"><a href="/">&larr; Writing</a></nav>
     <article>
-      <h1>Documents as Bridges: Turning Pressure Into Structure</h1>
+      <h1>Why JsonRequired Can&#39;t Depend on Another Property</h1>
       <div class="post-meta">
-        <time datetime="2025-11-21">November 21, 2025</time>
-        <span class="category-tag">Production</span>
-        <span class="category-tag">Leadership</span>
-        <span class="category-tag">Communication</span>
-        <a class="post-tag" href="/#tag=production">production</a>
-        <a class="post-tag" href="/#tag=documentation">documentation</a>
-        <a class="post-tag" href="/#tag=leadership">leadership</a>
-        <a class="post-tag" href="/#tag=communication">communication</a>
-        <a class="post-tag" href="/#tag=stakeholder-management">stakeholder-management</a>
+        <time datetime="2025-12-21">December 21, 2025</time>
+        <span class="category-tag">Software Engineering</span>
+        <span class="category-tag">C#</span>
+        <a class="post-tag" href="/#tag=dotnet">dotnet</a>
+        <a class="post-tag" href="/#tag=csharp">csharp</a>
+        <a class="post-tag" href="/#tag=system-text-json">system-text-json</a>
+        <a class="post-tag" href="/#tag=serialization">serialization</a>
+        <a class="post-tag" href="/#tag=api-design">api-design</a>
       </div>
-      <img class="post-hero" src="/assets-blog/documents-as-bridges-turning-pressure-into-structure.jpg" alt="" width="1200" height="675" />
 
-<p>A common situation a producer faces looks like this. External pressure arrives, usually from a publisher or a partner. Internal disagreement follows about how to respond, with one side pushing for urgency and another defending the sequenced plan. The producer&#39;s job is to make a decision, except the decision the team needs isn&#39;t &quot;urgency or plan.&quot; The decision they need is both, expressed in a way that everyone can argue with on equal footing.</p>
-<p>The response I have come to trust for this is to write a document. Not a meeting summary. Not an email. A real, structured document that frames the pressure and preserves the plan, lives in the place the team works, and outlasts the conversation it was written to resolve.</p>
-<h2>Pressure and Plan</h2>
-<p>Pressure and plan are not opposites. Most of the time, the pressure is correct in its assessment of urgency and the plan is correct in its assessment of sequencing. The argument between them is unproductive because each side is defending the part the other is missing.</p>
-<p>A bridging document does three things at once. It names the pressure in language the urgency-side recognizes as theirs. It names the plan in language the planning-side recognizes as theirs. It describes a sequence that respects both. Critically, it doesn&#39;t try to win the argument. It tries to make the argument manageable.</p>
-<p>When a document like this lands well, the meeting that follows is shorter than the meeting that produced the document, because both sides walk in already aligned on the framing.</p>
-<h2>Kinds of Documents</h2>
-<p>The form varies. The function doesn&#39;t. A few I&#39;ve written and watched work:</p>
-<p>A <em>milestone gates document</em> that names every gate between the current sprint and the next external deliverable, describes the criteria for each gate, and assigns ownership. Pressure-side reads it as a commitment. Plan-side reads it as a sequencing document. Both are correct.</p>
-<p>A <em>sprint reset document</em> that re-aligns sprint dates with the partner&#39;s mental model rather than the studio&#39;s. Pressure-side gets the partner-facing dates they wanted. Plan-side gets to keep the engineering rhythm intact, just relabeled.</p>
-<p>A <em>governance policy</em> (AI usage guidelines, for example) that names the legitimate concern, names the legitimate counter, and describes a set of practices that respect both. Pressure-side gets a written rule. Plan-side gets enough flexibility to keep using the tool effectively.</p>
-<p>A <em>post-incident document</em> that describes what happened, what worked, what didn&#39;t, and what changes structurally. Pressure-side gets accountability. Plan-side gets a constructive next step.</p>
-<p>In every case, the document is the thing the team can disagree with, refine, and ratify, without the disagreement becoming personal.</p>
-<h2>Why Writing Works</h2>
-<p>The reason writing works where conversation often doesn&#39;t is that writing has three properties verbal communication doesn&#39;t.</p>
-<p><em>Permanence.</em> The document is still there on Monday morning. It can&#39;t be misremembered, it can&#39;t be selectively reframed in the next conversation, and the producer doesn&#39;t have to be in the room for the team to refer back to it.</p>
-<p><em>Asynchronicity.</em> Different stakeholders can review the document on their own time, in their own headspace. The pressure-side person who tends to dominate the meeting room doesn&#39;t dominate the document. Their input lands as a comment, alongside everyone else&#39;s, and gets weighed on the same terms.</p>
-<p><em>Precision.</em> The producer is forced to actually figure out what they think, in language specific enough to be wrong about. Half of the bridging work is just translation: converting the urgency-side&#39;s vague pressure into specific gates, and the planning-side&#39;s vague plan into specific commitments. The translation is the value.</p>
-<p>There&#39;s also a fourth, subtler property: writing converts the pressure into something the producer can hand off. The document outlives the producer&#39;s attention. Other people can refer to it, update it, and act on it without re-running the original conversation. That property is what makes documents into infrastructure rather than overhead.</p>
-<h2>When This Fails</h2>
-<p>A trap is documents that try to win the argument instead of making it workable. A document that frames one side as right and the other as wrong isn&#39;t a bridge, it&#39;s a preemptive memo. The team will read it as such, and the bridging effect doesn&#39;t activate. The hard part is to write a document that both sides can endorse even though they entered the room disagreeing. That&#39;s harder than it sounds, and getting it right is most of the job.</p>
-<h2>Documents as Infrastructure</h2>
-<p>My opinion is that documents are infrastructure, not overhead, because they convert pressure into structure that everyone can argue with on equal footing.</p>
-<p>The teams I&#39;ve watched function well under partner pressure are the teams where this kind of document is the default response, not the exception. The teams I&#39;ve watched struggle are the teams where every conversation has to be re-run from scratch, every decision has to be re-defended at every meeting, and the producer is the only person carrying the institutional memory of how the team got here.</p>
-<p>So when the pressure-versus-plan argument shows up again, the practical step is to write the document, put it where the team works, and let it carry the framing the meeting room can&#39;t hold on its own.</p>
+<p>A configuration type has a discriminator and a property that only matters for one of its cases. A <code>Kind</code> of <code>Advanced</code> needs a <code>Tuning</code> value, and a <code>Kind</code> of <code>Basic</code> doesn&#39;t. The obvious thing to reach for is <code>[JsonRequired]</code> with a condition attached, and no such thing exists.</p>
+<p>The reason turns out to be a single line in how System.Text.Json builds its contracts, and once that line is clear, every possible workaround follows from it. This is the write-up of what I found building <code>ktsu.JsonRequiredConditionally</code>, and of the things the workaround can&#39;t do.</p>
+<h2>Where the Requirement Is Decided</h2>
+<p><code>[JsonRequired]</code> maps to <code>JsonPropertyInfo.IsRequired</code>. That&#39;s a <code>bool</code>, baked into a type&#39;s contract when metadata is built, which happens before any JSON is read.</p>
+<p>At that moment the object doesn&#39;t exist. There are no sibling values to consult, because nothing has been materialized yet. A condition that depends on what <code>Kind</code> turned out to be can&#39;t be evaluated at contract-build time for the same reason a compiler can&#39;t evaluate a runtime variable.</p>
+<p>So there&#39;s no extending the native required-check. It isn&#39;t a missing feature or an oversight in the API surface, it&#39;s a consequence of the requirement being a property of the contract rather than a property of the payload. Anything conditional has to run somewhere the object already exists, and in System.Text.Json that means a converter.</p>
+<h2>The Converter Route, and Why It Buffers</h2>
+<p>The converter buffers its subtree, materializes it through a cached copy of the caller&#39;s options with the factory removed, then walks the materialized object graph alongside the JSON, applying rules at every level.</p>
+<p>Removing the factory from the inner options is what stops it recursing into itself forever. Caching that copy is what stops it rebuilding the options on every deserialization, which would be a significant cost on a hot path.</p>
+<p>The less obvious decision is that the converter validates the whole subtree itself rather than letting System.Text.Json re-enter it for nested values. That looks like duplicated work, and I&#39;d have preferred to delegate. It can&#39;t, because converter resolution is cached per type. A self-referential type would resolve the converter once at the outermost level and then never again on the way down, so everything below the first level would go unvalidated. The bug would only appear on nested data, which is exactly the data least likely to be in the first test.</p>
+<p>Buffering has a real cost. The subtree is read into memory before validation, so this isn&#39;t free on large payloads. Types with no decorated members are never claimed at all and keep the serializer&#39;s normal fast path, which is what keeps the cost proportional to how much of a graph actually uses the feature.</p>
+<h2>Taking the Member Model From the Serializer</h2>
+<p>The walk takes its member model from <code>JsonTypeInfo.Properties</code> rather than from reflection.</p>
+<p>Anyone rewriting the library should preserve this decision. <code>JsonTypeInfo.Properties</code> is System.Text.Json&#39;s own view of which members it populates. Using it means <code>[JsonIgnore]</code>, <code>[JsonInclude]</code> on non-public members, get-only properties, and constructor binding all behave the same way in validation as they do in deserialization, automatically and permanently.</p>
+<p>Reflection would produce a second, independent model of which members count. It would agree with the serializer most of the time, and the cases where it disagreed would be silent. A property the serializer ignores but the validator requires produces an error nobody can act on. A property the serializer populates but the validator skips produces no error at all. Both are worse than a slower walk.</p>
+<p>The same principle shows up in a subtler place. Whether a type is claimed at all is decided before any caller options exist, because a converter factory&#39;s <code>CanConvert</code> is handed only a <code>Type</code>. So the claim check looks for decorated members with fields included, and a plain public field carrying the attribute claims its type. But the rules themselves are compiled against the real options, so with <code>IncludeFields</code> off no rule is produced for that field and nothing is enforced on it, exactly as System.Text.Json wouldn&#39;t populate it. The claim is deliberately broader than the enforcement, because the claim has less information available to it.</p>
+<h2>Absent Siblings Read as Their Default</h2>
+<p>Sibling values are read from the materialized object, so a sibling missing from the payload reads as its CLR default. That produces a trap to know about before it bites.</p>
+<pre class="shiki catppuccin-macchiato" style="color:#cad3f5" tabindex="0"><code><span class="line"><span style="color:#939AB7">[</span><span style="color:#EED49F;font-style:italic">JsonRequiredIfSiblingIs</span><span style="color:#939AB7">(</span><span style="color:#8BD5CA">nameof</span><span style="color:#939AB7">(</span><span style="color:#CAD3F5">Kind</span><span style="color:#939AB7">),</span><span style="color:#CAD3F5"> Kind</span><span style="color:#8BD5CA">.</span><span style="color:#CAD3F5">Basic</span><span style="color:#939AB7">)]</span><span style="color:#939AB7;font-style:italic">  // Basic == 0</span></span>
+<span class="line"><span style="color:#C6A0F6">public</span><span style="color:#C6A0F6"> string</span><span style="color:#8BD5CA">?</span><span style="color:#CAD3F5"> Name </span><span style="color:#939AB7">{</span><span style="color:#CAD3F5"> get</span><span style="color:#939AB7">;</span><span style="color:#CAD3F5"> set</span><span style="color:#939AB7">;</span><span style="color:#939AB7"> }</span></span></code></pre><p>An empty payload, <code>{}</code>, leaves <code>Kind</code> at its default. If <code>Basic</code> is the enum&#39;s zero value, the sibling matches, and <code>Name</code> is required on a document that never mentioned <code>Kind</code> at all. That&#39;s technically correct and rarely what the author meant.</p>
+<p>Distinguishing absent from defaulted needs the sibling marked <code>[JsonRequired]</code> or made nullable. Neither is the library&#39;s job to do automatically, because both change the contract in ways the author might not want, but the behavior is the kind of thing that belongs in the first paragraph of the documentation rather than the last.</p>
+<p>There&#39;s a related choice on presence. For the conditional attribute, a property that&#39;s physically present passes even when its value is <code>null</code>, which mirrors how <code>[JsonRequired]</code> itself behaves. Consistency with the built-in attribute is worth more here than being right in the abstract, because a library that redefines what &quot;required&quot; means in the same object as the framework&#39;s own version is a library that produces diffs nobody asked for.</p>
+<h2>Widening the Attribute Value</h2>
+<p>An attribute argument can only be a compile-time constant, so it&#39;s routinely a different type from the sibling it&#39;s compared against. <code>[JsonRequiredIfSiblingIs(nameof(Count), 1)]</code> is an <code>int</code> literal, and the sibling might be a <code>long</code>.</p>
+<p>So the attribute value is widened to the sibling&#39;s type before comparing. That <code>1</code> matches a <code>long</code>, <code>short</code>, <code>byte</code>, <code>uint</code>, or <code>nint</code> sibling. An enum sibling is matched by an <code>int</code>, by another enum with the same underlying value, or by the enum member&#39;s own name written as a string.</p>
+<p>Strings stay strict. A string sibling is compared ordinally against string constants only, and a number is never formatted into a string to make it match. Loosening that would mean <code>1</code> matching <code>&quot;1&quot;</code>, which is the kind of convenience that turns a typo into a silently different rule.</p>
+<p>A pairing that could never match throws rather than quietly never firing, and so does an unresolvable sibling name. A typo&#39;d <code>nameof</code> target is a coding error. Failing loudly at first use beats a validation rule that exists, looks correct in review, and never once runs.</p>
+<h2>What It Refuses to Claim</h2>
+<p>Two limitations are deliberate, and the second one is the more interesting.</p>
+<p>Types behind a custom converter aren&#39;t validated, because System.Text.Json exposes no property model for a type that has its own converter. The walk can&#39;t descend through one. That&#39;s a straightforward consequence of the extension point.</p>
+<p>Polymorphic hierarchies aren&#39;t claimed at all. A type carrying <code>[JsonPolymorphic]</code> or <code>[JsonDerivedType]</code>, or deriving from one that does, is skipped entirely. The reason is that System.Text.Json writes and reads the type discriminator around the derived type&#39;s converter, and refuses outright when that converter is a custom one. Claiming such a type would break a working polymorphic model, on both read and write, merely by registering this library.</p>
+<p>A library that breaks unrelated working code by being installed is worse than a library with a documented gap. The cost is no enforcement inside the hierarchy, and it extends one step further than it first appears: a container whose only route to a decorated type runs through a polymorphic member is itself left unclaimed, so violations beneath it are reported with a path rooted at the inner type rather than at the container. The requirement is still enforced, only the path prefix is lost.</p>
+<p>The refusal is also decided by declared type participation, so a decorated class that merely implements an interface carrying <code>[JsonDerivedType]</code> is skipped even when it&#39;s deserialized concretely and no polymorphic dispatch ever happens. That&#39;s stricter than strictly necessary, and I chose it because the alternative is a rule that depends on runtime shape rather than declared shape, which is much harder for a reader to predict.</p>
+<h2>Practical Takeaways</h2>
+<ul>
+<li><code>[JsonRequired]</code> is a contract-time <code>bool</code> on <code>JsonPropertyInfo</code>, so nothing conditional on payload values can be expressed through it. Any workaround runs after materialization, which means a converter.</li>
+<li>A converter that validates nested values has to walk them itself. Converter resolution is cached per type, so a self-referential type would go unvalidated below the outermost level.</li>
+<li>Take the member model from <code>JsonTypeInfo.Properties</code>, not from reflection, so validation and deserialization can&#39;t disagree about which members exist.</li>
+<li>Sibling values read as their CLR default when absent, so an enum whose zero value is meaningful will match a payload that never mentioned it.</li>
+<li>Refusing to claim polymorphic types keeps existing polymorphic models working. A documented gap beats breaking unrelated code at registration time.</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/required-properties">Required properties in System.Text.Json</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.text.json.serialization.metadata.jsonpropertyinfo.isrequired">JsonPropertyInfo.IsRequired</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.text.json.serialization.metadata.jsontypeinfo.properties">JsonTypeInfo.Properties</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/converters-how-to">Custom converters and converter factories</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/polymorphism">Polymorphic serialization</a></li>
+</ul>
 
     </article>
   </main>
